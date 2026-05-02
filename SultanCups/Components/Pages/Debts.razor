@@ -6,7 +6,6 @@
 
 <div class="pro-page">
 
-    ```
     <div class="pro-topbar">
         <div></div>
         <h2 class="pro-title">سجل الديون</h2>
@@ -17,7 +16,7 @@
     <div class="pro-search-bar">
 
         <input class="mk-search-input"
-               placeholder="بحث بالاسم"
+               placeholder="بحث باسم الشخص (زبون أو مسوق) أو رقم الفاتورة"
                @bind="NameSearch"
                @bind:event="oninput" />
 
@@ -31,22 +30,6 @@
             <option value="all">كل الحالات</option>
             <option value="full">دين كامل</option>
             <option value="partial">خالص جزئي</option>
-        </select>
-
-        <select class="pro-filter-select" @bind="YearFilter">
-            <option value="0">كل السنوات</option>
-            @foreach (var y in Years)
-            {
-                <option value="@y">@y</option>
-            }
-        </select>
-
-        <select class="pro-filter-select" @bind="MonthFilter">
-            <option value="0">كل الشهور</option>
-            @for (int i = 1; i <= 12; i++)
-            {
-                <option value="@i">@i</option>
-            }
         </select>
 
         <input type="date"
@@ -73,8 +56,8 @@
                 </thead>
 
                 <tbody>
-
-                    @if (FilteredList == null)
+                    @if (DebtList == null)
+                    
                     {
                         <tr>
                             <td colspan="7">جاري التحميل...</td>
@@ -127,7 +110,23 @@
 
         </div>
     </div>
-    ```
+
+</div>
+
+<div class="pro-pagination">
+
+    <button class="pro-btn"
+            @onclick="PrevPage"
+            disabled="@(CurrentPage == 1)">
+        السابق
+    </button>
+
+    <span>صفحة @CurrentPage</span>
+
+    <button class="pro-btn"
+            @onclick="NextPage">
+        التالي
+    </button>
 
 </div>
 
@@ -138,43 +137,54 @@ List<DebtView>? DebtList;
     string NameSearch = "";
     string PersonFilter = "all";
     string StatusFilter = "all";
+    bool HasNextPage = true;
 
-    int YearFilter = 0;
-    int MonthFilter = 0;
     DateTime? DayFilter = null;
+
+    int CurrentPage = 1;
+    int PageSize = 3;
 
     protected override async Task OnInitializedAsync()
     {
-        DebtList = await FinanceService.GetDebts();
+        DebtList = await FinanceService.GetDebts(CurrentPage, PageSize);
+    }
+
+    async Task NextPage()
+    {
+        var next = await FinanceService.GetDebts(CurrentPage + 1, PageSize);
+
+        if (!next.Any())
+            return;
+
+        CurrentPage++;
+        DebtList = next;
+    }
+
+    async Task PrevPage()
+    {
+        if (CurrentPage == 1) return;
+
+        CurrentPage--;
+        DebtList = await FinanceService.GetDebts(CurrentPage, PageSize);
     }
 
     IEnumerable<DebtView> FilteredList =>
-        (DebtList ?? new List<DebtView>())
-        .Where(d =>
-            (string.IsNullOrWhiteSpace(NameSearch) ||
-             d.person_name.Contains(NameSearch, StringComparison.OrdinalIgnoreCase))
+     (DebtList ?? Enumerable.Empty<DebtView>())
+     .Where(d =>
+         (string.IsNullOrWhiteSpace(NameSearch) ||
+          d.person_name.Contains(NameSearch, StringComparison.OrdinalIgnoreCase) ||
+          d.order_id.ToString().Contains(NameSearch))
 
-            && (PersonFilter == "all" ||
-                (PersonFilter == "customer" && d.person_name.Contains("زبون")) ||
-                (PersonFilter == "marketer" && d.person_name.Contains("مسوق")))
+         && (PersonFilter == "all" ||
+             (PersonFilter == "customer" && d.person_type == "customer") ||
+             (PersonFilter == "marketer" && d.person_type == "marketer"))
 
-            && (StatusFilter == "all" ||
-                (StatusFilter == "full" && d.paid_amount == 0) ||
-                (StatusFilter == "partial" && d.paid_amount > 0))
+         && (StatusFilter == "all" ||
+             (StatusFilter == "full" && d.status == "دين كامل") ||
+             (StatusFilter == "partial" && d.status == "خالص جزئي"))
 
-            && (YearFilter == 0 || d.order_date.Year == YearFilter)
-
-            && (MonthFilter == 0 || d.order_date.Month == MonthFilter)
-
-            && (DayFilter == null || d.order_date.Date == DayFilter.Value.Date)
-        );
-
-    List<int> Years =>
-        (DebtList ?? new())
-        .Select(x => x.order_date.Year)
-        .Distinct()
-        .OrderByDescending(x => x)
-        .ToList();
+         && (DayFilter == null || d.order_date.Date == DayFilter.Value.Date)
+     );
 
     string Fmt(decimal v) => $"{v:0.00} د.ل";
 

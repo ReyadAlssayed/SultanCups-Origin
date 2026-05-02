@@ -6,6 +6,8 @@
 
         public string person_name { get; set; } = "";
 
+        public string person_type { get; set; } = ""; // 🔥 مهم
+
         public DateTime order_date { get; set; }
 
         public decimal net_total { get; set; }

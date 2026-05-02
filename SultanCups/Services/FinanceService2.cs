@@ -521,7 +521,7 @@ namespace SultanCups.Services
             );
         }
 
-        public async Task<List<DebtView>> GetDebts()
+        public async Task<List<DebtView>> GetDebts(int page = 1, int pageSize = 50)
         {
             var query =
                 from o in _context.orders
@@ -537,7 +537,6 @@ namespace SultanCups.Services
                     .Sum(i => (decimal?)i.quantity * i.unit_price) ?? 0
 
                 let net = total - o.discount_total
-
                 let remaining = net - o.paid_amount
 
                 where remaining > 0
@@ -546,15 +545,18 @@ namespace SultanCups.Services
                 {
                     order_id = o.order_id,
                     person_name = o.person_type == "customer" ? c.name : m.name,
+                    person_type = o.person_type,
                     order_date = o.order_date,
                     net_total = net,
                     paid_amount = o.paid_amount,
                     remaining = remaining,
-                    status = o.paid_amount == 0 ? "غير مدفوع" : "جزئي"
+                    status = o.paid_amount == 0 ? "دين كامل" : "خالص جزئي"
                 };
 
             return await query
                 .OrderByDescending(x => x.order_date)
+                .Skip((page - 1) * pageSize)   // 🔥 هذا الجديد
+                .Take(pageSize)                // 🔥 وهذا
                 .ToListAsync();
         }
 
