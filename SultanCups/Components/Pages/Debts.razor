@@ -112,18 +112,17 @@
     </div>
 
 </div>
-
 <div class="pro-pagination">
 
-    <button class="pro-btn"
+    <button class="pg-btn"
             @onclick="PrevPage"
             disabled="@(CurrentPage == 1)">
         السابق
     </button>
 
-    <span>صفحة @CurrentPage</span>
+    <span class="pg-number">صفحة @CurrentPage</span>
 
-    <button class="pro-btn"
+    <button class="pg-btn"
             @onclick="NextPage">
         التالي
     </button>

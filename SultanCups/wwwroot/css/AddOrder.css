@@ -462,6 +462,38 @@
 }
 
 
+.pro-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.pg-btn {
+    padding: 6px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+    .pg-btn:hover {
+        background: #f8fafc;
+    }
+
+    .pg-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+.pg-number {
+    font-size: 13px;
+    color: #64748b;
+}
+
 @keyframes highlightFade {
     0% {
         background: #86efac;
