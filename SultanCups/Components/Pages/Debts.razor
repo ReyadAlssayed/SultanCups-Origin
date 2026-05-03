@@ -112,22 +112,7 @@
     </div>
 
 </div>
-<div class="pro-pagination">
 
-    <button class="pg-btn"
-            @onclick="PrevPage"
-            disabled="@(CurrentPage == 1)">
-        السابق
-    </button>
-
-    <span class="pg-number">صفحة @CurrentPage</span>
-
-    <button class="pg-btn"
-            @onclick="NextPage">
-        التالي
-    </button>
-
-</div>
 
 @code {
 
@@ -136,36 +121,16 @@ List<DebtView>? DebtList;
     string NameSearch = "";
     string PersonFilter = "all";
     string StatusFilter = "all";
-    bool HasNextPage = true;
+
 
     DateTime? DayFilter = null;
 
-    int CurrentPage = 1;
-    int PageSize = 3;
 
     protected override async Task OnInitializedAsync()
     {
-        DebtList = await FinanceService.GetDebts(CurrentPage, PageSize);
+        DebtList = await FinanceService.GetDebts();
     }
 
-    async Task NextPage()
-    {
-        var next = await FinanceService.GetDebts(CurrentPage + 1, PageSize);
-
-        if (!next.Any())
-            return;
-
-        CurrentPage++;
-        DebtList = next;
-    }
-
-    async Task PrevPage()
-    {
-        if (CurrentPage == 1) return;
-
-        CurrentPage--;
-        DebtList = await FinanceService.GetDebts(CurrentPage, PageSize);
-    }
 
     IEnumerable<DebtView> FilteredList =>
      (DebtList ?? Enumerable.Empty<DebtView>())

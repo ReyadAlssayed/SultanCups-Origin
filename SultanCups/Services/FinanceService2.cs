@@ -212,15 +212,20 @@ namespace SultanCups.Services
                             * o.commission_per_box)
                         : 0,
 
-                    paid_amount = o.paid_amount,   // 🔥 هذا الناقص
+                    paid_amount =
+    _context.financial_events
+        .Where(x =>
+            x.ref_table == "orders" &&
+            x.ref_id == o.order_id &&
+            x.direction == "IN")
+        .Sum(x => (decimal?)x.amount) ?? 0,   // 🔥 هذا الناقص
                     order_date = o.order_date
                 };
 
             return await query
-                .OrderByDescending(o => o.order_id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+
+    .OrderByDescending(x => x.order_id)
+    .ToListAsync();
         }
 
         //جلب الخزنات النشطة
@@ -407,7 +412,6 @@ namespace SultanCups.Services
                 order.person_id = updated.person_id;
                 order.person_type = updated.person_type;
                 order.discount_total = updated.discount_total;
-                order.paid_amount = updated.paid_amount;
                 order.cash_box_id = updated.cash_box_id;
                 order.notes = updated.notes;
                 order.commission_per_box = updated.commission_per_box;
@@ -521,7 +525,7 @@ namespace SultanCups.Services
             );
         }
 
-        public async Task<List<DebtView>> GetDebts(int page = 1, int pageSize = 50)
+        public async Task<List<DebtView>> GetDebts()
         {
             var query =
                 from o in _context.orders
@@ -537,7 +541,16 @@ namespace SultanCups.Services
                     .Sum(i => (decimal?)i.quantity * i.unit_price) ?? 0
 
                 let net = total - o.discount_total
-                let remaining = net - o.paid_amount
+
+                // 🔥 المدفوع الحقيقي
+                let paid = _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "orders" &&
+                        x.ref_id == o.order_id &&
+                        x.direction == "IN")
+                    .Sum(x => (decimal?)x.amount) ?? 0
+
+                let remaining = net - paid
 
                 where remaining > 0
 
@@ -548,15 +561,13 @@ namespace SultanCups.Services
                     person_type = o.person_type,
                     order_date = o.order_date,
                     net_total = net,
-                    paid_amount = o.paid_amount,
+                    paid_amount = paid, // ✔ الصحيح
                     remaining = remaining,
-                    status = o.paid_amount == 0 ? "دين كامل" : "خالص جزئي"
+                    status = paid == 0 ? "دين كامل" : "خالص جزئي"
                 };
 
             return await query
-                .OrderByDescending(x => x.order_date)
-                .Skip((page - 1) * pageSize)   // 🔥 هذا الجديد
-                .Take(pageSize)                // 🔥 وهذا
+                .OrderByDescending(x => x.order_id)
                 .ToListAsync();
         }
 

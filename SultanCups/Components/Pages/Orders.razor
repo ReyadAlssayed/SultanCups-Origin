@@ -79,7 +79,7 @@
                                     
         </td>
 
-        <td>@o.order_date.ToString("yyyy-MM-dd")</td>
+        <td>@o.order_date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
 
         <td>
             <button class="btn-info" @onclick="() => OpenDetails(o)">تفاصيل</button>
@@ -184,7 +184,7 @@
 
                     <div class="row">
                         <span>التاريخ</span>
-                        <span>@SelectedOrder.order_date.ToString("yyyy-MM-dd")</span>
+                        <span>@SelectedOrder.order_date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
                     </div>
 
                 </div>
