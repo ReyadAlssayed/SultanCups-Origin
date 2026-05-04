@@ -230,8 +230,12 @@
 
                     <label class="cash-label">الخزنة</label>
 
-                    <select class="pay-input1 small" @bind="Form.cash_box_id">
+                    <select class="pay-input1 small"
+                            value="@Form.cash_box_id"
+                            @onchange="OnCashBoxChanged">
+
                         <option value="">اختر</option>
+
                         @foreach (var c in CashBoxes)
                         {
                             <option value="@c.cash_box_id">@c.name</option>
@@ -389,7 +393,7 @@
             person_id = order.person_id,
             person_type = order.person_type,
             discount_total = order.discount_total,
-            cash_box_id = order.cash_box_id,
+            cash_box_id = order.cash_box_id ?? 0,
             notes = order.notes,
             commission_per_box = order.commission_per_box,
             order_date = order.order_date,
@@ -428,6 +432,16 @@
         }
 
         current.method = newMethod!;
+    }
+
+    void OnCashBoxChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+
+        if (string.IsNullOrEmpty(val))
+            Form.cash_box_id = null;
+        else
+            Form.cash_box_id = int.Parse(val);
     }
 
     void OpenPaymentDialog()
