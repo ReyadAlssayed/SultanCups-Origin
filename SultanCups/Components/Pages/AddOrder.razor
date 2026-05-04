@@ -13,8 +13,8 @@
 
 
 <div class="pro-page">
-  
 
+  
     <div class="top-bar">
 
         <button class="btn-back" @onclick='() => Nav.NavigateTo("/orders")'>
@@ -98,12 +98,11 @@
         </div>
 
         <div>
-           
         </div>
 
     </div>
 
-                <hr />
+    <hr />
 
     <div class="order-layout1">
 
@@ -157,7 +156,7 @@
 
                             <td>
                                 <input class="pro-input"
-                                       value="@(item.quantity* item.unit_price)"
+                                       value="@(item.quantity * item.unit_price)"
                                        readonly />
                             </td>
 
@@ -182,7 +181,7 @@
             }
 
             <button class="pro-btn-add small" @onclick="AddItem">
-                 إضافة صنف
+                إضافة صنف
             </button>
 
             <div class="bottom-actions1">
@@ -230,7 +229,6 @@
 
                 @{
                     var remaining = Net - PaymentsTotal;
-                    var displayRemaining = remaining < 0 ? 0 : remaining;
                     bool isPaid = Net > 0 && remaining <= 0;
                     bool isPartial = PaymentsTotal > 0 && remaining > 0;
                 }
@@ -318,8 +316,7 @@
 
     </div>
 
-                </div>
-
+</div>
 
 
 @if (ShowPaymentDialog)
@@ -328,33 +325,21 @@
 
         <div class="rm-dialog-box">
 
-            <!-- 🔥 نفس المواد الخام -->
-            <div class="rm-dialog-top-image">
-                <img src="images/Background.png" />
-            </div>
-
             <div class="rm-dialog-body">
 
-                <div class="pay-header-row">
+                <h3>طرق الدفع</h3>
 
-                    <div class="money-head">
-                        <h3>طرق الدفع</h3>
-                        <img src="images/Money.jpg" />
-                    </div>
+                <div class="cashbox-inline">
 
-                    <div class="cashbox-inline">
+                    <label class="cash-label">الخزنة</label>
 
-                        <label class="cash-label">الخزنة</label>
-
-                        <select class="pay-input1 small" @bind="Form.cash_box_id">
-                            <option value="">اختر</option>
-                            @foreach (var c in CashBoxes)
-                            {
-                                <option value="@c.cash_box_id">@c.name</option>
-                            }
-                        </select>
-
-                    </div>
+                    <select class="pay-input1 small" @bind="Form.cash_box_id">
+                        <option value="">اختر</option>
+                        @foreach (var c in CashBoxes)
+                        {
+                            <option value="@c.cash_box_id">@c.name</option>
+                        }
+                    </select>
 
                 </div>
 
@@ -370,18 +355,23 @@
                     {
                         <div class="payment-row1">
 
-                            <select class="pay-input1" @bind="p.method">
-                                <option value="cash">كاش</option>
-                                <option value="card">بطاقة</option>
-                                <option value="transfer">تحويل</option>
-                                <option value="check">شيك</option>
+                            <select class="pay-input1" value="@p.method"
+                                    @onchange="e => OnPaymentMethodChanged(e, p)">
+
+                                @foreach (var m in new[] { "cash", "card", "transfer", "check" })
+                                {
+                                    var used = TempPayments.Any(x => x.method == m && x != p);
+
+                                    if (!used || m == p.method)
+                                    {
+                                        <option value="@m">@GetMethodName(m)</option>
+                                    }
+                                }
+
                             </select>
 
-                            <input type="number"
-                                   class="pay-input1"
-                                   min="0"
-                                   @bind="p.amount"
-                                   @onkeydown="HandleEnter" />
+                            <input class="pay-input1"
+                                   @bind="p.amount"/>                    
 
                             <button class="pay-delete1"
                                     @onclick="() => TempPayments.Remove(p)">
@@ -391,75 +381,24 @@
                         </div>
                     }
 
-                    @if (TempPayments.Count < 4)
-                    {
-                        <button class="rm-add-btn small" @onclick="AddTempPayment">
-                            + إضافة دفعة
-                        </button>
-                    }
-                    else
-                    {
-                        <div class="pro-error-text">لا يمكن إضافة أكثر من 4 دفعات</div>
-                    }
+                    <button class="rm-add-btn small" @onclick="AddTempPayment">
+                         إضافة دفعة
+                    </button>
 
                 </div>
 
-            </div>
+                <div class="pay-actions1">
+                    <button class="pay-save1" @onclick="ClosePaymentDialog">تم</button>
+                    <button class="pay-cancel1" @onclick="CancelPaymentDialog">إلغاء</button>
+                </div>
 
-            <div class="pay-actions1">
-                <button class="pay-save1" @onclick="ClosePaymentDialog">تم</button>
-                <button class="pay-cancel1" @onclick="CancelPaymentDialog">إلغاء</button>
             </div>
 
         </div>
     </div>
 }
-@if (ShowPaymentDiffDialog)
-{
-    <div class="pro-dialog-overlay">
-        <div class="pro-dialog-box">
 
-            <div class="pro-dialog-body">
 
-                <h3 class="diff-title">تأكيد تعديل الدفعات</h3>
-
-                <div class="diff-row">
-                    <span>المدفوع السابق</span>
-                    <b>@OldPaid.ToString("0.00") د.ل</b>
-                </div>
-
-                <div class="diff-row">
-                    <span>المدفوع الجديد</span>
-                    <b>@Math.Abs(DiffPaid).ToString("0.00") د.ل</b>
-                </div>
-
-                <div class="diff-row">
-                    <span>الفرق</span>
-
-                    <b class="@(DiffPaid > 0 ? "diff-in" : "diff-out")">
-                        @Math.Abs(DiffPaid).ToString("0.00") د.ل
-                    </b>
-                </div>
-                <p class="diff-note">
-                    @if (DiffPaid > 0)
-                    {
-                        <span>سيتم إدخال @DiffPaid د.ل إلى الخزنة</span>
-                    }
-                    else
-                    {
-                        <span>سيتم إخراج @Math.Abs(DiffPaid) د.ل من الخزنة</span>
-                    }
-                </p>
-
-                <div class="pro-dialog-actions">
-                    <button class="pro-save" @onclick="ConfirmPaymentEdit">متابعة</button>
-                    <button class="pro-cancel" @onclick="() => ShowPaymentDiffDialog = false">إلغاء</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-}
 
 
 
@@ -483,21 +422,12 @@
 
     
     bool ShowPaymentDialog = false;
-    bool ShowPaymentDiffDialog;
 
-    decimal OldPaid;
-    decimal NewPaid;
-    decimal DiffPaid;
 
     List<PaymentInput> TempPayments = new();
     List<PaymentInput> Payments = new();
 
-    [Parameter] public string? newId { get; set; }
-    int HighlightId => int.TryParse(newId, out var id) ? id : 0;
 
-    [Parameter]
-    [SupplyParameterFromQuery(Name = "id")]
-    public int? Id { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -506,12 +436,6 @@
         Marketers = await SalesService.GetActiveMarketers();
         CashBoxes = await FinanceService.GetCashBoxes();
 
-        if (Id.HasValue)
-        {
-            await LoadOrder(Id.Value);
-        }
-        else
-        {
             Form = new Order
             {
                 order_date = DateTime.UtcNow, // 🔥 الحل
@@ -528,7 +452,7 @@
             }
             };
         }
-    }
+    
 
     async Task RemoveItem(OrderItem item)
     {
@@ -540,6 +464,31 @@
     void CancelPaymentDialog()
     {
         ShowPaymentDialog = false;
+    }
+
+    string GetMethodName(string m) => m switch
+    {
+        "cash" => "كاش",
+        "card" => "بطاقة",
+        "transfer" => "تحويل",
+        "check" => "شيك",
+        _ => m
+    };
+
+    void OnPaymentMethodChanged(ChangeEventArgs e, PaymentInput current)
+    {
+        var newMethod = e.Value?.ToString();
+
+        var exists = TempPayments
+            .Any(p => p.method == newMethod && p != current);
+
+        if (exists)
+        {
+            ToastService.ShowToast("لا يمكن تكرار نفس نوع الدفع", "error");
+            return;
+        }
+
+        current.method = newMethod!;
     }
 
     void HandleEnter(KeyboardEventArgs e)
@@ -554,7 +503,22 @@
     {
         if (TempPayments.Count >= 4) return;
 
-        TempPayments.Add(new PaymentInput());
+        var methods = TempPayments.Select(x => x.method).ToList();
+        var all = new[] { "cash", "card", "transfer", "check" };
+
+        var next = all.FirstOrDefault(m => !methods.Contains(m));
+
+        if (next == null)
+        {
+            ToastService.ShowToast("لا يمكن تكرار نفس نوع الدفع", "error");
+            return;
+        }
+
+        TempPayments.Add(new PaymentInput
+        {
+            method = next,
+            amount = 0
+        });
     }
 
     void OnMarketerChanged(ChangeEventArgs e)
@@ -617,9 +581,9 @@
 
     void ClosePaymentDialog()
     {
-        if (TempPayments.All(p => p.amount == 0))
+        if (TempPayments.Any(p => p.amount < 0))
         {
-            ToastService.ShowToast("لا يمكن أن يكون المبلغ المدفوع = 0", "error");
+            ToastService.ShowToast("لا يمكن إدخال مبلغ سالب", "error");
             return;
         }
 
@@ -629,11 +593,6 @@
             return;
         }
 
-        if (TempPayments.Any(p => p.amount < 0))
-        {
-            ToastService.ShowToast("لا يمكن إدخال مبلغ سالب", "error");
-            return;
-        }
 
         if (TempPayments.Sum(p => p.amount) > Net)
         {
@@ -691,71 +650,23 @@
         }
     }
 
-    async Task LoadOrder(int id)
-    {
-        var order = await FinanceService.GetOrderById(id);
-
-        if (order == null) return;
-
-        Form = new Order
-        {
-            order_id = order.order_id,
-            person_id = order.person_id,
-            person_type = order.person_type,
-            discount_total = order.discount_total,
-            paid_amount = order.paid_amount,
-            cash_box_id = order.cash_box_id,
-            commission_per_box = order.commission_per_box,
-            notes = order.notes,
-            order_date = order.order_date,
-            Items = order.Items.Select(i => new OrderItem
-            {
-                product_id = i.product_id,
-                quantity = i.quantity,
-                unit_price = i.unit_price
-            }).ToList()
-        };
-
-        var events = await FinanceService.GetPaymentsByOrder(id);
-
-        // 🔥 نحسب الصافي لكل نوع
-        Payments = events
-            .GroupBy(x => x.payment_method ?? "cash")
-            .Select(g => new PaymentInput
-            {
-                method = g.Key,
-                amount = g.Sum(x =>
-                    x.direction == "IN"
-                        ? x.amount
-                        : -x.amount
-                )
-            })
-            .Where(p => p.amount > 0)
-            .ToList();
-
-        // ✅ مهم
-        OldPaid = order.paid_amount;
-    }
 
     void OnProductChanged(ChangeEventArgs e, OrderItem item)
     {
         int id = int.Parse(e.Value?.ToString() ?? "0");
 
-        // 🔥 لا تدمج إلا مع صف فيه نفس المنتج ومثبت (مش صف جديد)
         var existing = Form.Items
-            .FirstOrDefault(i =>
-                i.product_id == id &&
-                i != item &&
-                i.product_id != 0
-            );
+     .FirstOrDefault(i =>
+         i.product_id == id &&
+         i != item &&
+         i.product_id != 0
+     );
 
         if (existing != null)
         {
-            existing.quantity += item.quantity;
-
             Form.Items.Remove(item);
 
-            ToastService.ShowToast("تم دمج المنتج", "info");
+            ToastService.ShowToast("هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد", "error");
             return;
         }
 
@@ -770,25 +681,15 @@
         }
     }
 
-    void AddPayment()
-    {
-        if (Payments.Count >= 4) return;
-
-        Payments.Add(new PaymentInput());
-    }
-
-
     decimal PaymentsTotal => Payments.Sum(p => p.amount);
 
-    bool IsOverLimit()
-    {
-        return Payments.Sum(p => p.amount) > Net;
-    }
 
     async Task SaveOrder()
     {
         try
         {
+
+            Form.order_date = DateTime.SpecifyKind(Form.order_date, DateTimeKind.Utc);
             PersonError = "";
             ItemsError = "";
             ProductError = "";
@@ -850,7 +751,8 @@
             // ========================
             // الحسابات
             // ========================
-            var net = Form.Items.Sum(i => i.quantity * i.unit_price) - Form.discount_total;
+            
+            var net = Net;
 
             if (Payments.Sum(p => p.amount) > net)
             {
@@ -860,28 +762,15 @@
 
 
             var finalPayments = Payments ?? new List<PaymentInput>();
-            var paid = finalPayments.Sum(p => p.amount);
-
-            // ========================
-            // Diff logic
-            // ========================
-            if (Id.HasValue)
-            {
-                NewPaid = paid;
-                DiffPaid = NewPaid - OldPaid;
-
-                if (DiffPaid != 0)
-                {
-                    ShowPaymentDiffDialog = true;
-                    return;
-                }
-            }
+            var paid = finalPayments.Sum(p => p.amount);     
 
 
-
-            var result = Id.HasValue
-                ? await FinanceService.UpdateOrder(Form, Form.Items, finalPayments, CurrentAdminId)
-                : await FinanceService.AddOrder(Form, Form.Items, finalPayments, CurrentAdminId);
+            var result = await FinanceService.AddOrder(
+    Form,
+    Form.Items,
+    finalPayments,
+    CurrentAdminId
+);
 
             if (result.success)
             {
@@ -903,30 +792,5 @@
         }
     }
 
-    async Task ConfirmPaymentEdit()
-    {
-        ShowPaymentDiffDialog = false;
-
-        var finalPayments = Payments;
-
-
-        var result = await FinanceService.UpdateOrder(
-            Form,
-            Form.Items,
-            finalPayments,
-            CurrentAdminId
-        );
-
-        if (result.success)
-        {
-            ToastService.ShowToast("تم التتعديل ✔", "success");
-            Nav.NavigateTo("/orders");
-        }
-        else
-        {
-            ToastService.ShowToast(result.message, "error");
-        }
-    }
-
     string Fmt(decimal v) => $"{v:0.00} د.ل";
-}
+} 

@@ -87,7 +87,7 @@
             <button class="btn-info" @onclick="() => OpenDetails(o)">تفاصيل</button>
 
                                     <button class="btn-edit"
-                                            @onclick='() => Nav.NavigateTo($"/orders/add?id={o.order_id}")'>
+                                            @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
                                         تعديل
                                     </button>
 
@@ -220,10 +220,10 @@
 
                 </div>
 
-                
                 <button class="btn-pdf-save" onclick="printOrderCard()">
-    حفظ PDF
+    🖨️ طباعة الفاتورة
 </button>
+                
                 <button class="btn-cancel" @onclick="CloseDetails">
                     إغلاق
                 </button>

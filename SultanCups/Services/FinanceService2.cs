@@ -275,10 +275,10 @@ namespace SultanCups.Services
         }
 
         public async Task<(bool success, string message)> UpdateOrder(
-    Order updated,
-    List<OrderItem> newItems,
-    List<PaymentInput> payments,
-    int adminId)
+       Order updated,
+       List<OrderItem> newItems,
+       List<PaymentInput> payments,
+       int adminId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -294,35 +294,28 @@ namespace SultanCups.Services
                     .Where(i => i.order_id == order.order_id)
                     .ToListAsync();
 
-                // =====================================
-                // 🔹 حساب الإجمالي
-                // =====================================
                 decimal oldTotal = oldItems.Sum(i => i.quantity * i.unit_price);
                 decimal newTotal = newItems.Sum(i => i.quantity * i.unit_price);
 
-                decimal oldNet = oldTotal - order.discount_total;
                 decimal newNet = newTotal - updated.discount_total;
 
-                // =====================================
-                // 🔹 المخزون
-                // =====================================
                 var stock = await _context.product_stock
                     .ToDictionaryAsync(s => s.product_id);
 
-                // رجع القديم
                 foreach (var item in oldItems)
                 {
                     if (stock.ContainsKey(item.product_id))
                         stock[item.product_id].quantity += item.quantity;
                 }
 
+                // ❌ كان ناقص هنا
                 await _context.SaveChangesAsync();
 
-                // حذف القديم
                 _context.order_items.RemoveRange(oldItems);
+
+                // ❌ كان ناقص هنا
                 await _context.SaveChangesAsync();
 
-                // تحقق الجديد
                 foreach (var item in newItems)
                 {
                     if (item.product_id <= 0)
@@ -335,7 +328,6 @@ namespace SultanCups.Services
                         return (false, "المخزون غير كافي");
                 }
 
-                // خصم الجديد
                 foreach (var item in newItems)
                 {
                     stock[item.product_id].quantity -= item.quantity;
@@ -343,7 +335,6 @@ namespace SultanCups.Services
 
                 await _context.SaveChangesAsync();
 
-                // إضافة العناصر
                 foreach (var item in newItems)
                 {
                     _context.order_items.Add(new OrderItem
@@ -357,98 +348,148 @@ namespace SultanCups.Services
 
                 await _context.SaveChangesAsync();
 
-                // =====================================
-                // 🔥 اسم الشخص
-                // =====================================
-                string personName = "";
+                // =========================
+                // 🔥 الشخص (قديم → جديد)
+                // =========================
+                string oldPersonName = "";
+                string newPersonName = "";
+
+                if (order.person_type == "customer")
+                {
+                    oldPersonName = await _context.customers
+                        .Where(c => c.customer_id == order.person_id)
+                        .Select(c => c.name)
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    oldPersonName = await _context.marketers
+                        .Where(m => m.marketer_id == order.person_id)
+                        .Select(m => m.name)
+                        .FirstOrDefaultAsync();
+                }
 
                 if (updated.person_type == "customer")
                 {
-                    personName = await _context.customers
+                    newPersonName = await _context.customers
                         .Where(c => c.customer_id == updated.person_id)
                         .Select(c => c.name)
                         .FirstOrDefaultAsync();
                 }
                 else
                 {
-                    personName = await _context.marketers
+                    newPersonName = await _context.marketers
                         .Where(m => m.marketer_id == updated.person_id)
                         .Select(m => m.name)
                         .FirstOrDefaultAsync();
                 }
+                string personName = order.person_type == "customer"
+                    ? $"{oldPersonName} (زبون)"
+                    : $"{oldPersonName} (مسوق)";
 
-                personName = updated.person_type == "customer"
-                    ? $"{personName} (زبون)"
-                    : $"{personName} (مسوق)";
+                // =========================
+                // 🔥 المنتج (1 أو 2)
+                // =========================
+                var oldProductIds = oldItems.Select(x => x.product_id).Distinct().Take(2).ToList();
+                var newProductIds = newItems.Select(x => x.product_id).Distinct().Take(2).ToList();
 
-                // =====================================
-                // 🔥 جلب الدفعات القديمة
-                // =====================================
+                var oldNames = await _context.products
+                    .Where(p => oldProductIds.Contains(p.product_id))
+                    .Select(p => p.name)
+                    .ToListAsync();
+
+                var newNames = await _context.products
+                    .Where(p => newProductIds.Contains(p.product_id))
+                    .Select(p => p.name)
+                    .ToListAsync();
+
+                string itemName;
+
+                var oldSet = oldProductIds.OrderBy(x => x).ToList();
+                var newSet = newProductIds.OrderBy(x => x).ToList();
+
+                bool sameProducts = oldSet.SequenceEqual(newSet);
+
+                if (sameProducts)
+                {
+                    // نفس المنتجات
+                    itemName = string.Join(" + ", oldNames);
+                }
+                else
+                {
+                    // تغيرت المنتجات
+                    itemName = $"{string.Join(" + ", oldNames)} → {string.Join(" + ", newNames)}";
+                }
+
+                var firstItemId = newProductIds.FirstOrDefault();
+
+                // =========================
+                // 🔥 الدفعات
+                // =========================
                 var oldPayments = await _context.financial_events
-    .Where(x =>
-        x.ref_table == "orders" &&
-        x.ref_id == order.order_id &&
-        x.payment_method != null)
-    .ToListAsync();
+                    .Where(x =>
+                        x.ref_table == "orders" &&
+                        x.ref_id == order.order_id &&
+                        x.payment_method != null)
+                    .ToListAsync();
 
                 var oldPaid = oldPayments.Sum(x =>
-    x.direction == "IN"
-        ? x.amount
-        : -x.amount
-);
+                    x.direction == "IN" ? x.amount : -x.amount);
 
-
-                // 🔥 الجديد (حماية النظام)
                 var newPaymentsList = payments ?? new List<PaymentInput>();
                 var newPaid = newPaymentsList.Sum(p => p.amount);
 
-                // ❌ منع الدفع الزائد
                 if (newPaid > newNet)
                     return (false, "المبلغ المدفوع أكبر من الإجمالي");
 
-                // ❌ منع القيم السالبة
                 if (newPaymentsList.Any(p => p.amount < 0))
                     return (false, "لا يمكن إدخال مبلغ سالب");
 
-                // ❌ منع الدفع بدون خزنة
-                if (updated.cash_box_id == null && newPaid > 0)
-                    return (false, "اختر الخزنة");
 
-                // =====================================
-                // 🔥 معالجة تغيير الخزنة
-                // =====================================
-                HandleCashBoxChange(
-                    order,
-                    updated,
-                    oldPaid,
-                    personName,
-                    adminId
-                );
 
-                // =====================================
-                // 🔥 معالجة فرق الدفعات
-                // =====================================
+                var finalCashBoxId = updated.cash_box_id ?? order.cash_box_id;
+
+                if (newPaid == 0)
+                {
+                    updated.cash_box_id = null;
+                }
+                else
+                {
+                    if (finalCashBoxId == null)
+                        return (false, "اختر الخزنة");
+
+                    updated.cash_box_id = finalCashBoxId.Value;
+                }
+
+                HandleCashBoxChange(order, updated, oldPaid, personName, adminId);
+
                 HandlePaymentDifferences(
-    oldPayments,
-    newPaymentsList,
+                    oldPayments,
+                    newPaymentsList,
                     order,
                     updated,
                     personName,
                     adminId
                 );
 
-                await _context.SaveChangesAsync();
+                // جلب جميع الحركات المالية المرتبطة بالفاتورة
+                var events = await _context.financial_events
+                    .Where(x => x.ref_table == "orders" && x.ref_id == order.order_id)
+                    .ToListAsync();
 
-                // =====================================
-                // 🔥 تحديث الفاتورة
-                // =====================================
-                order.person_id = updated.person_id;
-                order.person_type = updated.person_type;
-                order.discount_total = updated.discount_total;
-                order.cash_box_id = updated.cash_box_id;
-                order.notes = updated.notes;
-                order.commission_per_box = updated.commission_per_box;
-                order.order_date = DateTime.SpecifyKind(updated.order_date, DateTimeKind.Utc);
+                foreach (var ev in events)
+                {
+                    // 1. تحديث المعرف فقط (مثل المشتريات تماماً) لربط الحركة بالشخص الجديد برمجياً
+                    ev.person_id = updated.person_id;
+                    ev.item_id = firstItemId;
+
+                    // 2. ❌ احذف السطور التالية أو عطلها (لا تقم بتحديث الـ Snapshot)
+                    // ev.person_name_snapshot = newPersonName; 
+                    // ev.item_name_snapshot = itemName; 
+
+                    // ملاحظة: بهذا الشكل سيظل ev.person_name_snapshot في قاعدة البيانات 
+                    // يحمل الاسم القديم (مثلاً: محمد حمد السيد) بينما الـ ID يشير إلى (عمار الكريمية)
+                }
 
                 await _context.SaveChangesAsync();
 
@@ -460,64 +501,6 @@ namespace SultanCups.Services
             {
                 await transaction.RollbackAsync();
                 return (false, ex.InnerException?.Message ?? ex.Message);
-            }
-        }
-        private void HandlePaymentDifferences(
-    List<FinancialEvent> oldPayments,
-    List<PaymentInput> newPayments,
-    Order oldOrder,
-    Order updated,
-    string personName,
-    int adminId)
-        {
-            var oldDict = oldPayments
-                .GroupBy(p => p.payment_method ?? "cash")
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.amount));
-
-            var newDict = newPayments
-                .GroupBy(p => p.method ?? "cash")
-                .ToDictionary(g => g.Key, g => g.Sum(x => x.amount));
-
-            var allMethods = oldDict.Keys.Union(newDict.Keys);
-
-            foreach (var method in allMethods)
-            {
-                var oldAmount = oldDict.ContainsKey(method) ? oldDict[method] : 0;
-                var newAmount = newDict.ContainsKey(method) ? newDict[method] : 0;
-
-                var diff = newAmount - oldAmount;
-
-                if (diff == 0) continue;
-
-                var methodName = method switch
-                {
-                    "cash" => "نقدي",
-                    "card" => "بطاقة",
-                    "transfer" => "تحويل",
-                    "check" => "شيك",
-                    _ => method
-                };
-
-                // 🔥 التعديل هنا فقط
-                var cashBoxId = diff > 0
-     ? updated.cash_box_id!.Value
-     : oldOrder.cash_box_id!.Value;   // نقصان → القديمة
-
-                AddFinancialEvent(
-                    "تعديل فاتورة بيع",
-                    diff > 0 ? "IN" : "OUT",
-                    Math.Abs(diff),
-                    cashBoxId,
-                    adminId,
-                    oldOrder.order_id,
-                    "orders",
-                    updated.person_id,
-                    personName,
-                    method,
-                    diff > 0
-                        ? $"زاد {methodName} {diff}"
-                        : $"نقص {methodName} {Math.Abs(diff)}"
-                );
             }
         }
 
@@ -561,6 +544,95 @@ namespace SultanCups.Services
                 null,
                 $"نقل إلى خزنة جديدة"
             );
+        }
+
+        private void HandlePaymentDifferences(
+    List<FinancialEvent> oldPayments,
+    List<PaymentInput> newPayments,
+    Order oldOrder,
+    Order updated,
+    string personName,
+    int adminId)
+        {
+            var oldDict = oldPayments
+                .GroupBy(p => p.payment_method ?? "cash")
+                .ToDictionary(g => g.Key, g => g.Sum(x =>
+                    x.direction == "IN" ? x.amount : -x.amount)); // ✔ هنا التصحيح
+
+            var newDict = newPayments
+                .GroupBy(p => p.method ?? "cash")
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.amount));
+
+            var allMethods = oldDict.Keys.Union(newDict.Keys);
+
+            foreach (var method in allMethods)
+            {
+                var oldAmount = oldDict.ContainsKey(method) ? oldDict[method] : 0;
+                var newAmount = newDict.ContainsKey(method) ? newDict[method] : 0;
+
+                var diff = newAmount - oldAmount;
+
+                if (diff == 0) continue;
+
+                var methodName = method switch
+                {
+                    "cash" => "نقدي",
+                    "card" => "بطاقة",
+                    "transfer" => "تحويل",
+                    "check" => "شيك",
+                    _ => method
+                };
+
+                if (diff > 0)
+                {
+                    // زيادة دفع
+                    AddFinancialEvent(
+                        "تعديل فاتورة بيع",
+                        "IN",
+                        diff,
+                        updated.cash_box_id!.Value,
+                        adminId,
+                        oldOrder.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        method,
+                        $"زاد {methodName} {diff}"
+                    );
+                }
+                else
+                {
+                    // استرجاع
+                    AddFinancialEvent(
+                        "تعديل فاتورة بيع",
+                        "OUT",
+                        Math.Abs(diff),
+                        oldOrder.cash_box_id!.Value,
+                        adminId,
+                        oldOrder.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        method,
+                        $"نقص {methodName} {Math.Abs(diff)}"
+                    );
+                }
+            }
+        }
+
+        public async Task<List<Order>> GetOrdersRaw()
+        {
+            return await _context.orders.ToListAsync();
+        }
+
+        public async Task<List<OrderItem>> GetOrderItems()
+        {
+            return await _context.order_items.ToListAsync();
+        }
+
+        public async Task<List<Product>> GetProducts()
+        {
+            return await _context.products.ToListAsync();
         }
 
         public async Task<List<DebtView>> GetDebts()
@@ -611,6 +683,20 @@ namespace SultanCups.Services
                 .OrderByDescending(x => x.order_id)
                 .ToListAsync();
         }
+
+        //
+
+        public async Task<List<Customer>> GetCustomers()
+        {
+            return await _context.customers.ToListAsync();
+        }
+
+        public async Task<List<Marketer>> GetMarketers()
+        {
+            return await _context.marketers.ToListAsync();
+        }
+
+
 
     }
 }
