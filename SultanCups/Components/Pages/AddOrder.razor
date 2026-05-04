@@ -323,11 +323,18 @@
 {
     <div class="rm-dialog-overlay">
 
-        <div class="rm-dialog-box">
+        <div class="rm-dialog-box pay-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
 
             <div class="rm-dialog-body">
 
-                <h3>طرق الدفع</h3>
+                <div class="money-head">
+                    <h3>طرق الدفع</h3>
+                    <img src="images/Money.jpg" />
+                </div>
 
                 <div class="cashbox-inline">
 
@@ -600,7 +607,7 @@
             return;
         }
 
-        if (TempPayments.Sum(p => p.amount) > 0 && Form.cash_box_id == null)
+        if (TempPayments.Sum(p => p.amount) > 0 && Form.cash_box_id <= 0)
         {
             ToastService.ShowToast("اختر الخزنة أولاً", "error");
             return;
@@ -724,14 +731,9 @@
 
             var realPaid = Payments.Sum(p => p.amount);
 
-            if (realPaid == 0)
-            {
-                Form.cash_box_id = null;
-            }
-
             if (realPaid > 0)
             {
-                if (Form.cash_box_id == null)
+                if (Form.cash_box_id <= 0)
                 {
                     ToastService.ShowToast("اختر الخزنة", "error");
                     return;
@@ -742,6 +744,15 @@
                     ToastService.ShowToast("الخزنة غير صالحة، أعد الاختيار", "error");
                     return;
                 }
+            }
+
+            // 🔥 هنا مباشرة
+            if (realPaid == 0 && Form.cash_box_id <= 0)
+            {
+                var firstCashBox = CashBoxes.FirstOrDefault();
+
+                if (firstCashBox != null)
+                    Form.cash_box_id = firstCashBox.cash_box_id;
             }
 
            

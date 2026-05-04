@@ -150,7 +150,7 @@ namespace SultanCups.Services
                             "فاتورة بيع جديدة",
                             "IN",
                             p.amount,
-                            order.cash_box_id!.Value,
+                            order.cash_box_id,
                             adminId,
                             order.order_id,
                             "orders",
@@ -446,20 +446,12 @@ namespace SultanCups.Services
                     return (false, "لا يمكن إدخال مبلغ سالب");
 
 
+                var finalCashBoxId = updated.cash_box_id;
 
-                var finalCashBoxId = updated.cash_box_id ?? order.cash_box_id;
+                if (finalCashBoxId <= 0)
+                    return (false, "اختر الخزنة");
 
-                if (newPaid == 0)
-                {
-                    updated.cash_box_id = null;
-                }
-                else
-                {
-                    if (finalCashBoxId == null)
-                        return (false, "اختر الخزنة");
-
-                    updated.cash_box_id = finalCashBoxId.Value;
-                }
+                updated.cash_box_id = finalCashBoxId;
 
                 HandleCashBoxChange(order, updated, oldPaid, personName, adminId);
 
@@ -520,7 +512,7 @@ namespace SultanCups.Services
                 "تعديل فاتورة بيع",
                 "OUT",
                 oldPaid,
-                oldOrder.cash_box_id!.Value,
+                oldOrder.cash_box_id,
                 adminId,
                 oldOrder.order_id,
                 "orders",
@@ -535,7 +527,7 @@ namespace SultanCups.Services
                 "تعديل فاتورة بيع",
                 "IN",
                 oldPaid,
-                updated.cash_box_id!.Value,
+                updated.cash_box_id,
                 adminId,
                 oldOrder.order_id,
                 "orders",
@@ -590,7 +582,7 @@ namespace SultanCups.Services
                         "تعديل فاتورة بيع",
                         "IN",
                         diff,
-                        updated.cash_box_id!.Value,
+                        updated.cash_box_id,
                         adminId,
                         oldOrder.order_id,
                         "orders",
@@ -607,7 +599,7 @@ namespace SultanCups.Services
                         "تعديل فاتورة بيع",
                         "OUT",
                         Math.Abs(diff),
-                        oldOrder.cash_box_id!.Value,
+                        oldOrder.cash_box_id,
                         adminId,
                         oldOrder.order_id,
                         "orders",

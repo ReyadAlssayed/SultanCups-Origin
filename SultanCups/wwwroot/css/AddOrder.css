@@ -633,6 +633,125 @@
 .rm-dialog-overlay {
     z-index: 2000;
 }
+
+/* 🎯 إصلاح مودال الدفع فقط */
+.pay-dialog {
+    max-width: 550px;
+}
+
+    /* رجوع الصف طبيعي */
+    .pay-dialog .payment-row1 {
+        display: flex;
+        gap: 10px;
+    }
+
+        /* عرض الحقول */
+        .pay-dialog .payment-row1 select {
+            width: 35%;
+        }
+
+        .pay-dialog .payment-row1 input {
+            width: 45%;
+            text-align: center;
+        }
+
+    /* 🎯 عنوان مودال الدفع */
+    .pay-dialog .money-head {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* في المنتصف */
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+        .pay-dialog .money-head img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .pay-dialog .money-head h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+/* زر إضافة دفعة (أخضر) */
+.pay-add1 {
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #16a34a;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .pay-add1:hover {
+        background: #bbf7d0;
+    }
+
+/* 🎯 مودال صغير أنيق */
+.small-dialog {
+    max-width: 390px; /* أصغر أكثر */
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+    /* العنوان */
+    .small-dialog .money-head h3 {
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    /* الحقل */
+    .small-dialog .pro-input {
+        text-align: center;
+        font-weight: 700;
+        font-size: 13px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    /* الأزرار */
+    .small-dialog .pro-dialog-actions {
+        display: flex;
+        flex-direction: row; /* 👈 جنب بعض */
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    /* زر التأكيد */
+    .small-dialog .pro-save {
+        flex: 1;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 10px;
+        padding: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        height: 36px;
+    }
+
+    /* زر الإلغاء */
+    .small-dialog .pro-cancel {
+        flex: 1;
+        background: #64748b;
+        color: #fff;
+        border-radius: 10px;
+        padding: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        height: 36px;
+    }
+
+
+
+
 @keyframes highlightFade {
     0% {
         background: #86efac;
