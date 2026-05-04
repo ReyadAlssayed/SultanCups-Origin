@@ -157,9 +157,9 @@
     background: linear-gradient(135deg, #f8fafc, #eef2ff);
     border: 1px solid #e2e8f0;
     border-radius: 18px;
-    padding: 20px;
+    padding: 14px;
     display: grid;
-    gap: 12px;
+    gap: 8px;
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.05);
     transition: all 0.25s ease;
     position: relative;
@@ -187,7 +187,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 13px;
     padding: 4px 0;
 }
 
@@ -197,7 +197,7 @@
 
     .sum-line1 strong {
         color: #1d4ed8;
-        font-size: 17px;
+        font-size: 14px;
         font-weight: 900;
         letter-spacing: 0.3px;
     }
@@ -207,7 +207,7 @@
     }
 
 .notes1 {
-    height: 80px;
+    height: 60px;
     border-radius: 14px;
     border: 1px solid #e2e8f0;
     padding: 10px;
@@ -283,16 +283,6 @@
 }
 
 
-.order-table1 td:first-child {
-    width: 30%;
-}
-
-.order-table1 td:nth-child(2),
-.order-table1 td:nth-child(3),
-.order-table1 td:nth-child(4),
-.order-table1 td:nth-child(5) {
-    width: 17.5%;
-}
 
 
 .bottom-actions1 {
@@ -599,7 +589,38 @@
     border-radius: 10px;
 }
 
+.order-table1 td:first-child {
+    width: 40%; /* كان 30% */
+}
 
+.order-table1 td:nth-child(2),
+.order-table1 td:nth-child(3),
+.order-table1 td:nth-child(4) {
+    width: 20%; /* تكبير بسيط */
+}
+
+
+/* 🔥 حالة العمولة */
+.commission-status {
+    font-size: 12px !important;
+    font-weight: 700;
+}
+
+    .commission-status.ok {
+        color: #16a34a !important; /* أخضر */
+    }
+
+    .commission-status.no {
+        color: #dc2626 !important; /* أحمر */
+    }
+
+.order-table1 td {
+    vertical-align: middle !important;
+}
+
+.order-table1 td {
+    height: 60px;
+}
 @keyframes highlightFade {
     0% {
         background: #86efac;

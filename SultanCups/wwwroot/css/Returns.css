@@ -174,17 +174,16 @@
     max-width: 620px;
 }
 
-/* خاص بالفواتير فقط */
 .pro-dialog-box {
     background: #fff;
-    border-radius: 24px;
-    width: 80%;
-    max-width: 1200px;
-    max-height: 90vh;
+    border-radius: 20px;
+    width: 60%;
+    max-width: 800px; /* 🔥 صغّرناه */
+    max-height: 85vh; /* 🔥 خفف الطول */
     display: flex;
     flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border-top: 6px solid #2563eb;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    border-top: 5px solid #2563eb;
 }
 
 .pro-dialog-box {

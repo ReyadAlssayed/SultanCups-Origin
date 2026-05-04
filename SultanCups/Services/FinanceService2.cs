@@ -140,7 +140,7 @@ namespace SultanCups.Services
                 // =========================================
                 // 🔥 تسجيل الحركة المالية
                 // =========================================
-                if (payments != null && payments.Any())
+                if (payments != null && payments.Any() && order.cash_box_id != null)
                 {
                     foreach (var p in payments)
                     {
@@ -150,7 +150,7 @@ namespace SultanCups.Services
                             "فاتورة بيع جديدة",
                             "IN",
                             p.amount,
-                            order.cash_box_id,
+                            order.cash_box_id!.Value,
                             adminId,
                             order.order_id,
                             "orders",
@@ -189,21 +189,27 @@ namespace SultanCups.Services
                 select new OrderView
                 {
                     order_id = o.order_id,
+                    person_id = o.person_id,
                     person_type = o.person_type,
-                    discount_total = o.discount_total,
                     person_name = o.person_type == "customer" ? c.name : m.name,
+
+                    is_special = o.person_type == "marketer" ? m.is_special : false,
 
                     items_count = _context.order_items.Count(i => i.order_id == o.order_id),
 
+                    total_quantity = _context.order_items
+                        .Where(i => i.order_id == o.order_id)
+                        .Sum(i => (int?)i.quantity) ?? 0,
+
                     total = _context.order_items
-    .Where(i => i.order_id == o.order_id)
-    .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
+                        .Where(i => i.order_id == o.order_id)
+                        .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
 
                     net_total =
-    ((_context.order_items
-        .Where(i => i.order_id == o.order_id)
-        .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
-    - o.discount_total),
+                        ((_context.order_items
+                            .Where(i => i.order_id == o.order_id)
+                            .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
+                        - o.discount_total),
 
                     commission_total = o.person_type == "marketer"
                         ? ((_context.order_items
@@ -216,16 +222,19 @@ namespace SultanCups.Services
     _context.financial_events
         .Where(x =>
             x.ref_table == "orders" &&
-            x.ref_id == o.order_id &&
-            x.direction == "IN")
-        .Sum(x => (decimal?)x.amount) ?? 0,   // 🔥 هذا الناقص
+            x.ref_id == o.order_id)
+        .Sum(x =>
+            x.direction == "IN"
+                ? (decimal?)x.amount
+                : -(decimal?)x.amount
+        ) ?? 0,
+
                     order_date = o.order_date
                 };
 
             return await query
-
-    .OrderByDescending(x => x.order_id)
-    .ToListAsync();
+                .OrderByDescending(x => x.order_id)
+                .ToListAsync();
         }
 
         //جلب الخزنات النشطة
@@ -254,10 +263,15 @@ namespace SultanCups.Services
                 .Where(x =>
                     x.ref_table == "orders" &&
                     x.ref_id == orderId &&
-                    x.direction == "IN" &&
-                    x.payment_method != null)
+                    x.payment_method != null) // 🔥 حذف شرط IN
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<Dictionary<int, string>> GetProductsDict()
+        {
+            return await _context.products
+                .ToDictionaryAsync(p => p.product_id, p => p.name);
         }
 
         public async Task<(bool success, string message)> UpdateOrder(
@@ -371,15 +385,34 @@ namespace SultanCups.Services
                 // 🔥 جلب الدفعات القديمة
                 // =====================================
                 var oldPayments = await _context.financial_events
-                    .Where(x =>
-                        x.ref_table == "orders" &&
-                        x.ref_id == order.order_id &&
-                        x.direction == "IN" &&
-                        x.payment_method != null)
-                    .ToListAsync();
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == order.order_id &&
+        x.payment_method != null)
+    .ToListAsync();
 
-                // 🔥 مجموع القديم
-                var oldPaid = oldPayments.Sum(x => x.amount);
+                var oldPaid = oldPayments.Sum(x =>
+    x.direction == "IN"
+        ? x.amount
+        : -x.amount
+);
+
+
+                // 🔥 الجديد (حماية النظام)
+                var newPaymentsList = payments ?? new List<PaymentInput>();
+                var newPaid = newPaymentsList.Sum(p => p.amount);
+
+                // ❌ منع الدفع الزائد
+                if (newPaid > newNet)
+                    return (false, "المبلغ المدفوع أكبر من الإجمالي");
+
+                // ❌ منع القيم السالبة
+                if (newPaymentsList.Any(p => p.amount < 0))
+                    return (false, "لا يمكن إدخال مبلغ سالب");
+
+                // ❌ منع الدفع بدون خزنة
+                if (updated.cash_box_id == null && newPaid > 0)
+                    return (false, "اختر الخزنة");
 
                 // =====================================
                 // 🔥 معالجة تغيير الخزنة
@@ -396,8 +429,8 @@ namespace SultanCups.Services
                 // 🔥 معالجة فرق الدفعات
                 // =====================================
                 HandlePaymentDifferences(
-                    oldPayments,
-                    payments ?? new List<PaymentInput>(),
+    oldPayments,
+    newPaymentsList,
                     order,
                     updated,
                     personName,
@@ -430,12 +463,12 @@ namespace SultanCups.Services
             }
         }
         private void HandlePaymentDifferences(
-            List<FinancialEvent> oldPayments,
-            List<PaymentInput> newPayments,
-            Order oldOrder,
-            Order updated,
-            string personName,
-            int adminId)
+    List<FinancialEvent> oldPayments,
+    List<PaymentInput> newPayments,
+    Order oldOrder,
+    Order updated,
+    string personName,
+    int adminId)
         {
             var oldDict = oldPayments
                 .GroupBy(p => p.payment_method ?? "cash")
@@ -465,11 +498,16 @@ namespace SultanCups.Services
                     _ => method
                 };
 
+                // 🔥 التعديل هنا فقط
+                var cashBoxId = diff > 0
+     ? updated.cash_box_id!.Value
+     : oldOrder.cash_box_id!.Value;   // نقصان → القديمة
+
                 AddFinancialEvent(
                     "تعديل فاتورة بيع",
                     diff > 0 ? "IN" : "OUT",
                     Math.Abs(diff),
-                    updated.cash_box_id,
+                    cashBoxId,
                     adminId,
                     oldOrder.order_id,
                     "orders",
@@ -499,7 +537,7 @@ namespace SultanCups.Services
                 "تعديل فاتورة بيع",
                 "OUT",
                 oldPaid,
-                oldOrder.cash_box_id,
+                oldOrder.cash_box_id!.Value,
                 adminId,
                 oldOrder.order_id,
                 "orders",
@@ -514,7 +552,7 @@ namespace SultanCups.Services
                 "تعديل فاتورة بيع",
                 "IN",
                 oldPaid,
-                updated.cash_box_id,
+                updated.cash_box_id!.Value,
                 adminId,
                 oldOrder.order_id,
                 "orders",
@@ -544,11 +582,14 @@ namespace SultanCups.Services
 
                 // 🔥 المدفوع الحقيقي
                 let paid = _context.financial_events
-                    .Where(x =>
-                        x.ref_table == "orders" &&
-                        x.ref_id == o.order_id &&
-                        x.direction == "IN")
-                    .Sum(x => (decimal?)x.amount) ?? 0
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == o.order_id)
+    .Sum(x =>
+        x.direction == "IN"
+            ? (decimal?)x.amount
+            : -(decimal?)x.amount
+    ) ?? 0
 
                 let remaining = net - paid
 

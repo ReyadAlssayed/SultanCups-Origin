@@ -87,8 +87,7 @@
             <label>التاريخ</label>
             <input type="date"
                    class="pro-input"
-                   value="@Form.order_date.ToString("yyyy-MM-dd")"
-                   readonly />
+                   @bind="Form.order_date" />
         </div>
 
        
@@ -214,16 +213,17 @@
                 <hr />
                 @if (Form.person_type == "marketer")
                 {
-                    var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
-
-                    bool isGreen =
-                        marketer != null &&
-                        (marketer.is_special || PaymentsTotal >= Net);
-
                     <div class="sum-line1">
                         <span>العمولة</span>
-                        <strong class="@(isGreen ? "text-success" : "text-danger")">
+                        <strong class="@(IsCommissionAllowed ? "text-success" : "text-danger")">
                             @Fmt(Commission)
+                        </strong>
+                    </div>
+
+                    <div class="sum-line1 small">
+                        <span>حالة العمولة</span>
+                        <strong class="commission-status @(IsCommissionAllowed ? "ok" : "no")">
+                            @(IsCommissionAllowed ? "✔ تُصرف" : "❌ معلقة حتى السداد")
                         </strong>
                     </div>
                 }
@@ -347,7 +347,7 @@
                         <label class="cash-label">الخزنة</label>
 
                         <select class="pay-input1 small" @bind="Form.cash_box_id">
-                            <option value="0">اختر</option>
+                            <option value="">اختر</option>
                             @foreach (var c in CashBoxes)
                             {
                                 <option value="@c.cash_box_id">@c.name</option>
@@ -430,7 +430,7 @@
 
                 <div class="diff-row">
                     <span>المدفوع الجديد</span>
-                    <b>@NewPaid.ToString("0.00") د.ل</b>
+                    <b>@Math.Abs(DiffPaid).ToString("0.00") د.ل</b>
                 </div>
 
                 <div class="diff-row">
@@ -440,11 +440,15 @@
                         @Math.Abs(DiffPaid).ToString("0.00") د.ل
                     </b>
                 </div>
-
                 <p class="diff-note">
-                    @(DiffPaid > 0
-                                    ? "سيتم تسجيل زيادة في التحصيل"
-                                    : "سيتم تسجيل استرجاع من الفاتورة")
+                    @if (DiffPaid > 0)
+                    {
+                        <span>سيتم إدخال @DiffPaid د.ل إلى الخزنة</span>
+                    }
+                    else
+                    {
+                        <span>سيتم إخراج @Math.Abs(DiffPaid) د.ل من الخزنة</span>
+                    }
                 </p>
 
                 <div class="pro-dialog-actions">
@@ -510,7 +514,7 @@
         {
             Form = new Order
             {
-                order_date = DateTime.UtcNow,
+                order_date = DateTime.UtcNow, // 🔥 الحل
                 person_type = "marketer",
                 person_id = 0,
                 Items = new List<OrderItem>
@@ -565,6 +569,29 @@
         {
             Form.commission_per_box = marketer.commission_per_box;
         }
+
+        // 🔥 هذا السطر المهم
+        StateHasChanged();
+    }
+
+    bool IsCommissionAllowed
+    {
+        get
+        {
+            if (Form.person_type != "marketer")
+                return false;
+
+            var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
+
+            if (marketer == null)
+                return false;
+
+            // 🔥 التعديل هنا
+            if (marketer.is_special)
+                return true;
+
+            return Net > 0 && PaymentsTotal >= Net;
+        }
     }
 
     void OpenPaymentDialog()
@@ -614,7 +641,7 @@
             return;
         }
 
-        if (TempPayments.Sum(p => p.amount) > 0 && Form.cash_box_id == 0)
+        if (TempPayments.Sum(p => p.amount) > 0 && Form.cash_box_id == null)
         {
             ToastService.ShowToast("اختر الخزنة أولاً", "error");
             return;
@@ -689,13 +716,22 @@
             }).ToList()
         };
 
-        var payments = await FinanceService.GetPaymentsByOrder(id);
+        var events = await FinanceService.GetPaymentsByOrder(id);
 
-        Payments = payments.Select(p => new PaymentInput
-        {
-            method = p.payment_method ?? "cash",
-            amount = p.amount
-        }).ToList();
+        // 🔥 نحسب الصافي لكل نوع
+        Payments = events
+            .GroupBy(x => x.payment_method ?? "cash")
+            .Select(g => new PaymentInput
+            {
+                method = g.Key,
+                amount = g.Sum(x =>
+                    x.direction == "IN"
+                        ? x.amount
+                        : -x.amount
+                )
+            })
+            .Where(p => p.amount > 0)
+            .ToList();
 
         // ✅ مهم
         OldPaid = order.paid_amount;
@@ -787,10 +823,24 @@
 
             var realPaid = Payments.Sum(p => p.amount);
 
-            if (realPaid > 0 && Form.cash_box_id == 0)
+            if (realPaid == 0)
             {
-                ToastService.ShowToast("اختر الخزنة", "error");
-                return;
+                Form.cash_box_id = null;
+            }
+
+            if (realPaid > 0)
+            {
+                if (Form.cash_box_id == null)
+                {
+                    ToastService.ShowToast("اختر الخزنة", "error");
+                    return;
+                }
+
+                if (!CashBoxes.Any(c => c.cash_box_id == Form.cash_box_id))
+                {
+                    ToastService.ShowToast("الخزنة غير صالحة، أعد الاختيار", "error");
+                    return;
+                }
             }
 
            
@@ -827,7 +877,7 @@
                 }
             }
 
-            Form.order_date = DateTime.UtcNow;
+
 
             var result = Id.HasValue
                 ? await FinanceService.UpdateOrder(Form, Form.Items, finalPayments, CurrentAdminId)

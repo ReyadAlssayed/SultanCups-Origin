@@ -13,6 +13,9 @@ namespace SultanCups.Models
 
         public int product_id { get; set; }
 
+        [NotMapped]
+        public string? product_name { get; set; }
+
         public int quantity { get; set; }
 
         public decimal unit_price { get; set; }

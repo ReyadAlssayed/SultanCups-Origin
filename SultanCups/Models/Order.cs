@@ -17,7 +17,7 @@ public class Order
     public DateTime order_date { get; set; }
 
     // 🔥 الجديد
-    public int cash_box_id { get; set; } // الخزنة
+    public int? cash_box_id { get; set; } // الخزنة
     public string payment_method { get; set; } = "cash";
 
     // 🔥 الجديد

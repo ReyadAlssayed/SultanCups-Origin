@@ -91,3 +91,109 @@ window.printPurchaseCard = function () {
         win.close();
     }, 700);
 };
+
+
+window.printOrderCard = function () {
+
+    const content = document.querySelector('.sal-dialog-box').outerHTML;
+
+    const css = Array.from(document.querySelectorAll('link[rel="stylesheet"],style'))
+        .map(x => x.outerHTML)
+        .join('');
+
+    const win = window.open('', '', 'width=900,height=700');
+
+    win.document.write(`
+        <html dir="rtl">
+        <head>
+            ${css}
+            <style>
+                @page{ margin:10mm; }
+
+                body{ background:#fff; }
+
+                .sal-dialog-box{
+                    width:700px !important;
+                    margin:auto !important;
+                    box-shadow:none !important;
+                }
+
+                .pro-dialog-actions{
+                    display:none !important;
+                }
+
+                table{
+                    width:100%;
+                    border-collapse:collapse;
+                    margin-top:15px;
+                }
+
+                th, td{
+                    border:1px solid #ddd;
+                    padding:8px;
+                    text-align:center;
+                }
+
+                th{
+                    background:#f3f4f6;
+                    font-weight:bold;
+                }
+
+                img{
+    object-fit:contain;
+}
+            </style>
+        </head>
+
+        <body>
+           <div style="
+    width:700px;
+    margin:0 auto 20px auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+">
+
+    <img src="/images/logo2.jpg"
+         style="width:65px; height:auto;" />
+
+    <div style="text-align:right; line-height:1.3;">
+        <div style="font-size:18px; font-weight:700;">
+            مصنع السلطان للأكواب الورقية
+        </div>
+
+        <div style="font-size:12px; color:#444;">
+            أبناء السيد
+        </div>
+    </div>
+
+</div>
+            ${content}
+
+<div style="
+    width:700px;
+    margin:25px auto 0 auto;
+    text-align:center;
+    font-size:13px;
+    border-top:1px solid #000;
+    padding-top:8px;
+">
+
+    <div style="font-weight:600;">
+        صناعة نفخر بها
+    </div>
+
+</div>
+        </body>
+        </html>
+    `);
+
+    win.document.close();
+    win.focus();
+
+    setTimeout(() => {
+        win.print();
+        win.close();
+    }, 700);
+};
