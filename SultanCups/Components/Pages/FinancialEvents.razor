@@ -230,58 +230,41 @@
                     <div class="row">
                         <span>الشخص المرتبط بالعملية</span>
                         <span>
-                            @(string.IsNullOrWhiteSpace(SelectedItem.person_name_snapshot)
-                                ? "-"
-                                : SelectedItem.person_name_snapshot)
+                            @{
+                                var oldP = SelectedItem.person_name_snapshot;
+                                var newP = GetCurrentPersonName(SelectedItem);
+                            }
+
+                            @(
+    string.IsNullOrWhiteSpace(oldP)
+        ? (newP ?? "-")
+        : (string.IsNullOrWhiteSpace(newP) || oldP.Trim() == newP.Trim()
+            ? oldP
+            : $"{oldP} ← {newP}")
+)
                         </span>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(SelectedItem.person_name_snapshot))
-                    {
-                        var newPerson = GetCurrentPersonName(SelectedItem);
-
-                        if (!string.IsNullOrWhiteSpace(newPerson) &&
-                            newPerson != SelectedItem.person_name_snapshot)
-                        {
-                            <div class="row">
-                                <span>تعديل الاسم</span>
-                                <span class="change-inline">
-                                    <b>@SelectedItem.person_name_snapshot</b>
-                                    <span class="arrow-change">←</span>
-                                    <b>@newPerson</b>
-                                </span>
-                            </div>
-                        }
-                    }
-
+                   
                     <div class="row">
                         <span>العنصر المرتبط بالعملية</span>
                         <span>
-                            @(string.IsNullOrWhiteSpace(SelectedItem.item_name_snapshot)
-                                ? "-"
-                                : SelectedItem.item_name_snapshot)
+                            @{
+                                var oldI = SelectedItem.item_name_snapshot;
+                                var newI = GetCurrentItemName(SelectedItem);
+                            }
+
+                            @(
+    string.IsNullOrWhiteSpace(oldI)
+        ? (newI ?? "-")
+        : (string.IsNullOrWhiteSpace(newI) || oldI.Trim() == newI.Trim()
+            ? oldI
+            : $"{oldI} ← {newI}")
+)
                         </span>
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(SelectedItem.item_name_snapshot))
-                    {
-                        var newItem = GetCurrentItemName(SelectedItem);
-
-                        if (!string.IsNullOrWhiteSpace(newItem) &&
-                            newItem != SelectedItem.item_name_snapshot)
-                        {
-                            <div class="row">
-                                <span>تعديل العنصر</span>
-                                <span class="change-inline">
-                                    <b>@SelectedItem.item_name_snapshot</b>
-                                    <span class="arrow-change">←</span>
-                                    <b>@newItem</b>
-                                </span>
-                            </div>
-                        }
-                    }
-
-
+                  
                     <div class="row">
                         <span>التاريخ</span>
                         <span class="dt-box">
@@ -409,18 +392,25 @@
             return Suppliers.FirstOrDefault(x => x.supplier_id == pur?.supplier_id)?.name;
         }
 
-        // 🔥 هذا هو التعديل
         if (item.ref_table == "orders")
         {
             var order = Orders.FirstOrDefault(x => x.order_id == item.ref_id);
 
             if (order == null) return null;
 
-            if (order.person_type == "customer")
-                return Customers.FirstOrDefault(c => c.customer_id == order.person_id)?.name;
+            string? name = null;
 
-            if (order.person_type == "marketer")
-                return Marketers.FirstOrDefault(m => m.marketer_id == order.person_id)?.name;
+            if (order.person_type == "customer")
+                name = Customers.FirstOrDefault(c => c.customer_id == order.person_id)?.name;
+
+            else if (order.person_type == "marketer")
+                name = Marketers.FirstOrDefault(m => m.marketer_id == order.person_id)?.name;
+
+            if (string.IsNullOrWhiteSpace(name)) return null;
+
+            return order.person_type == "customer"
+                ? $"{name} (زبون)"
+                : $"{name} (مسوق)";
         }
 
         return null;
@@ -442,8 +432,12 @@
             var firstItem = OrderItems
                 .FirstOrDefault(x => x.order_id == item.ref_id);
 
-            return Products
-                .FirstOrDefault(p => p.product_id == firstItem?.product_id)?.name;
+            var productName = Products
+     .FirstOrDefault(p => p.product_id == firstItem?.product_id)?.name;
+
+            return string.IsNullOrWhiteSpace(productName)
+                ? null
+                : $"{productName} (منتج)";
         }
 
         return null;

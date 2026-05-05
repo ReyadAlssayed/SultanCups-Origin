@@ -285,10 +285,19 @@ namespace SultanCups.Services
             try
             {
                 var order = await _context.orders
-                    .FirstOrDefaultAsync(x => x.order_id == updated.order_id);
+     .FirstOrDefaultAsync(x => x.order_id == updated.order_id);
 
                 if (order == null)
                     return (false, "الفاتورة غير موجودة");
+
+                // ✔ بعد التحقق فقط
+                order.person_id = updated.person_id;
+                order.person_type = updated.person_type;
+                order.discount_total = updated.discount_total;
+                order.cash_box_id = updated.cash_box_id;
+                order.notes = updated.notes;
+                order.commission_per_box = updated.commission_per_box;
+                order.order_date = updated.order_date; 
 
                 var oldItems = await _context.order_items
                     .Where(i => i.order_id == order.order_id)
@@ -383,9 +392,33 @@ namespace SultanCups.Services
                         .Select(m => m.name)
                         .FirstOrDefaultAsync();
                 }
-                string personName = order.person_type == "customer"
-                    ? $"{oldPersonName} (زبون)"
-                    : $"{oldPersonName} (مسوق)";
+                string oldLabel = order.person_type == "customer"
+      ? $"{oldPersonName} (زبون)"
+      : $"{oldPersonName} (مسوق)";
+
+                string newLabel = updated.person_type == "customer"
+                    ? $"{newPersonName} (زبون)"
+                    : $"{newPersonName} (مسوق)";
+
+                // 🔥 جلب snapshot من أول حركة
+                var firstEvent = await _context.financial_events
+                    .Where(x => x.ref_table == "orders" && x.ref_id == order.order_id)
+                    .OrderBy(x => x.event_id)
+                    .FirstOrDefaultAsync();
+
+                string snapshotName = firstEvent?.person_name_snapshot ?? oldLabel;
+
+                // 🔥 المقارنة الصحيحة
+                bool sameAsSnapshot =
+     snapshotName?.Trim() == newLabel?.Trim();
+
+                // ✔ اسم عادي (بدون سهم)
+                string personName = newLabel;
+
+                // ✔ اسم فيه سهم (فقط للتعديل الحقيقي)
+                string personChangeLabel = sameAsSnapshot
+                    ? newLabel
+                    : $"{snapshotName} ← {newLabel}";
 
                 // =========================
                 // 🔥 المنتج (1 أو 2)
@@ -456,13 +489,13 @@ namespace SultanCups.Services
                 HandleCashBoxChange(order, updated, oldPaid, personName, adminId);
 
                 HandlePaymentDifferences(
-                    oldPayments,
-                    newPaymentsList,
-                    order,
-                    updated,
-                    personName,
-                    adminId
-                );
+    oldPayments,
+    newPaymentsList,
+    order,
+    updated,
+    personChangeLabel,
+    adminId
+);
 
                 // جلب جميع الحركات المالية المرتبطة بالفاتورة
                 var events = await _context.financial_events
@@ -475,12 +508,6 @@ namespace SultanCups.Services
                     ev.person_id = updated.person_id;
                     ev.item_id = firstItemId;
 
-                    // 2. ❌ احذف السطور التالية أو عطلها (لا تقم بتحديث الـ Snapshot)
-                    // ev.person_name_snapshot = newPersonName; 
-                    // ev.item_name_snapshot = itemName; 
-
-                    // ملاحظة: بهذا الشكل سيظل ev.person_name_snapshot في قاعدة البيانات 
-                    // يحمل الاسم القديم (مثلاً: محمد حمد السيد) بينما الـ ID يشير إلى (عمار الكريمية)
                 }
 
                 await _context.SaveChangesAsync();
