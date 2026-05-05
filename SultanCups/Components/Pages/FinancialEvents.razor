@@ -1,7 +1,9 @@
 ﻿@page "/FinancialEvents"
 @layout Layout.MainLayout
 @using SultanCups.Models
+
 @inject SultanCups.Services.FinanceService FinanceService
+@inject SultanCups.Services.FinanceService2 FinanceService2
 
 @using ClosedXML.Excel
 @using ClosedXML.Excel.Drawings
@@ -358,18 +360,33 @@
 
     List<Purchase> Purchases = new();
 
+    List<Order> Orders = new();
+    List<OrderItem> OrderItems = new();
+    List<Product> Products = new();
+
+    List<Customer> Customers = new();
+    List<Marketer> Marketers = new();
+
     bool IsExporting = false;
 
 
-    protected override async Task OnInitializedAsync()
-    {
+   protected override async Task OnInitializedAsync()
+{
         Logs = await FinanceService.GetFinancialEvents();
+
+        Orders = await FinanceService2.GetOrdersRaw();
+        OrderItems = await FinanceService2.GetOrderItems();
+        Products = await FinanceService2.GetProducts();
+
         Employees = await FinanceService.GetActiveEmployees();
         Salaries = await FinanceService.GetSalaries();
         OtherPurchases = await FinanceService.GetOtherPurchases();
         Suppliers = await FinanceService.GetSuppliers();
         RawMaterials = await FinanceService.GetRawMaterials();
         Purchases = await FinanceService.GetPurchases();
+
+        Customers = await FinanceService2.GetCustomers();
+        Marketers = await FinanceService2.GetMarketers();
     }
 
     void OpenDetails(FinancialEvent item)
@@ -392,6 +409,20 @@
             return Suppliers.FirstOrDefault(x => x.supplier_id == pur?.supplier_id)?.name;
         }
 
+        // 🔥 هذا هو التعديل
+        if (item.ref_table == "orders")
+        {
+            var order = Orders.FirstOrDefault(x => x.order_id == item.ref_id);
+
+            if (order == null) return null;
+
+            if (order.person_type == "customer")
+                return Customers.FirstOrDefault(c => c.customer_id == order.person_id)?.name;
+
+            if (order.person_type == "marketer")
+                return Marketers.FirstOrDefault(m => m.marketer_id == order.person_id)?.name;
+        }
+
         return null;
     }
 
@@ -403,8 +434,21 @@
             return RawMaterials.FirstOrDefault(x => x.raw_material_id == pur?.raw_material_id)?.name;
         }
 
+        // 🔥 هذا هو التعديل
+        if (item.ref_table == "orders")
+        {
+            var order = Orders.FirstOrDefault(x => x.order_id == item.ref_id);
+
+            var firstItem = OrderItems
+                .FirstOrDefault(x => x.order_id == item.ref_id);
+
+            return Products
+                .FirstOrDefault(p => p.product_id == firstItem?.product_id)?.name;
+        }
+
         return null;
     }
+
 
     string GetPaymentName(string method)
     {
@@ -521,6 +565,8 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+
+
 
     string GetPersonDisplay(FinancialEvent item)
     {

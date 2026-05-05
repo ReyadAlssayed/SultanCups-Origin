@@ -174,31 +174,16 @@
     max-width: 620px;
 }
 
-/* خاص بالفواتير فقط */
 .pro-dialog-box {
     background: #fff;
     border-radius: 24px;
-    width: 80%;
-    max-width: 1200px;
+    width: 50%;
+    max-width: 800px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border-top: 6px solid #2563eb;
 }
-
-.pro-dialog-box {
-    background: #fff;
-    border-radius: 24px;
-    width: 80%;
-    max-width: 1200px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border-top: 6px solid #2563eb; /* 🔥 الخط الأزرق العلوي */
-}
-
 
 .inv-dialog-top-image, .pro-dialog-top-image, .sp-dialog-top-image {
     width: 100%;

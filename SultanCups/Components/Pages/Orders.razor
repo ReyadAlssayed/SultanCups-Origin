@@ -18,7 +18,7 @@
         <button class="pro-btn-add" @onclick='() => Nav.NavigateTo("/orders/add")'>
             إضافة فاتورة
         </button>
-        <h2 class="pro-title">الفواتير</h2>
+        <h2 class="pro-title">فواتير المبيعات</h2>
         <div></div>
     </div>
 
@@ -79,18 +79,20 @@
                                     
         </td>
 
-        <td>@o.order_date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    @o.order_date.ToString("yyyy-MM-dd")
+                                </td>
 
         <td>
             <button class="btn-info" @onclick="() => OpenDetails(o)">تفاصيل</button>
 
                                     <button class="btn-edit"
-                                            @onclick='() => Nav.NavigateTo($"/orders/add?id={o.order_id}")'>
+                                            @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
                                         تعديل
                                     </button>
 
             <button class="btn-delete">تعطيل</button>
-                                    <button class="btn-print">طباعة</button>
+                                   
         </td>
 
     </tr>
@@ -118,13 +120,23 @@
 
                     <div class="row">
                         <span>رقم الفاتورة</span>
-                        <span>@SelectedOrder.order_id</span>
+                        <span>INV-@SelectedOrder.order_id.ToString("D4")</span>
                     </div>
 
                     <div class="row">
                         <span>الاسم</span>
                         <span>@SelectedOrder.person_name</span>
                     </div>
+
+                    <div class="row">
+    <span>عدد الأصناف</span>
+    <span>@SelectedOrder.items_count</span>
+</div>
+
+<div class="row">
+    <span>إجمالي الكمية</span>
+    <span>@SelectedOrder.total_quantity صندوق</span>
+</div>
 
                     <div class="row">
                         <span>الإجمالي</span>
@@ -166,36 +178,83 @@
 </span>
 </div>
 
-                    <div class="row">
-                        <span>العمولة</span>
-                        <span>@Fmt(SelectedOrder.commission_total)</span>
-                    </div>
+                   @if (SelectedOrder.person_type == "marketer")
+{
+    <div class="row">
+        <span>العمولة</span>
+        <span>@Fmt(SelectedOrder.commission_total)</span>
+    </div>
 
-                    <div class="row">
-    <span>طريقة الدفع</span>
-    <span>
-    @(PaymentMethods.Any()
-        ? (PaymentMethods.Count == 1
-            ? PaymentMethods.First()
-            : string.Join(" | ", PaymentMethods))
-        : "-")
-</span>
-</div>
+    bool canPayCommission =
+        SelectedOrder.is_special ||
+        SelectedOrder.paid_amount >= SelectedOrder.net_total;
 
+    <div class="row">
+        <span>حالة العمولة</span>
+        <span class="@(canPayCommission ? "status-green" : "status-red")">
+            @(canPayCommission ? "تُصرف" : "معلقة")
+        </span>
+    </div>
+}
+
+                  @if (PaymentMethods.Any())
+{
+    <div class="row">
+        <span>طريقة الدفع</span>
+        <span>
+            @(PaymentMethods.Count == 1
+                ? PaymentMethods.First()
+                : string.Join(" | ", PaymentMethods))
+        </span>
+    </div>
+}
                     <div class="row">
                         <span>التاريخ</span>
-                        <span>@SelectedOrder.order_date.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                       <span class="dt-box">
+    <span class="dt-day">
+        @SelectedOrder.order_date.ToLocalTime().ToString("yyyy-MM-dd")
+    </span>
+
+</span>
                     </div>
 
                 </div>
 
+                <button class="btn-pdf-save" onclick="printOrderCard()">
+    🖨️ طباعة الفاتورة
+</button>
                 
-
                 <button class="btn-cancel" @onclick="CloseDetails">
                     إغلاق
                 </button>
 
             </div>
+
+            @if (SelectedItems.Any())
+{
+    <table style="margin-top:20px;">
+        <thead>
+            <tr>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>الإجمالي</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in SelectedItems)
+            {
+                <tr>
+                    <td>@item.product_name</td>
+                    <td>@item.quantity</td>
+                    <td>@Fmt(item.unit_price)</td>
+                    <td>@Fmt(item.total)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
         </div>
 
@@ -246,6 +305,12 @@
     };
 }
 
+[Inject] IJSRuntime JS { get; set; } = default!;
+
+async Task PrintInvoice()
+{
+    await JS.InvokeVoidAsync("printOrderCard");
+}
     async Task ClearHighlight()
     {
         await Task.Delay(3000); // 3 ثواني
@@ -259,7 +324,17 @@ async Task OpenDetails(OrderView o)
     if (order == null) return;
 
     SelectedOrder = o;
-    SelectedItems = order.Items;
+   var products = await FinanceService.GetProductsDict();
+
+SelectedItems = order.Items;
+
+foreach (var item in SelectedItems)
+{
+    if (products.ContainsKey(item.product_id))
+    {
+        item.product_name = products[item.product_id];
+    }
+}
 
     // 🔥 جلب طرق الدفع
     var payments = await FinanceService.GetPaymentsByOrder(o.order_id);
@@ -279,6 +354,7 @@ string GetStatusClass(OrderView o)
     if (o.paid_amount < o.net_total) return "status-orange";
     return "status-green";
 }
+
 
 void CloseDetails()
 {

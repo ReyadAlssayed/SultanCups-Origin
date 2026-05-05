@@ -157,9 +157,9 @@
     background: linear-gradient(135deg, #f8fafc, #eef2ff);
     border: 1px solid #e2e8f0;
     border-radius: 18px;
-    padding: 20px;
+    padding: 14px;
     display: grid;
-    gap: 12px;
+    gap: 8px;
     box-shadow: 0 4px 10px rgba(37, 99, 235, 0.05);
     transition: all 0.25s ease;
     position: relative;
@@ -187,7 +187,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 14px;
+    font-size: 13px;
     padding: 4px 0;
 }
 
@@ -197,7 +197,7 @@
 
     .sum-line1 strong {
         color: #1d4ed8;
-        font-size: 17px;
+        font-size: 14px;
         font-weight: 900;
         letter-spacing: 0.3px;
     }
@@ -207,7 +207,7 @@
     }
 
 .notes1 {
-    height: 80px;
+    height: 60px;
     border-radius: 14px;
     border: 1px solid #e2e8f0;
     padding: 10px;
@@ -283,16 +283,6 @@
 }
 
 
-.order-table1 td:first-child {
-    width: 30%;
-}
-
-.order-table1 td:nth-child(2),
-.order-table1 td:nth-child(3),
-.order-table1 td:nth-child(4),
-.order-table1 td:nth-child(5) {
-    width: 17.5%;
-}
 
 
 .bottom-actions1 {
@@ -423,9 +413,13 @@
     }
 
     .payment-row1 button {
-        width: 20%;
+        width: auto;
+        min-width: 90px;
     }
 
+.payment-row1 {
+    flex-wrap: nowrap;
+}
 
 .pay-input1 {
     width: 100%;
@@ -598,6 +592,164 @@
     height: 44px;
     border-radius: 10px;
 }
+
+.order-table1 td:first-child {
+    width: 40%; /* كان 30% */
+}
+
+.order-table1 td:nth-child(2),
+.order-table1 td:nth-child(3),
+.order-table1 td:nth-child(4) {
+    width: 20%; /* تكبير بسيط */
+}
+
+
+/* 🔥 حالة العمولة */
+.commission-status {
+    font-size: 12px !important;
+    font-weight: 700;
+}
+
+    .commission-status.ok {
+        color: #16a34a !important; /* أخضر */
+    }
+
+    .commission-status.no {
+        color: #dc2626 !important; /* أحمر */
+    }
+
+.order-table1 td {
+    vertical-align: middle !important;
+}
+
+.order-table1 td {
+    height: 60px;
+}
+
+.pro-dialog-overlay {
+    z-index: 3000;
+}
+
+.rm-dialog-overlay {
+    z-index: 2000;
+}
+
+/* 🎯 إصلاح مودال الدفع فقط */
+.pay-dialog {
+    max-width: 550px;
+}
+
+    /* رجوع الصف طبيعي */
+    .pay-dialog .payment-row1 {
+        display: flex;
+        gap: 10px;
+    }
+
+        /* عرض الحقول */
+        .pay-dialog .payment-row1 select {
+            width: 35%;
+        }
+
+        .pay-dialog .payment-row1 input {
+            width: 45%;
+            text-align: center;
+        }
+
+    /* 🎯 عنوان مودال الدفع */
+    .pay-dialog .money-head {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* في المنتصف */
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+        .pay-dialog .money-head img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .pay-dialog .money-head h3 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+/* زر إضافة دفعة (أخضر) */
+.pay-add1 {
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #16a34a;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .pay-add1:hover {
+        background: #bbf7d0;
+    }
+
+/* 🎯 مودال صغير أنيق */
+.small-dialog {
+    max-width: 390px; /* أصغر أكثر */
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+    /* العنوان */
+    .small-dialog .money-head h3 {
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    /* الحقل */
+    .small-dialog .pro-input {
+        text-align: center;
+        font-weight: 700;
+        font-size: 13px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    /* الأزرار */
+    .small-dialog .pro-dialog-actions {
+        display: flex;
+        flex-direction: row; /* 👈 جنب بعض */
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    /* زر التأكيد */
+    .small-dialog .pro-save {
+        flex: 1;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 10px;
+        padding: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        height: 36px;
+    }
+
+    /* زر الإلغاء */
+    .small-dialog .pro-cancel {
+        flex: 1;
+        background: #64748b;
+        color: #fff;
+        border-radius: 10px;
+        padding: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        height: 36px;
+    }
+
+
 
 
 @keyframes highlightFade {

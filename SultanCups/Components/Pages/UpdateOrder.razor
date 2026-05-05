@@ -1,0 +1,802 @@
+﻿@page "/orders/edit/{id:int}"
+
+@layout Layout.MainLayout
+@using SultanCups.Models
+@using SultanCups.Services
+@inject UserSession Session
+@inject FinanceService2 FinanceService
+@inject InventoryService InventoryService
+@inject SalesService SalesService
+@inject ToastService ToastService
+@inject NavigationManager Nav
+
+<div class="pro-page">
+
+
+    <div class="top-bar">
+        <button class="btn-back" @onclick='() => Nav.NavigateTo("/orders")'>
+            ← رجوع
+        </button>
+
+        <h3>تعديل فاتورة</h3>
+
+        <div style="background:#fff3cd; padding:10px; margin-bottom:10px; border-radius:8px; font-size:14px">
+
+            <b>تشخيص الخزنة:</b><br />
+
+            cash_box_id: @Form.cash_box_id <br />
+
+            موجود في القائمة:
+            @(CashBoxes.Any(c => c.cash_box_id == Form.cash_box_id)) <br />
+
+            عدد الخزنات: @CashBoxes.Count <br />
+
+            قائمة الخزنات:
+            @string.Join(" | ", CashBoxes.Select(c => $"{c.cash_box_id}:{c.name}"))
+
+        </div>
+    </div>
+
+    <div class="pro-fields-grid pro-animate">
+
+        <div>
+            <label>نوع الشخص</label>
+            <select class="pro-input" @bind="Form.person_type">
+                <option value="customer">زبون</option>
+                <option value="marketer">مسوق</option>
+            </select>
+        </div>
+
+        @if (Form.person_type == "customer")
+        {
+            <div>
+                <label>الزبون</label>
+                <select class="pro-input" @bind="Form.person_id">
+                    <option value="0">اختر زبون</option>
+                    @foreach (var c in Customers)
+                    {
+                        <option value="@c.customer_id">@c.name</option>
+                    }
+                </select>
+            </div>
+        }
+
+        @if (Form.person_type == "marketer")
+        {
+            <div>
+                <label>المسوق</label>
+                <select class="pro-input" value="@Form.person_id" @onchange="OnMarketerChanged">
+                    <option value="0">اختر مسوق</option>
+                    @foreach (var m in Marketers)
+                    {
+                        <option value="@m.marketer_id">@m.name</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label>عمولة الصندوق</label>
+                <input class="pro-input" @bind="Form.commission_per_box" />
+            </div>
+        }
+
+        <div>
+            <label>التاريخ</label>
+            <input type="date" class="pro-input" @bind="Form.order_date" />
+        </div>
+
+        <div class="pay-btn-wrap">
+            <button class="btn-info fixed-btn" @onclick="OpenPaymentDialog">
+                💳 دفع
+            </button>
+        </div>
+
+    </div>
+
+    <hr />
+
+    <div class="order-layout1">
+
+        <div class="order-right1">
+
+            <h4>الأصناف</h4>
+
+            <table class="order-table1">
+                <thead>
+                    <tr>
+                        <th>المنتج</th>
+                        <th>السعر</th>
+                        <th>الكمية</th>
+                        <th>الإجمالي</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Form.Items)
+                    {
+                        <tr>
+                            <td>
+                                <select class="pro-input" value="@item.product_id"
+                                        @onchange="e => OnProductChanged(e, item)">
+                                    <option value="0">اختر</option>
+                                    @foreach (var p in Products)
+                                    {
+                                        <option value="@p.product_id">@p.name</option>
+                                    }
+                                </select>
+                            </td>
+
+                            <td><input class="pro-input" @bind="item.unit_price" /></td>
+                            <td><input class="pro-input" @bind="item.quantity" /></td>
+
+                            <td>@(item.quantity * item.unit_price)</td>
+
+                            <td>
+                                @if (Form.Items.Count > 1)
+                                {
+                                    <button @onclick="() => RemoveItem(item)">✕</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <button class="pro-btn-add small" @onclick="AddItem">إضافة صنف</button>
+
+            <div class="bottom-actions1">
+                <button class="pro-save" @onclick="SaveOrder">تحديث الفاتورة</button>
+            </div>
+
+        </div>
+
+        <div class="order-left1">
+
+            <div class="summary-box1">
+
+                <label>الخصم <span class="muted1">(اختياري)</span></label>
+                <input type="number"
+                       class="pro-input"
+                       @bind-value="Form.discount_total"
+                       @bind-value:event="oninput" />
+
+                <hr />
+
+                @if (Form.person_type == "marketer")
+                {
+                    <div class="sum-line1">
+                        <span>العمولة</span>
+                        <strong class="@(IsCommissionAllowed ? "text-success" : "text-danger")">
+                            @Fmt(Commission)
+                        </strong>
+                    </div>
+
+                    <div class="sum-line1 small">
+                        <span>حالة العمولة</span>
+                        <strong class="commission-status @(IsCommissionAllowed ? "ok" : "no")">
+                            @(IsCommissionAllowed ? "✔ تُصرف" : "❌ معلقة")
+                        </strong>
+                    </div>
+                }
+
+                @{
+                    var remaining = Net - PaymentsTotal;
+                    bool isPaid = Net > 0 && remaining <= 0;
+                    bool isPartial = PaymentsTotal > 0 && remaining > 0;
+                }
+
+                <div class="sum-line1 main">
+                    <span>الإجمالي</span>
+                    <strong>@Fmt(Net)</strong>
+                </div>
+
+                <div class="sum-line1 small">
+                    <span>المدفوع</span>
+                    <strong class="text-success">@Fmt(PaymentsTotal)</strong>
+                </div>
+
+                <div class="sum-line1 small">
+                    <span>المتبقي</span>
+                    <strong class="@(remaining > 0 ? "text-danger" : "text-success")">
+                        @Fmt(remaining)
+                    </strong>
+                </div>
+
+                <div class="sum-line1 status">
+                    <span>الحالة</span>
+
+                    @if (Net == 0)
+                    {
+                        <div class="status-bar neutral">—</div>
+                    }
+                    else if (isPaid)
+                    {
+                        <div class="status-bar paid">✔ تم السداد</div>
+                    }
+                    else if (isPartial)
+                    {
+                        <div class="status-bar partial">◐ خالص جزئي</div>
+                    }
+                    else
+                    {
+                        <div class="status-bar not-paid">⚠ غير خالص</div>
+                    }
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+@if (ShowPaymentDialog)
+{
+    <div class="rm-dialog-overlay">
+        <div class="rm-dialog-box pay-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="rm-dialog-body">
+
+                <div class="money-head">
+                    <h3>طرق الدفع</h3>
+                    <img src="images/Money.jpg" />
+                </div>
+
+                <div class="cashbox-inline">
+
+                    <label class="cash-label">الخزنة</label>
+
+                    <select class="pay-input1 small"
+                            @bind="Form.cash_box_id">
+
+                        <option value="">اختر</option>
+
+                        @foreach (var c in CashBoxes)
+                        {
+                            <option value="@c.cash_box_id">@c.name</option>
+                        }
+                    </select>
+
+                </div>
+
+                <div class="payments-box">
+
+                    <div class="payment-header1">
+                        <span>النوع</span>
+                        <span>المبلغ</span>
+                        <span></span>
+                    </div>
+
+                    @foreach (var p in TempPayments)
+                    {
+                        <div class="payment-row1">
+
+                            <select class="pay-input1" value="@p.method"
+                                    @onchange="e => OnPaymentMethodChanged(e, p)">
+
+                                @foreach (var m in new[] { "cash", "card", "transfer", "check" })
+                                {
+                                    var used = TempPayments.Any(x => x.method == m && x != p);
+
+                                    if (!used || m == p.method)
+                                    {
+                                        <option value="@m">@GetMethodName(m)</option>
+                                    }
+                                }
+
+                            </select>
+
+                            <input class="pay-input1" value="@p.amount" readonly />
+                            <button class="pay-add1"
+                                    @onclick="() => OpenAddDialog(p.method)">
+                                إضافة دفعة
+                            </button>
+
+                            <button class="pay-delete1"
+                                    @onclick="() => OpenRefundDialog(p.method)">
+                                استرجاع
+                            </button>
+
+                        </div>
+                    }
+
+                    <button class="rm-add-btn small" @onclick="AddTempPayment">
+                        إضافة دفعة من نوع آخر
+                    </button>
+
+                </div>
+
+                <div class="pay-actions1">
+                    <button class="pay-save1" @onclick="ClosePaymentDialog">تم</button>
+                    <button class="pay-cancel1" @onclick="CancelPaymentDialog">إلغاء</button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+}
+
+@if (ShowAddDialog)
+{
+    <div class="pro-dialog-overlay">
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <img src="images/Money.jpg" />
+                    <h3>إضافة دفعة</h3>
+                </div>
+
+                <input type="number" class="pro-input" @bind="AddAmount" />
+
+                <div class="pro-dialog-actions">
+                    <button class="pro-save" @onclick="ConfirmAdd">حفظ</button>
+                    <button class="pro-cancel" @onclick="() => ShowAddDialog = false">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ShowRefundDialog)
+{
+    <div class="pro-dialog-overlay">
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <img src="images/Money.jpg" />
+                    <h3>استرجاع مبلغ</h3>
+                </div>
+
+                <input type="number" class="pro-input" @bind="RefundAmount" />
+
+                <div class="pro-dialog-actions">
+                    <button class="pro-save" @onclick="ConfirmRefund">تأكيد</button>
+                    <button class="pro-cancel" @onclick="() => ShowRefundDialog = false">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+
+[Parameter] public int id { get; set; }
+
+    List<Product> Products = new();
+    List<Customer> Customers = new();
+    List<Marketer> Marketers = new();
+    List<CashBox> CashBoxes = new();
+
+    Order Form = new();
+
+    List<PaymentInput> Payments = new();
+    List<PaymentInput> TempPayments = new();
+
+    bool ShowPaymentDialog;
+
+    int CurrentAdminId => Session.AdminId;
+
+    bool ShowAddDialog = false;
+    bool ShowRefundDialog = false;
+
+    string CurrentMethod = "";
+
+    decimal AddAmount;
+    decimal RefundAmount;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await InventoryService.GetProducts();
+        Customers = await SalesService.GetActiveCustomers();
+        Marketers = await SalesService.GetActiveMarketers();
+        CashBoxes = await FinanceService.GetCashBoxes();
+
+        await LoadOrder();
+    }
+
+    async Task LoadOrder()
+    {
+        var order = await FinanceService.GetOrderById(id);
+        var payments = await FinanceService.GetPaymentsByOrder(id);
+
+        if (order == null)
+        {
+            Nav.NavigateTo("/orders");
+            return;
+        }
+
+        Form = new Order
+        {
+            order_id = order.order_id,
+            person_id = order.person_id,
+            person_type = order.person_type,
+            discount_total = order.discount_total,
+            cash_box_id = order.cash_box_id,
+            notes = order.notes,
+            commission_per_box = order.commission_per_box,
+            order_date = order.order_date,
+            Items = order.Items
+        .Select(i => new OrderItem
+        {
+            product_id = i.product_id,
+            quantity = i.quantity,
+            unit_price = i.unit_price
+        }).ToList()
+        };
+
+
+        Payments = payments
+            .GroupBy(p => p.payment_method)
+            .Select(g => new PaymentInput
+            {
+                method = g.Key!,
+                amount = g.Sum(x => x.direction == "IN" ? x.amount : -x.amount)
+            })
+            .ToList();
+    }
+
+    void OnPaymentMethodChanged(ChangeEventArgs e, PaymentInput current)
+    {
+        var newMethod = e.Value?.ToString();
+
+        var exists = TempPayments
+            .Any(p => p.method == newMethod && p != current);
+
+        if (exists)
+        {
+            ToastService.ShowToast("لا يمكن تكرار نفس نوع الدفع", "error");
+            return;
+        }
+
+        current.method = newMethod!;
+    }
+
+    void OpenPaymentDialog()
+    {
+        TempPayments = Payments
+     .Select(p => new PaymentInput
+     {
+         method = p.method,
+         amount = p.amount
+     }).ToList();
+
+        if (!TempPayments.Any())
+        {
+            TempPayments.Add(new PaymentInput
+            {
+                method = "cash",
+                amount = 0
+            });
+        }
+
+        ShowPaymentDialog = true;
+    }
+
+    string GetMethodName(string m) => m switch
+    {
+        "cash" => "كاش",
+        "card" => "بطاقة",
+        "transfer" => "تحويل",
+        "check" => "شيك",
+        _ => m
+    };
+
+    void OnMarketerChanged(ChangeEventArgs e)
+    {
+        int id = int.Parse(e.Value?.ToString() ?? "0");
+
+        Form.person_id = id;
+
+        var marketer = Marketers.FirstOrDefault(m => m.marketer_id == id);
+
+        if (marketer != null)
+        {
+            Form.commission_per_box = marketer.commission_per_box;
+        }
+
+        StateHasChanged();
+    }
+
+    void OpenAddDialog(string method)
+    {
+        // 🔥 اقفل الباقي
+        ShowRefundDialog = false;
+
+        CurrentMethod = method;
+        AddAmount = 0;
+        ShowAddDialog = true;
+    }
+
+    void OpenRefundDialog(string method)
+    {
+        // 🔥 اقفل الباقي
+        ShowAddDialog = false;
+
+        CurrentMethod = method;
+        RefundAmount = 0;
+        ShowRefundDialog = true;
+    }
+
+    void ConfirmAdd()
+    {
+        if (AddAmount <= 0)
+        {
+            ToastService.ShowToast("أدخل مبلغ صحيح", "error");
+            return;
+        }
+
+        var totalAfter = TempPayments.Sum(x => x.amount) + AddAmount;
+
+        if (totalAfter > Net)
+        {
+            ToastService.ShowToast("المبلغ يتجاوز المتبقي", "error");
+            return;
+        }
+
+        var item = TempPayments.FirstOrDefault(x => x.method == CurrentMethod);
+
+        if (item != null)
+            item.amount += AddAmount;
+
+        ShowAddDialog = false;
+    }
+
+    void ConfirmRefund()
+    {
+        if (RefundAmount <= 0)
+        {
+            ToastService.ShowToast("أدخل مبلغ صحيح", "error");
+            return;
+        }
+
+        var item = TempPayments.FirstOrDefault(x => x.method == CurrentMethod);
+
+        if (item == null) return;
+
+        if (RefundAmount > item.amount)
+        {
+            ToastService.ShowToast("المبلغ أكبر من المدفوع", "error");
+            return;
+        }
+
+        item.amount -= RefundAmount;
+
+        ShowRefundDialog = false;
+    }
+
+    void AddTempPayment()
+    {
+        if (TempPayments.Count >= 4) return;
+
+        var methods = TempPayments.Select(x => x.method).ToList();
+        var all = new[] { "cash", "card", "transfer", "check" };
+
+        var next = all.FirstOrDefault(m => !methods.Contains(m));
+
+        if (next == null)
+        {
+            ToastService.ShowToast("لا يمكن تكرار نفس نوع الدفع، استخدم إضافة دفعة", "error");
+            return;
+        }
+
+        TempPayments.Add(new PaymentInput
+        {
+            method = next,
+            amount = 0
+        });
+    }
+
+
+
+    void ClosePaymentDialog()
+    {
+        if (TempPayments.Any(p => p.amount < 0))
+        {
+            ToastService.ShowToast("لا يمكن إدخال مبلغ سالب", "error");
+            return;
+        }
+
+        var total = TempPayments.Sum(p => p.amount);
+
+        if (total > Net)
+        {
+            ToastService.ShowToast("المبلغ أكبر من الإجمالي", "error");
+            return;
+        }
+
+
+        Payments = TempPayments
+            .Select(p => new PaymentInput
+            {
+                method = p.method,
+                amount = p.amount
+            }).ToList();
+
+        ShowPaymentDialog = false;
+    }
+
+    void CancelPaymentDialog()
+    {
+        ShowPaymentDialog = false;
+    }
+
+    async Task SaveOrder()
+    {
+        try
+        {
+            Form.order_date = DateTime.SpecifyKind(Form.order_date, DateTimeKind.Utc);
+
+            if (Form.person_id == 0)
+            {
+                ToastService.ShowToast("اختر الشخص", "error");
+                return;
+            }
+
+            if (!Form.Items.Any())
+            {
+                ToastService.ShowToast("أضف صنف واحد على الأقل", "error");
+                return;
+            }
+
+            if (Form.Items.Any(i => i.product_id == 0))
+            {
+                ToastService.ShowToast("اختر المنتج", "error");
+                return;
+            }
+
+            if (Form.Items.Any(i => i.quantity <= 0))
+            {
+                ToastService.ShowToast("الكمية غير صحيحة", "error");
+                return;
+            }
+
+            var net = Form.Items.Sum(i => i.quantity * i.unit_price) - Form.discount_total;
+
+            if (Payments.Sum(p => p.amount) > net)
+            {
+                ToastService.ShowToast("المبلغ المدفوع أكبر من الإجمالي", "error");
+                return;
+            }
+
+            if (Payments.Any(p => p.amount < 0))
+            {
+                ToastService.ShowToast("لا يمكن إدخال مبلغ سالب", "error");
+                return;
+            }
+
+            var oldPaid = (await FinanceService.GetPaymentsByOrder(id))
+    .Sum(x => x.direction == "IN" ? x.amount : -x.amount);
+
+            var newPaid = Payments.Sum(p => p.amount);
+
+            // 🔥 هنا التعديل
+            if (newPaid == 0 && Form.cash_box_id <= 0)
+            {
+                var firstCashBox = CashBoxes.FirstOrDefault();
+
+                if (firstCashBox != null)
+                    Form.cash_box_id = firstCashBox.cash_box_id;
+            }
+
+            // 🔥 بعدها مباشرة
+            var result = await FinanceService.UpdateOrder(
+                Form,
+                Form.Items,
+                Payments,
+                CurrentAdminId
+            );
+
+            if (result.success)
+            {
+                ToastService.ShowToast("تم التعديل ✔", "success");
+                Nav.NavigateTo("/orders");
+            }
+            else
+            {
+                ToastService.ShowToast(result.message, "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowToast(ex.Message, "error");
+        }
+    }
+
+    void RemoveItem(OrderItem item)
+    {
+        Form.Items.Remove(item);
+    }
+
+    void AddItem()
+    {
+        Form.Items.Add(new OrderItem());
+    }
+
+    bool IsCommissionAllowed
+    {
+        get
+        {
+            if (Form.person_type != "marketer")
+                return false;
+
+            var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
+
+            if (marketer == null)
+                return false;
+
+            if (marketer.is_special)
+                return true;
+
+            return Net > 0 && PaymentsTotal >= Net;
+        }
+    }
+
+    decimal Commission
+    {
+        get
+        {
+            if (Form.person_type != "marketer")
+                return 0;
+
+            var qty = Form.Items.Sum(i => i.quantity);
+            return qty * Form.commission_per_box;
+        }
+    }
+
+    void OnProductChanged(ChangeEventArgs e, OrderItem item)
+    {
+        int id = int.Parse(e.Value?.ToString() ?? "0");
+
+        var existing = Form.Items
+            .FirstOrDefault(i =>
+                i.product_id == id &&
+                i != item &&
+                i.product_id != 0
+            );
+
+        if (existing != null)
+        {
+            Form.Items.Remove(item);
+
+            ToastService.ShowToast("هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد", "error");
+            return;
+        }
+
+        item.product_id = id;
+
+        var p = Products.FirstOrDefault(x => x.product_id == id);
+        if (p != null)
+            item.unit_price = p.sale_price;
+    }
+
+    decimal Total => Form.Items.Sum(i => i.quantity * i.unit_price);
+    decimal Net => Math.Max(0, Total - Form.discount_total);
+    decimal PaymentsTotal => Payments.Sum(x => x.amount);
+
+    string Fmt(decimal v) => $"{v:0.00} د.ل";
+
+
+
+}
