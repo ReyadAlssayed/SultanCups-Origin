@@ -294,7 +294,6 @@
 
     async Task SaveProduction()
     {
-        // تصفير جميع الأخطاء قبل الفحص
         ProductError = CountError = CostError = NoteError = "";
 
         bool hasError = false;
@@ -306,26 +305,45 @@
 
         if (hasError) return;
 
-        string actionText = ShowAddDialog ? "إضافة" : "تعديل";
-
         if (ShowAddDialog)
+        {
             await InventoryService.AddProduction(ProForm);
+            ShowToast("✔️ تم إضافة الإنتاج بنجاح", "success");
+        }
         else
-            await InventoryService.UpdateProduction(ProForm);
+        {
+            var result = await InventoryService.UpdateProduction(ProForm);
+
+            if (result.StartsWith("✔️"))
+            {
+                ShowToast(result, "success");
+                CloseDialogs();
+            }
+            else
+            {
+                ShowToast(result, "error");
+                return; // ❌ لا تقفل النافذة
+            }
+        }
 
         ProductionList = await InventoryService.GetProduction();
-    
-        ShowToast($"تم {actionText} الإنتاج بنجاح", "success");
-        CloseDialogs();
     }
 
     async Task ConfirmDelete()
     {
-        await InventoryService.DeleteProduction(ProForm.production_id);
-        ProductionList = await InventoryService.GetProduction();
-    
-        ShowToast("تم حذف سجل الإنتاج بنجاح", "error");
-        CloseDialogs();
+        var result = await InventoryService.DeleteProduction(ProForm.production_id);
+
+        if (result.StartsWith("✔️"))
+        {
+            ShowToast(result, "success");
+            ProductionList = await InventoryService.GetProduction();
+            CloseDialogs();
+        }
+        else
+        {
+            ShowToast(result, "error");
+            // ❌ لا تقفل النافذة
+        }
     }
 
     async Task ExportToExcel()

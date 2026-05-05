@@ -119,91 +119,95 @@ namespace SultanCups.Services
             {
                 await transaction.RollbackAsync();
                 throw;
-            }
+           }
         }
 
-        public async Task<bool> UpdateProduction(Production updated)
+        public async Task<string> UpdateProduction(Production updated)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var prod = await _context.production
+                var production = await _context.production
                     .FirstOrDefaultAsync(p => p.production_id == updated.production_id);
 
-                if (prod == null)
-                    return false;
+                if (production == null)
+                    return "not_found";
 
-                var oldQuantity = prod.box_count;
-                var newQuantity = updated.box_count;
+                var stock = await _context.product_stock
+                    .FirstOrDefaultAsync(s => s.product_id == production.product_id);
 
-                var diff = newQuantity - oldQuantity;
+                if (stock == null)
+                    return "stock_not_found";
 
-                // تحديث الإنتاج
-                prod.product_id = updated.product_id;
-                prod.box_cost = updated.box_cost;
-                prod.box_count = newQuantity;
-                prod.notes = updated.notes?.Trim();
+                // الفرق
+                var diff = updated.box_count - production.box_count;
+                var newStockQty = stock.quantity + diff;
 
-                prod.production_date = DateTime.SpecifyKind(
+                // 🔥 منع السالب
+                if (newStockQty < 0)
+                    return "لا يمكن تعديل الإنتاج: الكمية المصروفة أكبر من المتبقي في المخزون.";
+
+                // التعديل
+                stock.quantity = newStockQty;
+
+                production.box_count = updated.box_count;
+                production.notes = updated.notes?.Trim();
+                production.production_date = DateTime.SpecifyKind(
                     updated.production_date,
                     DateTimeKind.Unspecified);
 
-                // تحديث المخزون
-                var stock = await _context.product_stock
-                    .FirstOrDefaultAsync(s => s.product_id == prod.product_id);
-
-                if (stock != null)
-                {
-                    stock.quantity += diff;
-                }
-
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return true;
+                return "updated";
             }
             catch
             {
                 await transaction.RollbackAsync();
-                return false;
+                throw;
             }
         }
 
-        public async Task<bool> DeleteProduction(int id)
+        public async Task<string> DeleteProduction(int id)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var prod = await _context.production
+                var production = await _context.production
                     .FirstOrDefaultAsync(p => p.production_id == id);
 
-                if (prod == null)
-                    return false;
+                if (production == null)
+                    return "not_found";
 
                 var stock = await _context.product_stock
-                    .FirstOrDefaultAsync(s => s.product_id == prod.product_id);
+                    .FirstOrDefaultAsync(s => s.product_id == production.product_id);
 
-                if (stock != null)
-                {
-                    stock.quantity -= prod.box_count;
-                }
+                if (stock == null)
+                    return "stock_not_found";
 
-                _context.production.Remove(prod);
+                // 🔥 تحقق قبل الحذف
+                var newStockQty = stock.quantity - production.box_count;
+
+                if (newStockQty < 0)
+                    return "لا يمكن حذف الإنتاج: الكمية المصروفة أكبر من المتبقي في المخزون.";
+
+                stock.quantity = newStockQty;
+
+                _context.production.Remove(production);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return true;
+                return "deleted";
             }
             catch
             {
                 await transaction.RollbackAsync();
-                return false;
+                throw;
             }
         }
-
         // =========================================
         // 🔹 هذا الجزء خاص بجدول suppliers (الموردين)
         // =========================================
