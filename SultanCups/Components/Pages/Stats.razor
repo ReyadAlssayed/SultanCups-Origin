@@ -1,104 +1,122 @@
 ﻿@page "/Stats"
 @layout Layout.MainLayout
 
-<div class="stats-container">
-
+<div class="stats-page-container">
+    
     @if (!isDataVisible)
     {
-        <div class="privacy-blanket">
-            <div class="upper-shield-card">
-                <div class="shield-icon">
-                    <i class="bi bi-shield-lock"></i>
-                </div>
+        <div class="privacy-lock-zone">
+            <div class="glass-shield-card">
+                <div class="lock-anim">🔒</div>
                 <h3>إحصائيات الإدارة</h3>
-                <p>هذه الصفحة تحتوي على بيانات مالية وحساسة خاصة بمصنع السلطان.</p>
-                <button class="reveal-btn-main" @onclick="() => isDataVisible = true">
-                    <i class="bi bi-eye"></i> كشف البيانات المالية
-                </button>
+                <p>بيانات مالية حساسة ومحمية</p>
+                <button class="btn-reveal" @onclick="() => isDataVisible = true">كشف البيانات</button>
             </div>
         </div>
     }
 
-    <div class="stats-content-main @(isDataVisible ? "show-content-smooth" : "hide-content")">
-
-        <div class="stats-header d-flex justify-content-between align-items-center">
-            <h1>إحصائيات مصنع السلطان</h1>
-            <p>نظرة شاملة على الأداء المالي والإنتاجي للمصنع</p>
-        </div>
-
-        <button class="hide-btn-top" @onclick="() => isDataVisible = false">
-            <i class="bi bi-eye-slash"></i> إخفاء الإحصائيات
-        </button>
+    <div class="stats-scrollable-content @(isDataVisible ? "content-active" : "content-blurred")">
         
-
-        <div class="summary-row">
-            <div class="summary-card net-profit">
-                <div class="summary-info">
-                    <span class="label">إجمالي الصافي (الأرباح)</span>
-                    <span class="value-large">0 <small>د.ل</small></span>
-                </div>
-                <div class="summary-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <!-- HEADER -->
+        <div class="stats-top-bar">
+            <div class="welcome-msg">
+                <h1>لوحة التحكم المالي</h1>
+                <p>نظرة عامة على السيولة والأداء</p>
             </div>
+            <button class="btn-hide-ui" @onclick="() => isDataVisible = false">إخفاء البيانات</button>
+        </div>
 
-            <div class="summary-card cash-box">
-                <div class="summary-info">
-                    <span class="label">السيولة النقدية (الخزائن)</span>
-                    <span class="value-large">0 <small>د.ل</small></span>
+        <!-- LEVEL 1: SUMMARY -->
+        <div class="summary-grid">
+            <div class="mini-card profit">
+                <div class="card-icon">📈</div>
+                <div class="card-data">
+                    <span class="label">صافي الربح</span>
+                    <span class="value">12,500 <small>د.ل</small></span>
                 </div>
-                <div class="summary-icon"><i class="bi bi-safe2"></i></div>
+            </div>
+            <div class="mini-card salaries">
+                <div class="card-icon">👥</div>
+                <div class="card-data">
+                    <span class="label">صافي المرتبات</span>
+                    <span class="value">4,200 <small>د.ل</small></span>
+                </div>
+            </div>
+            <div class="mini-card debts">
+                <div class="card-icon">🚨</div>
+                <div class="card-data">
+                    <span class="label">صافي الديون</span>
+                    <span class="value">7,050 <small>د.ل</small></span>
+                </div>
+            </div>
+            <div class="mini-card inventory">
+                <div class="card-icon">📦</div>
+                <div class="card-data">
+                    <span class="label">قيمة المخزن</span>
+                    <span class="value">15,000 <small>د.ل</small></span>
+                </div>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <section class="stats-section">
-                <div class="section-head">
-                    <h3>المبيعات والديون</h3>
-                    <i class="bi bi-cart-check"></i>
+        <!-- LEVEL 2: CHARTS -->
+        <div class="charts-layout">
+            <div class="main-chart-card">
+                <div class="chart-header">
+                    <h3>حركة الأرباح الصافية</h3>
+                    <div class="chart-filters">
+                        <span class="active">سنوي</span>
+                        <span>شهري</span>
+                    </div>
                 </div>
-                <div class="section-body">
-                    <div class="stat-item"><span>إجمالي المبيعات</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>المبالغ المحصلة</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>ديون الزبائن</span><strong class="text-danger">0 د.ل</strong></div>
-                    <div class="stat-item"><span>عمولات المسوقين</span><strong>0 د.ل</strong></div>
+                <div class="visual-graph">
+                    <div class="graph-line-path"></div>
+                    <div class="graph-dots">
+                        <span style="bottom: 20%; left: 10%"></span>
+                        <span style="bottom: 50%; left: 40%"></span>
+                        <span style="bottom: 80%; left: 85%"></span>
+                    </div>
                 </div>
-            </section>
+            </div>
 
-            <section class="stats-section">
-                <div class="section-head">
-                    <h3>المخزن والمواد الخام</h3>
-                    <i class="bi bi-box-seam"></i>
+            <div class="distribution-card">
+                <h3>توزيع المبيعات</h3>
+                <div class="modern-donut">
+                    <svg viewBox="0 0 36 36" class="donut-svg">
+                        <path class="donut-ring" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path class="donut-segment" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <div class="donut-text">
+                        <span class="percent">75%</span>
+                        <span class="subtext">كوب 2.5</span>
+                    </div>
                 </div>
-                <div class="section-body">
-                    <div class="stat-item"><span>قيمة المخزون الحالية</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>مشتريات مواد خام</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>عدد الموردين النشطين</span><strong>0</strong></div>
+                <div class="donut-legend">
+                    <div class="legend-item"><span class="dot p-primary"></span> كوب 2.5</div>
+                    <div class="legend-item"><span class="dot p-secondary"></span> كوب 6</div>
                 </div>
-            </section>
-
-            <section class="stats-section">
-                <div class="section-head">
-                    <h3>الإنتاج والتشغيل</h3>
-                    <i class="bi bi-gear-wide-connected"></i>
-                </div>
-                <div class="section-body">
-                    <div class="stat-item"><span>إجمالي الصناديق المنتجة</span><strong>0</strong></div>
-                    <div class="stat-item"><span>تكلفة الإنتاج الإجمالية</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>الراجع (توالف)</span><strong class="text-danger">0</strong></div>
-                </div>
-            </section>
-
-            <section class="stats-section">
-                <div class="section-head">
-                    <h3>الموارد البشرية والرواتب</h3>
-                    <i class="bi bi-people"></i>
-                </div>
-                <div class="section-body">
-                    <div class="stat-item"><span>الرواتب المستحقة</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>السلف والمكافآت</span><strong>0 د.ل</strong></div>
-                    <div class="stat-item"><span>إجمالي الموظفين</span><strong>0</strong></div>
-                </div>
-            </section>
+            </div>
         </div>
+
+        <!-- LEVEL 3: VAULTS (Footer Strip) -->
+        <div class="vaults-footer-strip">
+            <div class="v-strip-card vs-blue">
+                <div class="vs-info"><label>الرئيسية</label><strong>5,000 د.ل</strong></div>
+                <div class="vs-trend">↑ 12%</div>
+            </div>
+            <div class="v-strip-card vs-green">
+                <div class="vs-info"><label>المصنع</label><strong>2,300 د.ل</strong></div>
+                <div class="vs-trend">↑ 5%</div>
+            </div>
+            <div class="v-strip-card vs-orange">
+                <div class="vs-info"><label>الطوارئ</label><strong>1,000 د.ل</strong></div>
+                <div class="vs-trend">↓ 2%</div>
+            </div>
+            <div class="v-strip-card vs-dark">
+                <div class="vs-info"><label>إجمالي السيولة</label><strong>8,300 د.ل</strong></div>
+                <div class="vs-icon-mini">💰</div>
+            </div>
+        </div>
+
     </div>
 </div>
 

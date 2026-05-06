@@ -60,7 +60,8 @@
                     {
                         @foreach (var o in OrdersList)
 {
-    <tr class="@(o.order_id == HighlightId ? "new-row" : "")">
+    <tr id="order-@o.order_id"
+    class="@(o.order_id == HighlightId ? "new-row" : "")">
 
         <td>@o.order_id</td>
 
@@ -92,6 +93,10 @@
                                     </button>
 
             <button class="btn-delete">تعطيل</button>
+
+<button class="btn-return">
+    ترجيع
+</button>
                                    
         </td>
 
@@ -229,8 +234,9 @@
                 </button>
 
             </div>
+<div class="print-only">
 
-            @if (SelectedItems.Any())
+@if (SelectedItems.Any())
 {
     <table style="margin-top:20px;">
         <thead>
@@ -255,6 +261,8 @@
         </tbody>
     </table>
 }
+
+</div>
 
         </div>
 
@@ -285,13 +293,14 @@
         OrdersList = await FinanceService.GetOrders();
     }
 
-    protected override void OnParametersSet()
+protected override void OnParametersSet()
+{
+    if (!string.IsNullOrEmpty(newId))
     {
-        if (!string.IsNullOrEmpty(newId))
-        {
-            _ = ClearHighlight();
-        }
+        _ = ScrollToOrder();
+        _ = ClearHighlight();
     }
+}
 
     string GetPaymentName(string method)
 {
@@ -313,9 +322,20 @@ async Task PrintInvoice()
 }
     async Task ClearHighlight()
     {
-        await Task.Delay(3000); // 3 ثواني
+        await Task.Delay(5000); // 5 ثواني
         Nav.NavigateTo("/orders");
     }
+
+
+    async Task ScrollToOrder()
+{
+    await Task.Delay(300);
+
+    await JS.InvokeVoidAsync(
+        "eval",
+        $"document.getElementById('order-{HighlightId}')?.scrollIntoView({{behavior:'smooth', block:'center'}})"
+    );
+}
    
 async Task OpenDetails(OrderView o)
 {

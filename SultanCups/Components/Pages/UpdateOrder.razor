@@ -115,7 +115,7 @@
                 <tbody>
                     @foreach (var item in Form.Items)
                     {
-                        <tr>
+                        <tr class="item-row1 open">
                             <td>
                                 <select class="pro-input" value="@item.product_id"
                                         @onchange="e => OnProductChanged(e, item)">
@@ -127,15 +127,30 @@
                                 </select>
                             </td>
 
-                            <td><input class="pro-input" @bind="item.unit_price" /></td>
-                            <td><input class="pro-input" @bind="item.quantity" /></td>
+                            <td>
+                                <input type="number"
+                                       step="0.01"
+                                       class="pro-input"
+                                       @bind-value="item.unit_price"
+                                       @bind-value:event="oninput" />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       class="pro-input"
+                                       @bind-value="item.quantity"
+                                       @bind-value:event="oninput" />
+                            </td>
 
                             <td>@(item.quantity * item.unit_price)</td>
 
                             <td>
                                 @if (Form.Items.Count > 1)
                                 {
-                                    <button @onclick="() => RemoveItem(item)">✕</button>
+                                    <button class="btn-delete-item1"
+                                            @onclick="() => RemoveItem(item)">
+                                        ✕
+                                    </button>
                                 }
                             </td>
                         </tr>

@@ -181,12 +181,16 @@ namespace SultanCups.Services
         public async Task<List<OrderView>> GetOrders(int page = 1, int pageSize = 20)
         {
             var query =
-                from o in _context.orders
-                join c in _context.customers on o.person_id equals c.customer_id into cg
-                from c in cg.DefaultIfEmpty()
-                join m in _context.marketers on o.person_id equals m.marketer_id into mg
-                from m in mg.DefaultIfEmpty()
-                select new OrderView
+    from o in _context.orders.AsNoTracking()
+
+    join c in _context.customers.AsNoTracking()
+    on o.person_id equals c.customer_id into cg
+    from c in cg.DefaultIfEmpty()
+
+    join m in _context.marketers.AsNoTracking()
+    on o.person_id equals m.marketer_id into mg
+    from m in mg.DefaultIfEmpty()
+    select new OrderView
                 {
                     order_id = o.order_id,
                     person_id = o.person_id,
@@ -233,8 +237,9 @@ namespace SultanCups.Services
                 };
 
             return await query
-                .OrderByDescending(x => x.order_id)
-                .ToListAsync();
+     .AsNoTracking()
+     .OrderByDescending(x => x.order_id)
+     .ToListAsync();
         }
 
         //جلب الخزنات النشطة
@@ -641,28 +646,36 @@ namespace SultanCups.Services
 
         public async Task<List<Order>> GetOrdersRaw()
         {
-            return await _context.orders.ToListAsync();
+            return await _context.orders
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<OrderItem>> GetOrderItems()
         {
-            return await _context.order_items.ToListAsync();
+            return await _context.order_items
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<Product>> GetProducts()
         {
-            return await _context.products.ToListAsync();
+            return await _context.products
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<DebtView>> GetDebts()
         {
             var query =
-                from o in _context.orders
+                from o in _context.orders.AsNoTracking()
 
-                join c in _context.customers on o.person_id equals c.customer_id into cg
+                join c in _context.customers.AsNoTracking()
+on o.person_id equals c.customer_id into cg
                 from c in cg.DefaultIfEmpty()
 
-                join m in _context.marketers on o.person_id equals m.marketer_id into mg
+                join m in _context.marketers.AsNoTracking()
+on o.person_id equals m.marketer_id into mg
                 from m in mg.DefaultIfEmpty()
 
                 let total = _context.order_items
@@ -699,20 +712,25 @@ namespace SultanCups.Services
                 };
 
             return await query
-                .OrderByDescending(x => x.order_id)
-                .ToListAsync();
+    .AsNoTracking()
+    .OrderByDescending(x => x.order_id)
+    .ToListAsync();
         }
 
         //
 
         public async Task<List<Customer>> GetCustomers()
         {
-            return await _context.customers.ToListAsync();
+            return await _context.customers
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<Marketer>> GetMarketers()
         {
-            return await _context.marketers.ToListAsync();
+            return await _context.marketers
+    .AsNoTracking()
+    .ToListAsync();
         }
 
 
