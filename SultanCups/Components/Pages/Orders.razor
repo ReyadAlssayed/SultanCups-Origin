@@ -22,6 +22,28 @@
         <div></div>
     </div>
 
+
+   <div class="pro-search-bar">
+
+    <input class="mk-search-input"
+           placeholder="ابحث برقم الفاتورة أو الاسم"
+           @bind="SearchText"
+           @bind:event="oninput" />
+
+    <select class="pro-filter-select" @bind="StatusFilter">
+        <option value="all">كل الحالات</option>
+        <option value="paid">خالص</option>
+        <option value="partial">جزئي</option>
+        <option value="unpaid">غير خالص</option>
+    </select>
+
+    <input type="date"
+           class="pro-filter-select"
+           @bind="DateFilter" />
+
+</div>
+
+
     <div class="pro-card">
         <div class="pro-table-wrap">
             <table class="pro-table">
@@ -45,7 +67,7 @@
                             </td>
                         </tr>
                     }
-                    else if (!OrdersList.Any())
+                    else if (!FilteredOrders.Any())
                     {
                         <tr>
                             <td colspan="10" class="st-empty-text">
@@ -58,7 +80,7 @@
                     }
                     else
                     {
-                        @foreach (var o in OrdersList)
+                        @foreach (var o in FilteredOrders)
 {
     <tr id="order-@o.order_id"
     class="@(o.order_id == HighlightId ? "new-row" : "")">
@@ -73,7 +95,7 @@
 
                                 <td>
                                     @(o.paid_amount == 0
-    ? "غير مدفوع"
+    ? "غير خالص"
     : o.paid_amount < o.net_total
         ? "جزئي"
         : "خالص")
@@ -176,7 +198,7 @@
    <span class="status-text">الحالة</span>
    <span class="@GetStatusClass(SelectedOrder)">
     @(SelectedOrder.paid_amount == 0
-        ? "غير مدفوع"
+        ? "غير خالص"
         : SelectedOrder.paid_amount < SelectedOrder.net_total
             ? "جزئي"
             : "خالص")
@@ -287,6 +309,12 @@
 
     List<OrderItem> SelectedItems = new();
     List<string> PaymentMethods = new();
+
+    string SearchText = "";
+
+string StatusFilter = "all";
+
+DateTime? DateFilter;
    
     protected override async Task OnInitializedAsync()
     {
@@ -336,6 +364,63 @@ async Task PrintInvoice()
         $"document.getElementById('order-{HighlightId}')?.scrollIntoView({{behavior:'smooth', block:'center'}})"
     );
 }
+
+IEnumerable<OrderView> FilteredOrders =>
+    (OrdersList ?? new List<OrderView>())
+    .Where(o =>
+
+        // البحث
+        (
+            string.IsNullOrWhiteSpace(SearchText)
+            ||
+            o.order_id.ToString().Contains(SearchText)
+            ||
+            (o.person_name != null &&
+             o.person_name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+        )
+
+        // فلترة التاريخ
+        &&
+
+        (
+            DateFilter == null
+            ||
+            o.order_date.Date == DateFilter.Value.Date
+        )
+
+        // فلترة الحالة
+        &&
+
+        (
+            StatusFilter == "all"
+
+            ||
+
+            (
+                StatusFilter == "paid"
+                &&
+                o.paid_amount >= o.net_total
+            )
+
+            ||
+
+            (
+                StatusFilter == "partial"
+                &&
+                o.paid_amount > 0
+                &&
+                o.paid_amount < o.net_total
+            )
+
+            ||
+
+            (
+                StatusFilter == "unpaid"
+                &&
+                o.paid_amount == 0
+            )
+        )
+    );
    
 async Task OpenDetails(OrderView o)
 {

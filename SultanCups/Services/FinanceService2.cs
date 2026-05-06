@@ -733,7 +733,79 @@ on o.person_id equals m.marketer_id into mg
     .ToListAsync();
         }
 
+        public async Task<List<MarketerCommissionView>> GetMarketerCommissions()
+        {
+            var orders = await _context.orders
+                .AsNoTracking()
+                .Where(o => o.person_type == "marketer")
+                .Include(o => o.Items)
+                .ToListAsync();
 
+            var marketers = await _context.marketers
+                .AsNoTracking()
+                .ToDictionaryAsync(
+                    m => m.marketer_id,
+                    m => new
+                    {
+                        m.name,
+                        m.is_special
+                    });
 
+            var result = orders.Select(o =>
+            {
+                var totalQuantity = o.Items.Sum(i => i.quantity);
+
+                var orderTotal = o.Items.Sum(i => i.quantity * i.unit_price);
+
+                var netTotal = orderTotal - o.discount_total;
+
+                var commissionTotal = totalQuantity * o.commission_per_box;
+
+                var marketerData = marketers.ContainsKey(o.person_id)
+                    ? marketers[o.person_id]
+                    : null;
+
+                var marketerName = marketerData?.name ?? "غير معروف";
+
+                var paidAmount =
+                    _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders" &&
+                            x.ref_id == o.order_id)
+                        .Sum(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount
+                        ) ?? 0;
+
+                bool canPayCommission =
+                    marketerData != null &&
+                    (
+                        marketerData.is_special ||
+                        paidAmount >= netTotal
+                    );
+
+                return new MarketerCommissionView
+                {
+                    order_id = o.order_id,
+
+                    marketer_name = marketerName,
+
+                    order_total = netTotal,
+
+                    commission_total = commissionTotal,
+
+                    commission_status = canPayCommission
+                        ? "مستحقة"
+                        : "معلقة",
+
+                    order_date = o.order_date
+                };
+            })
+            .OrderByDescending(x => x.order_id)
+            .ToList();
+
+            return result;
+        }
     }
 }

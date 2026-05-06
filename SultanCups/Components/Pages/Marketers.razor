@@ -46,6 +46,7 @@
                         <th>رقم الهاتف</th>
                         <th>العنوان</th>
                         <th>العمولة / كرتونة</th>
+                        <th>النوع</th>
                         <th>الحالة</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -78,6 +79,7 @@
                                 <td>@m.phone</td>
                                 <td>@m.address</td>
                                 <td>@m.commission_per_box.ToString("0.00") د.ل</td>
+
                                 <td>
                                     @(m.is_special ? "خاص" : "عادي")
                                 </td>

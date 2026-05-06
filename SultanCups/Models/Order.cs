@@ -20,9 +20,6 @@ public class Order
     public int cash_box_id { get; set; } // الخزنة
     public string payment_method { get; set; } = "cash";
 
-    // 🔥 الجديد
-    public decimal paid_amount { get; set; } = 0;
-
     public string? notes { get; set; }
 
     public List<OrderItem> Items { get; set; } = new();
