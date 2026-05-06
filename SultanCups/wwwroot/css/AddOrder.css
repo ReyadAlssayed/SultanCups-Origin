@@ -749,7 +749,23 @@
         height: 36px;
     }
 
+.save-loader {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin .7s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
 
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 
 
 @keyframes highlightFade {

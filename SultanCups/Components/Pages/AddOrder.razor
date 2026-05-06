@@ -186,7 +186,21 @@
 
             <div class="bottom-actions1">
 
-                <button class="pro-save" @onclick="SaveOrder">حفظ الفاتوره</button>
+                <button class="pro-save"
+                        @onclick="SaveOrder"
+                        disabled="@IsSaving">
+
+                    @if (IsSaving)
+                    {
+                        <span class="save-loader"></span>
+                        <span>جاري الحفظ...</span>
+                    }
+                    else
+                    {
+                        <span>حفظ الفاتوره</span>
+                    }
+
+                </button>
 
                 <button class="pro-cancel"
                         @onclick='() => Nav.NavigateTo("/orders")'>
@@ -427,6 +441,7 @@
     string CashBoxError = "";
     string PaidError = "";
 
+    bool IsSaving = false;
     
     bool ShowPaymentDialog = false;
 
@@ -696,12 +711,18 @@
         try
         {
 
+            if (IsSaving)
+                return;
+
             Form.order_date = DateTime.SpecifyKind(Form.order_date, DateTimeKind.Utc);
             PersonError = "";
             ItemsError = "";
             ProductError = "";
             QuantityError = "";
             CashBoxError = "";
+
+
+            IsSaving = true;
 
             bool hasError = false;
 
@@ -800,6 +821,11 @@
         {
             var msg = ex.InnerException?.Message ?? ex.Message;
             ToastService.ShowToast(msg, "error");
+        }
+
+        finally
+        {
+            IsSaving = false;
         }
     }
 
