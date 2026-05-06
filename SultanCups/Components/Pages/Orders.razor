@@ -83,7 +83,11 @@
                         @foreach (var o in FilteredOrders)
 {
     <tr id="order-@o.order_id"
-    class="@(o.order_id == HighlightId ? "new-row" : "")">
+    class="@(o.is_cancelled
+        ? "cancelled-row"
+        : o.order_id == HighlightId
+            ? "new-row"
+            : "")">
 
         <td>@o.order_id</td>
 
@@ -106,21 +110,37 @@
                                     @o.order_date.ToString("yyyy-MM-dd")
                                 </td>
 
-        <td>
-            <button class="btn-info" @onclick="() => OpenDetails(o)">تفاصيل</button>
+     <td>
 
-                                    <button class="btn-edit"
-                                            @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
-                                        تعديل
-                                    </button>
+    <button class="btn-info"
+            @onclick="() => OpenDetails(o)">
+        تفاصيل
+    </button>
 
-            <button class="btn-delete">تعطيل</button>
+    @if (!o.is_cancelled)
+    {
+        <button class="btn-edit"
+                @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
+            تعديل
+        </button>
 
-<button class="btn-return">
-    ترجيع
-</button>
-                                   
-        </td>
+        <button class="btn-delete"
+                @onclick="() => OpenDisableDialog(o)">
+            إلغاء
+        </button>
+
+        <button class="btn-return">
+            ترجيع
+        </button>
+    }
+    else
+    {
+        <span class="cancelled-text">
+            ملغاة
+        </span>
+    }
+
+</td>
 
     </tr>
 }
@@ -247,9 +267,12 @@
 
                 </div>
 
-                <button class="btn-pdf-save" onclick="printOrderCard()">
-    🖨️ طباعة الفاتورة
-</button>
+                @if (!SelectedOrder.is_cancelled)
+{
+    <button class="btn-pdf-save" onclick="printOrderCard()">
+        🖨️ طباعة الفاتورة
+    </button>
+}
                 
                 <button class="btn-cancel" @onclick="CloseDetails">
                     إغلاق
@@ -291,6 +314,73 @@
     </div>
 }
 
+@if (ShowDisableDialog && DisableOrder != null)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <h3>إلغاء الفاتورة</h3>
+
+                <p>
+                    سيتم إرجاع المنتجات التالية إلى المخزن:
+                </p>
+
+                <div class="disable-items">
+
+                    @foreach (var item in DisableItems)
+                    {
+                        <div class="disable-row">
+                            - @item.product_name
+                            (الكمية: @item.quantity)
+                        </div>
+                    }
+
+                </div>
+
+                @if (DisableOrder.paid_amount > 0)
+                {
+                    <div class="refund-note">
+
+                        سيتم إخراج مبلغ
+                        @Fmt(DisableOrder.paid_amount)
+
+                        وإرجاعه إلى
+
+                        @(DisableOrder.person_type == "customer"
+                            ? "الزبون"
+                            : "المسوق")
+
+                    </div>
+                }
+
+                <div class="pro-dialog-actions">
+
+                   <button class="pro-save"
+        @onclick="ConfirmCancelOrder">
+    تأكيد الإلغاء
+</button>
+
+                    <button class="pro-cancel"
+                            @onclick="() => ShowDisableDialog = false">
+                        إلغاء
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 @code {
 
     List<OrderView>? OrdersList;
@@ -313,6 +403,12 @@
     string SearchText = "";
 
 string StatusFilter = "all";
+
+bool ShowDisableDialog = false;
+
+OrderView? DisableOrder;
+
+List<OrderItem> DisableItems = new();
 
 DateTime? DateFilter;
    
@@ -351,7 +447,10 @@ async Task PrintInvoice()
     async Task ClearHighlight()
     {
         await Task.Delay(5000); // 5 ثواني
-        Nav.NavigateTo("/orders");
+        if (Nav.Uri.Contains("/orders"))
+{
+    Nav.NavigateTo("/orders");
+}
     }
 
 
@@ -458,6 +557,53 @@ string GetStatusClass(OrderView o)
     if (o.paid_amount == 0) return "status-red";
     if (o.paid_amount < o.net_total) return "status-orange";
     return "status-green";
+}
+
+async Task OpenDisableDialog(OrderView o)
+{
+    DisableOrder = o;
+
+    var order = await FinanceService.GetOrderById(o.order_id);
+
+    if (order == null)
+        return;
+
+    var products = await FinanceService.GetProductsDict();
+
+    DisableItems = order.Items;
+
+    foreach (var item in DisableItems)
+    {
+        if (products.ContainsKey(item.product_id))
+        {
+            item.product_name = products[item.product_id];
+        }
+    }
+
+    ShowDisableDialog = true;
+}
+
+async Task ConfirmCancelOrder()
+{
+    if (DisableOrder == null)
+        return;
+
+    var result = await FinanceService.CancelOrder(
+        DisableOrder.order_id,
+        CurrentAdminId);
+
+    if (result.success)
+    {
+        ToastService.ShowToast(result.message, "success");
+
+        OrdersList = await FinanceService.GetOrders();
+
+        ShowDisableDialog = false;
+    }
+    else
+    {
+        ToastService.ShowToast(result.message, "error");
+    }
 }
 
 

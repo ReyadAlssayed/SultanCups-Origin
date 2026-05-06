@@ -22,5 +22,7 @@ public class Order
 
     public string? notes { get; set; }
 
+    public bool is_cancelled { get; set; } = false;
+
     public List<OrderItem> Items { get; set; } = new();
 }

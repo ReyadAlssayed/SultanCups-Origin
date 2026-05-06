@@ -21,7 +21,7 @@
             ← رجوع
         </button>
 
-        <h3>إضافة فاتورة</h3>
+        <h3>إضافة فاتورة رقم @NextOrderNumber</h3>
 
     </div>
 
@@ -449,7 +449,7 @@
     List<PaymentInput> TempPayments = new();
     List<PaymentInput> Payments = new();
 
-
+    int NextOrderNumber = 1;
 
     protected override async Task OnInitializedAsync()
     {
@@ -473,6 +473,13 @@
                 }
             }
             };
+
+            var orders = await FinanceService.GetOrders();
+
+if (orders.Any())
+{
+    NextOrderNumber = orders.Max(x => x.order_id) + 1;
+}
         }
     
 
@@ -806,7 +813,7 @@
 
             if (result.success)
             {
-                ToastService.ShowToast("تم الحفظ ✔", "success");
+                ToastService.ShowToast("تم الحفظ", "success");
 
                 Payments = new List<PaymentInput>();
 

@@ -73,6 +73,14 @@
             border-right: 1px solid rgba(226,232,240,.6);
         }
 
+.commission-orange {
+    background: #fff7ed;
+    color: #ea580c;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
 .pro-table tbody tr.new-row,
 .pro-table tbody tr.new-row td {
     background: #dcfce7 !important;
@@ -288,6 +296,19 @@
 
 .print-only {
     display: none;
+}
+
+.cancelled-row {
+    background: #fff1f2 !important;
+}
+
+    .cancelled-row td {
+        color: #991b1b;
+    }
+
+.cancelled-text {
+    color: #dc2626;
+    font-weight: 700;
 }
 
 

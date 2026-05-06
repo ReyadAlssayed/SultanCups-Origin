@@ -3,6 +3,7 @@
 @using SultanCups.Models
 @using SultanCups.Services
 
+@using System.Globalization
 @inject FinanceService2 FinanceService
 @inject NavigationManager Nav
 
@@ -23,13 +24,22 @@
 
         <select class="pro-filter-select" @bind="StatusFilter">
             <option value="all">كل الحالات</option>
-            <option value="ready">مستحقة</option>
+            <option value="ready">تم الصرف</option>
             <option value="pending">معلقة</option>
         </select>
 
         <input type="date"
                class="pro-filter-select"
                @bind="DayFilter" />
+
+        <select class="pro-filter-select" @bind="MonthFilter">
+            <option value="0">كل الشهور</option>
+
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i">@CultureInfo.GetCultureInfo("ar").DateTimeFormat.GetMonthName(i)</option>
+            }
+        </select>
 
     </div>
 
@@ -45,6 +55,7 @@
                         <th>اسم المسوق</th>
                         <th>إجمالي الفاتورة</th>
                         <th>العمولة</th>
+                        <th>الإجمالي بعد العمولة</th>
                         <th>الحالة</th>
                         <th>التاريخ</th>
                         <th>الإجراءات</th>
@@ -89,26 +100,33 @@
                                 </td>
 
                                 <td>
-                                    <span class="pro-total">
-                                        @Fmt(c.order_total)
-                                    </span>
+                                    @Fmt(c.order_total)
                                 </td>
 
                                 <td>
-                                    <span class="commission-money">
+                                    <span class="commission-orange">
                                         @Fmt(c.commission_total)
                                     </span>
                                 </td>
 
                                 <td>
+                                    @Fmt(c.order_total + c.commission_total)
+                                </td>
 
-                                    <span class="@(c.commission_status == "مستحقة"
-                                                                                                                          ? "st-badge st-badge-success"
-                                                                                                                          : "st-badge st-badge-warning")">
+                                <td>
 
-                                        @c.commission_status
-
-                                    </span>
+                                    @if (c.commission_status == "مستحقة")
+                                    {
+                                        <span class="st-badge st-badge-success">
+                                            تم الصرف ✔
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="st-badge st-badge-warning">
+                                            معلقة ⏳
+                                        </span>
+                                    }
 
                                 </td>
 
@@ -150,6 +168,8 @@
 
     DateTime? DayFilter = null;
 
+    int MonthFilter = 0;
+
     protected override async Task OnInitializedAsync()
     {
         CommissionList = await FinanceService.GetMarketerCommissions();
@@ -167,13 +187,21 @@
             &&
 
             (StatusFilter == "all"
-            || (StatusFilter == "ready" && x.commission_status == "مستحقة")
+            || (StatusFilter == "ready" && x.commission_status == "تم الصرف")
             || (StatusFilter == "pending" && x.commission_status == "معلقة"))
 
             &&
 
-            (DayFilter == null
-            || x.order_date.Date == DayFilter.Value.Date)
+(DayFilter == null
+|| x.order_date.Date == DayFilter.Value.Date)
+
+&&
+
+(
+    MonthFilter == 0
+    ||
+    x.order_date.Month == MonthFilter
+)
 
         );
 

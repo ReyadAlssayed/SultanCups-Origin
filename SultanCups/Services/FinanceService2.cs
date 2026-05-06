@@ -191,55 +191,67 @@ namespace SultanCups.Services
     on o.person_id equals m.marketer_id into mg
     from m in mg.DefaultIfEmpty()
     select new OrderView
-                {
-                    order_id = o.order_id,
-                    person_id = o.person_id,
-                    person_type = o.person_type,
-                    person_name = o.person_type == "customer" ? c.name : m.name,
+    {
+        order_id = o.order_id,
 
-                    is_special = o.person_type == "marketer" ? m.is_special : false,
+        person_id = o.person_id,
 
-                    items_count = _context.order_items.Count(i => i.order_id == o.order_id),
+        person_type = o.person_type,
 
-                    total_quantity = _context.order_items
-                        .Where(i => i.order_id == o.order_id)
-                        .Sum(i => (int?)i.quantity) ?? 0,
+        is_cancelled = o.is_cancelled,
 
-                    total = _context.order_items
-                        .Where(i => i.order_id == o.order_id)
-                        .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
+        person_name = o.person_type == "customer"
+    ? c.name
+    : m.name,
 
-                    net_total =
-                        ((_context.order_items
-                            .Where(i => i.order_id == o.order_id)
-                            .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
-                        - o.discount_total),
+        is_special = o.person_type == "marketer"
+         ? m.is_special
+         : false,
 
-                    commission_total = o.person_type == "marketer"
-                        ? ((_context.order_items
-                            .Where(i => i.order_id == o.order_id)
-                            .Sum(i => (int?)i.quantity) ?? 0)
-                            * o.commission_per_box)
-                        : 0,
+        items_count = _context.order_items
+         .Count(i => i.order_id == o.order_id),
 
-                    paid_amount =
-    _context.financial_events
-        .Where(x =>
-            x.ref_table == "orders" &&
-            x.ref_id == o.order_id)
-        .Sum(x =>
-            x.direction == "IN"
-                ? (decimal?)x.amount
-                : -(decimal?)x.amount
-        ) ?? 0,
+        total_quantity = _context.order_items
+         .Where(i => i.order_id == o.order_id)
+         .Sum(i => (int?)i.quantity) ?? 0,
 
-                    order_date = o.order_date
-                };
+        total = _context.order_items
+         .Where(i => i.order_id == o.order_id)
+         .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
+
+        discount_total = o.discount_total,
+
+        net_total =
+         ((_context.order_items
+             .Where(i => i.order_id == o.order_id)
+             .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
+         - o.discount_total),
+
+        commission_total = o.person_type == "marketer"
+         ? ((_context.order_items
+             .Where(i => i.order_id == o.order_id)
+             .Sum(i => (int?)i.quantity) ?? 0)
+             * o.commission_per_box)
+         : 0,
+
+        paid_amount =
+         _context.financial_events
+             .Where(x =>
+                 x.ref_table == "orders" &&
+                 x.ref_id == o.order_id)
+             .Sum(x =>
+                 x.direction == "IN"
+                     ? (decimal?)x.amount
+                     : -(decimal?)x.amount
+             ) ?? 0,
+
+        order_date = o.order_date
+    };
 
             return await query
-     .AsNoTracking()
-     .OrderByDescending(x => x.order_id)
-     .ToListAsync();
+                .AsNoTracking()
+                .OrderByDescending(x => x.order_id)
+                .ToListAsync();
         }
 
         //جلب الخزنات النشطة
@@ -294,6 +306,9 @@ namespace SultanCups.Services
 
                 if (order == null)
                     return (false, "الفاتورة غير موجودة");
+
+                if (order.is_cancelled)
+                    return (false, "لا يمكن تعديل فاتورة ملغاة");
 
                 // ✔ بعد التحقق فقط
                 order.person_id = updated.person_id;
@@ -528,6 +543,117 @@ namespace SultanCups.Services
             }
         }
 
+        //CancleOrder 
+
+        public async Task<(bool success, string message)> CancelOrder(
+    int orderId,
+    int adminId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var order = await _context.orders
+                    .Include(o => o.Items)
+                    .FirstOrDefaultAsync(o => o.order_id == orderId);
+
+                if (order == null)
+                    return (false, "الفاتورة غير موجودة");
+
+                if (order.is_cancelled)
+                    return (false, "الفاتورة ملغاة مسبقًا");
+
+                // =====================================
+                // 🔥 إرجاع المنتجات للمخزون
+                // =====================================
+                var stock = await _context.product_stock
+                    .ToDictionaryAsync(x => x.product_id);
+
+                foreach (var item in order.Items)
+                {
+                    if (stock.ContainsKey(item.product_id))
+                    {
+                        stock[item.product_id].quantity += item.quantity;
+                    }
+                }
+
+                // =====================================
+                // 🔥 حساب المدفوع الحقيقي
+                // =====================================
+                var paidAmount =
+                    await _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders" &&
+                            x.ref_id == order.order_id)
+                        .SumAsync(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount
+                        ) ?? 0;
+
+                // =====================================
+                // 🔥 اسم الشخص
+                // =====================================
+                string personName = "";
+
+                if (order.person_type == "customer")
+                {
+                    personName = await _context.customers
+                        .Where(c => c.customer_id == order.person_id)
+                        .Select(c => c.name)
+                        .FirstOrDefaultAsync() ?? "";
+                }
+                else
+                {
+                    personName = await _context.marketers
+                        .Where(m => m.marketer_id == order.person_id)
+                        .Select(m => m.name)
+                        .FirstOrDefaultAsync() ?? "";
+                }
+
+                personName = order.person_type == "customer"
+                    ? $"{personName} (زبون)"
+                    : $"{personName} (مسوق)";
+
+                // =====================================
+                // 🔥 تسجيل استرجاع مالي
+                // =====================================
+                if (paidAmount > 0)
+                {
+                    AddFinancialEvent(
+                        "حذف فاتورة بيع",
+                        "OUT",
+                        paidAmount,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        $"استرجاع مبلغ فاتورة رقم {order.order_id}"
+                    );
+                }
+
+                // =====================================
+                // 🔥 إلغاء الفاتورة
+                // =====================================
+                order.is_cancelled = true;
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return (true, "تم إلغاء الفاتورة ✔");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return (false, ex.InnerException?.Message ?? ex.Message);
+            }
+        }
+
         private void HandleCashBoxChange(
     Order oldOrder,
     Order updated,
@@ -697,7 +823,7 @@ on o.person_id equals m.marketer_id into mg
 
                 let remaining = net - paid
 
-                where remaining > 0
+                where remaining > 0 && !o.is_cancelled
 
                 select new DebtView
                 {
@@ -737,7 +863,7 @@ on o.person_id equals m.marketer_id into mg
         {
             var orders = await _context.orders
                 .AsNoTracking()
-                .Where(o => o.person_type == "marketer")
+                .Where(o => o.person_type == "marketer" && !o.is_cancelled)
                 .Include(o => o.Items)
                 .ToListAsync();
 
