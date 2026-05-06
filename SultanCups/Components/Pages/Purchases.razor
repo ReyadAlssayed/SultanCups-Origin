@@ -40,21 +40,10 @@
             <option value="import">خارجي</option>
         </select>
 
-        <select class="pro-filter-select" @bind="YearFilter">
-            <option value="0">كل السنوات</option>
-            @foreach (var y in Years)
-            {
-                <option value="@y">@y</option>
-            }
-        </select>
-
-        <select class="pro-filter-select" @bind="MonthFilter">
-            <option value="0">كل الشهور</option>
-            @for (int i = 1; i <= 12; i++)
-            {
-                <option value="@i">@i</option>
-            }
-        </select>
+        <input type="date"
+               class="pro-filter-select"
+               @bind="DateFilter" />
+  
 
     </div>
 
@@ -67,16 +56,13 @@
             <table class="pro-table">
                 <thead>
                     <tr>
+                        <th>رقم الفاتورة</th>
                         <th>المادة</th>
                         <th>المورد</th>
                         <th>النوع</th>
                         <th>الكمية</th>
                         <th>سعر الوحدة</th>
-                        <th>جمرك</th>
-                        <th>شحن</th>
-                        <th>نقل</th>
                         <th>الإجمالي</th>
-                        <th>الخزنة</th>
                         <th>التاريخ</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -106,6 +92,8 @@
                         @foreach (var p in FilteredPurchases)
                         {
                             <tr>
+
+                                <td>@p.purchase_id</td>
                                 <td class="pro-name">@GetMaterialName(p.raw_material_id)</td>
                                 <td>@GetSupplierName(p.supplier_id)</td>
                                 <td>
@@ -113,15 +101,12 @@
                                 </td>
                                 <td>@p.quantity</td>
                                 <td>@p.unit_price.ToString("0.00")</td>
-                                <td>@p.customs_cost.ToString("0.00")</td>
-                                <td>@p.shipping_cost.ToString("0.00")</td>
-                                <td>@p.local_transport_cost.ToString("0.00")</td>
                                 <td>
                                     <span class="pro-total">
                                         @GetTotal(p).ToString("0.00") د.ل
                                     </span>
                                 </td>
-                                <td>@GetCashBoxName(p.cash_box_id)</td>
+  
                                 <td>@p.purchase_date.ToString("yyyy-MM-dd")</td>
                                 <td class="pro-actions-cell">
                                     <button class="pro-view" @onclick="() => OpenDetailsDialog(p)">
@@ -559,15 +544,8 @@
     string InvoiceSearch = "";
 
     string TypeFilter = "all";
-    int YearFilter = 0;
-    int MonthFilter = 0;
-
-    List<int> Years =>
-        (List ?? new())
-        .Select(x => x.purchase_date.Year)
-        .Distinct()
-        .OrderByDescending(x => x)
-        .ToList();
+  
+    DateTime? DateFilter;
 
     bool ShowDiffDialog;
 
@@ -622,12 +600,12 @@
   .Where(p =>
       (TypeFilter == "all" ||
        p.purchase_type == TypeFilter)
-      &&
-      (YearFilter == 0 ||
-       p.purchase_date.Year == YearFilter)
-      &&
-      (MonthFilter == 0 ||
-       p.purchase_date.Month == MonthFilter)
+     &&
+(
+    DateFilter == null
+    ||
+    p.purchase_date.Date == DateFilter.Value.Date
+)
       &&
       (string.IsNullOrWhiteSpace(InvoiceSearch)
        || p.purchase_id.ToString().Contains(InvoiceSearch)
