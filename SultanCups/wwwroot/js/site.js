@@ -107,42 +107,55 @@ window.printOrderCard = function () {
         <html dir="rtl">
         <head>
             ${css}
-            <style>
-                @page{ margin:10mm; }
+          <style>
+    @page{
+        margin:10mm;
+    }
 
-                body{ background:#fff; }
+    body{
+        background:#fff;
+    }
 
-                .sal-dialog-box{
-                    width:700px !important;
-                    margin:auto !important;
-                    box-shadow:none !important;
-                }
+    .sal-dialog-box{
+        width:700px !important;
+        margin:auto !important;
+        box-shadow:none !important;
+    }
 
-                .pro-dialog-actions{
-                    display:none !important;
-                }
+    .btn-cancel,
+    .btn-pdf-save{
+        display:none !important;
+    }
 
-                table{
-                    width:100%;
-                    border-collapse:collapse;
-                    margin-top:15px;
-                }
+    .pro-dialog-actions{
+        display:none !important;
+    }
 
-                th, td{
-                    border:1px solid #ddd;
-                    padding:8px;
-                    text-align:center;
-                }
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:15px;
+    }
 
-                th{
-                    background:#f3f4f6;
-                    font-weight:bold;
-                }
+    th, td{
+        border:1px solid #ddd;
+        padding:8px;
+        text-align:center;
+    }
 
-                img{
-    object-fit:contain;
+    th{
+        background:#f3f4f6;
+        font-weight:bold;
+    }
+
+    .print-only{
+    display:block !important;
 }
-            </style>
+
+    img{
+        object-fit:contain;
+    }
+</style>
         </head>
 
         <body>

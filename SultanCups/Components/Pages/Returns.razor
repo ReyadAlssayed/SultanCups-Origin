@@ -1,17 +1,22 @@
 ﻿@page "/returns"
 @layout Layout.MainLayout
 
-<div class="inv-page">
+<div class="pro-page">
 
-    <div class="inv-topbar">
-        <button class="inv-btn inv-btn-add" @onclick="OpenAddDialog">إضافة بضاعة راجعة</button>
-        <h2 class="inv-title">البضاعة الراجعة</h2>
+    <div class="pro-topbar">
+        <button class="pro-btn-add" @onclick="OpenAddDialog">
+            إضافة بضاعة راجعة
+        </button>
+
+        <h2 class="pro-title">البضاعة الراجعة</h2>
+
         <div></div>
     </div>
 
-    <div class="inv-card">
-        <div class="inv-table-wrap">
-            <table class="inv-table">
+    <div class="pro-card">
+        <div class="pro-table-wrap">
+
+            <table class="pro-table">
                 <thead>
                     <tr>
                         <th>رقم الفاتورة</th>
@@ -23,92 +28,146 @@
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    @foreach (var r in ReturnList)
+                    @if (ReturnList == null)
                     {
                         <tr>
-                            <td class="inv-code">@r.orderNumber</td>
-                            <td>@r.product</td>
-                            <td class="inv-money">@r.boxCount</td>
-                            <td class="inv-return-reason">@r.reason</td>
-                            <td class="inv-muted">@r.returnDate.ToString("yyyy-MM-dd")</td>
-                            <td class="inv-muted">@r.notes</td>
-
-                            <td class="inv-actions-cell">
-                                <button class="inv-small inv-edit" @onclick="() => OpenEditDialog(r)">تعديل</button>
-                                <button class="inv-small inv-del" @onclick="() => OpenDeleteDialog(r)">حذف</button>
+                            <td colspan="7">جاري التحميل...</td>
+                        </tr>
+                    }
+                    else if (!ReturnList.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="st-empty-text">
+                                <div class="empty-state">
+                                    <img src="images/Empty.jpg" class="empty-img" />
+                                    <span>لا توجد بيانات</span>
+                                </div>
                             </td>
                         </tr>
                     }
+                    else
+                    {
+                        @foreach (var r in ReturnList)
+                        {
+                            <tr>
+                                <td class="pro-code">@r.orderNumber</td>
+
+                                <td>@r.product</td>
+
+                                <td class="pro-money">@r.boxCount</td>
+
+                                <td>@r.reason</td>
+
+                                <td class="pro-muted">
+                                    @r.returnDate.ToString("yyyy-MM-dd")
+                                </td>
+
+                                <td class="pro-muted">@r.notes</td>
+
+                                <td class="pro-actions-cell">
+                                    <button class="pro-small pro-edit"
+                                            @onclick="() => OpenEditDialog(r)">
+                                        تعديل
+                                    </button>
+
+                                    <button class="pro-small pro-del"
+                                            @onclick="() => OpenDeleteDialog(r)">
+                                        حذف
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
+
             </table>
+
         </div>
     </div>
+
 </div>
 
 @if (ShowAddDialog || ShowEditDialog)
 {
-    <div class="inv-dialog-overlay">
-        <div class="inv-dialog-box">
-            <div class="inv-dialog-top-image">
-                <img src="images/Background.jpg" />
-            </div>
-            <div class="inv-dialog-body">
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box">
+
+            <div class="pro-dialog-body">
+
                 <h3>@(ShowAddDialog ? "إضافة إرجاع جديد" : "تعديل بيانات الإرجاع")</h3>
-                
-                <div class="inv-fields-grid">
-                    <div class="inv-field">
-                        <label class="inv-label">رقم الفاتورة</label>
-                        <input class="inv-input-dialog" @bind="ReturnForm.orderNumber" />
+
+                <div class="pro-fields-grid">
+
+                    <div class="pro-field">
+                        <label>رقم الفاتورة</label>
+                        <input class="pro-input" @bind="ReturnForm.orderNumber" />
                     </div>
-                    <div class="inv-field">
-                        <label class="inv-label">المنتج</label>
-                        <input class="inv-input-dialog" @bind="ReturnForm.product" />
+
+                    <div class="pro-field">
+                        <label>المنتج</label>
+                        <input class="pro-input" @bind="ReturnForm.product" />
                     </div>
-                    <div class="inv-field">
-                        <label class="inv-label">عدد الكراتين</label>
-                        <input class="inv-input-dialog" type="number" @bind="ReturnForm.boxCount" />
+
+                    <div class="pro-field">
+                        <label>عدد الكراتين</label>
+                        <input class="pro-input" type="number" @bind="ReturnForm.boxCount" />
                     </div>
-                    <div class="inv-field">
-                        <label class="inv-label">سبب الإرجاع</label>
-                        <input class="inv-input-dialog" @bind="ReturnForm.reason" />
+
+                    <div class="pro-field">
+                        <label>سبب الإرجاع</label>
+                        <input class="pro-input" @bind="ReturnForm.reason" />
                     </div>
-                    <div class="inv-field">
-                        <label class="inv-label">التاريخ</label>
-                        <input class="inv-input-dialog" type="date" @bind="ReturnForm.returnDate" />
+
+                    <div class="pro-field">
+                        <label>التاريخ</label>
+                        <input class="pro-input" type="date" @bind="ReturnForm.returnDate" />
                     </div>
-                    <div class="inv-field full-width">
-                        <label class="inv-label">ملاحظات</label>
-                        <textarea class="inv-input-dialog" @bind="ReturnForm.notes"></textarea>
+
+                    <div class="pro-field full-width">
+                        <label>ملاحظات</label>
+                        <textarea class="pro-input" @bind="ReturnForm.notes"></textarea>
                     </div>
+
                 </div>
 
-                <div class="inv-dialog-actions">
-                    <button type="button" class="inv-save">حفظ</button>
-                    <button type="button" class="inv-cancel" @onclick="CloseDialogs">إلغاء</button>
+                <div class="pro-dialog-actions">
+                    <button class="pro-save">حفظ</button>
+                    <button class="pro-cancel" @onclick="CloseDialogs">إلغاء</button>
                 </div>
+
             </div>
+
         </div>
+
     </div>
 }
 
 @if (ShowDeleteDialog)
 {
-    <div class="inv-dialog-overlay">
-        <div class="inv-dialog-box inv-delete-dialog-box">
-            <div class="inv-dialog-top-image inv-delete-top-image">
-                <img src="images/Background.jpg" />
-            </div>
-            <div class="inv-dialog-body inv-delete-dialog-body">
-                <div class="inv-delete-icon-wrap"><div class="inv-delete-icon">!</div></div>
-                <h3 class="inv-delete-title">تأكيد الحذف</h3>
-                <p class="inv-delete-text">هل تريد حذف سجل إرجاع الفاتورة "@ReturnForm.orderNumber"؟</p>
-                <div class="inv-dialog-actions">
-                    <button type="button" class="inv-delete-confirm">حذف</button>
-                    <button type="button" class="inv-cancel" @onclick="CloseDialogs">إلغاء</button>
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box pro-delete-dialog-box">
+
+            <div class="pro-dialog-body pro-delete-dialog-body">
+
+                <h3 class="pro-delete-title">تأكيد الحذف</h3>
+
+                <p class="pro-delete-text">
+                    هل تريد حذف سجل إرجاع الفاتورة "@ReturnForm.orderNumber"؟
+                </p>
+
+                <div class="pro-dialog-actions">
+                    <button class="pro-delete-confirm">حذف</button>
+                    <button class="pro-cancel" @onclick="CloseDialogs">إلغاء</button>
                 </div>
+
             </div>
+
         </div>
+
     </div>
 }
 
@@ -122,7 +181,12 @@
     bool ShowAddDialog, ShowEditDialog, ShowDeleteDialog;
     ReturnRow ReturnForm = new();
 
-    void OpenAddDialog() { ReturnForm = new ReturnRow { returnDate = DateTime.Now }; ShowAddDialog = true; }
+    void OpenAddDialog()
+    {
+        ReturnForm = new ReturnRow { returnDate = DateTime.Now };
+        ShowAddDialog = true;
+    }
+
     void OpenEditDialog(ReturnRow r)
     {
         ReturnForm = new ReturnRow
@@ -134,10 +198,18 @@
             returnDate = r.returnDate,
             notes = r.notes
         };
+
         ShowEditDialog = true;
     }
-    void OpenDeleteDialog(ReturnRow r) { ReturnForm = r; ShowDeleteDialog = true; }
-    void CloseDialogs() => ShowAddDialog = ShowEditDialog = ShowDeleteDialog = false;
+
+    void OpenDeleteDialog(ReturnRow r)
+    {
+        ReturnForm = r;
+        ShowDeleteDialog = true;
+    }
+
+    void CloseDialogs()
+        => ShowAddDialog = ShowEditDialog = ShowDeleteDialog = false;
 
     public class ReturnRow
     {

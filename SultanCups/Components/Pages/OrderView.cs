@@ -15,6 +15,8 @@
         public int person_id { get; set; }   // 🔥 مهم
 
         public bool is_special { get; set; }   // 🔥 جديد
+
+        public bool is_cancelled { get; set; }
         public decimal total { get; set; }
         public decimal discount_total { get; set; }
         public decimal net_total { get; set; }

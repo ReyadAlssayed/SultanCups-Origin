@@ -4,6 +4,9 @@
 @using SultanCups.Services
 @inject FinanceService2 FinanceService
 
+@inject NavigationManager Nav
+
+
 <div class="pro-page">
 
     <div class="pro-topbar">
@@ -52,6 +55,7 @@
                         <th>المتبقي</th>
                         <th>الحالة</th>
                         <th>التاريخ</th>
+                        <th>الإجراءات</th>
                     </tr>
                 </thead>
 
@@ -60,13 +64,13 @@
                     
                     {
                         <tr>
-                            <td colspan="7">جاري التحميل...</td>
+                            <td colspan="8">جاري التحميل...</td>
                         </tr>
                     }
                     else if (!FilteredList.Any())
                     {
                         <tr>
-                            <td colspan="7" class="st-empty-text">
+                            <td colspan="8" class="st-empty-text">
                                 <div class="empty-state">
                                     <img src="images/Empty.jpg" class="empty-img" />
                                     <span>لا توجد ديون</span>
@@ -101,6 +105,17 @@
                                 </td>
 
                                 <td>@d.order_date.ToString("yyyy-MM-dd")</td>
+
+                                <td>
+
+                                    <button class="debt-go-order-btn"
+                                            @onclick='() => Nav.NavigateTo($"/orders?new={d.order_id}")'>
+
+                                        الانتقال إلى الفاتورة
+
+                                    </button>
+
+                                </td>
                             </tr>
                         }
                     }

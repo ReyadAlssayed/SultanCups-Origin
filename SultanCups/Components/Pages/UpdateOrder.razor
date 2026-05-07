@@ -115,7 +115,8 @@
                 <tbody>
                     @foreach (var item in Form.Items)
                     {
-                        <tr>
+                        <tr @key="item"
+                            class="item-row1 @(item.IsRemoving ? "" : "open")">
                             <td>
                                 <select class="pro-input" value="@item.product_id"
                                         @onchange="e => OnProductChanged(e, item)">
@@ -127,15 +128,34 @@
                                 </select>
                             </td>
 
-                            <td><input class="pro-input" @bind="item.unit_price" /></td>
-                            <td><input class="pro-input" @bind="item.quantity" /></td>
+                            <td>
+                                <input type="number"
+                                       step="0.01"
+                                       class="pro-input"
+                                       @bind-value="item.unit_price"
+                                       @bind-value:event="oninput" />
+                            </td>
 
-                            <td>@(item.quantity * item.unit_price)</td>
+                            <td>
+                                <input type="number"
+                                       class="pro-input"
+                                       @bind-value="item.quantity"
+                                       @bind-value:event="oninput" />
+                            </td>
+
+                            <td>
+                                <input class="pro-input"
+                                       value="@(item.quantity * item.unit_price)"
+                                       readonly />
+                            </td>
 
                             <td>
                                 @if (Form.Items.Count > 1)
                                 {
-                                    <button @onclick="() => RemoveItem(item)">✕</button>
+                                    <button class="btn-delete-item1"
+                                            @onclick="() => RemoveItem(item)">
+                                        ✕
+                                    </button>
                                 }
                             </td>
                         </tr>
@@ -146,7 +166,21 @@
             <button class="pro-btn-add small" @onclick="AddItem">إضافة صنف</button>
 
             <div class="bottom-actions1">
-                <button class="pro-save" @onclick="SaveOrder">تحديث الفاتورة</button>
+                <button class="pro-save"
+                        @onclick="SaveOrder"
+                        disabled="@IsSaving">
+
+                    @if (IsSaving)
+                    {
+                        <span class="save-loader"></span>
+                        <span>جاري التحديث...</span>
+                    }
+                    else
+                    {
+                        <span>تحديث الفاتورة</span>
+                    }
+
+                </button>
             </div>
 
         </div>
@@ -402,6 +436,8 @@
 
     string CurrentMethod = "";
 
+    bool IsSaving = false;
+
     decimal AddAmount;
     decimal RefundAmount;
 
@@ -646,6 +682,11 @@
     {
         try
         {
+            if (IsSaving)
+                return;
+
+            IsSaving = true;
+
             Form.order_date = DateTime.SpecifyKind(Form.order_date, DateTimeKind.Utc);
 
             if (Form.person_id == 0)
@@ -710,7 +751,7 @@
 
             if (result.success)
             {
-                ToastService.ShowToast("تم التعديل ✔", "success");
+                ToastService.ShowToast("تم التعديل ", "success");
                 Nav.NavigateTo("/orders");
             }
             else
@@ -722,16 +763,37 @@
         {
             ToastService.ShowToast(ex.Message, "error");
         }
+
+        finally
+        {
+            IsSaving = false;
+        }
     }
 
-    void RemoveItem(OrderItem item)
+    async Task RemoveItem(OrderItem item)
     {
+        item.IsRemoving = true;
+
+        await Task.Delay(200);
+
         Form.Items.Remove(item);
     }
 
-    void AddItem()
+    async Task AddItem()
     {
-        Form.Items.Add(new OrderItem());
+        var item = new OrderItem
+        {
+            product_id = 0,
+            quantity = 1,
+            unit_price = 0,
+            IsRemoving = true
+        };
+
+        Form.Items.Add(item);
+
+        await Task.Delay(10);
+
+        item.IsRemoving = false;
     }
 
     bool IsCommissionAllowed

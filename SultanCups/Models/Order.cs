@@ -20,10 +20,9 @@ public class Order
     public int cash_box_id { get; set; } // الخزنة
     public string payment_method { get; set; } = "cash";
 
-    // 🔥 الجديد
-    public decimal paid_amount { get; set; } = 0;
-
     public string? notes { get; set; }
+
+    public bool is_cancelled { get; set; } = false;
 
     public List<OrderItem> Items { get; set; } = new();
 }

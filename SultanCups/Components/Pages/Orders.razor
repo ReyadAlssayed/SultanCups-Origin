@@ -22,6 +22,28 @@
         <div></div>
     </div>
 
+
+   <div class="pro-search-bar">
+
+    <input class="mk-search-input"
+           placeholder="ابحث برقم الفاتورة أو الاسم"
+           @bind="SearchText"
+           @bind:event="oninput" />
+
+    <select class="pro-filter-select" @bind="StatusFilter">
+        <option value="all">كل الحالات</option>
+        <option value="paid">خالص</option>
+        <option value="partial">جزئي</option>
+        <option value="unpaid">غير خالص</option>
+    </select>
+
+    <input type="date"
+           class="pro-filter-select"
+           @bind="DateFilter" />
+
+</div>
+
+
     <div class="pro-card">
         <div class="pro-table-wrap">
             <table class="pro-table">
@@ -45,7 +67,7 @@
                             </td>
                         </tr>
                     }
-                    else if (!OrdersList.Any())
+                    else if (!FilteredOrders.Any())
                     {
                         <tr>
                             <td colspan="10" class="st-empty-text">
@@ -58,9 +80,14 @@
                     }
                     else
                     {
-                        @foreach (var o in OrdersList)
+                        @foreach (var o in FilteredOrders)
 {
-    <tr class="@(o.order_id == HighlightId ? "new-row" : "")">
+    <tr id="order-@o.order_id"
+    class="@(o.is_cancelled
+        ? "cancelled-row"
+        : o.order_id == HighlightId
+            ? "new-row"
+            : "")">
 
         <td>@o.order_id</td>
 
@@ -72,7 +99,7 @@
 
                                 <td>
                                     @(o.paid_amount == 0
-    ? "غير مدفوع"
+    ? "غير خالص"
     : o.paid_amount < o.net_total
         ? "جزئي"
         : "خالص")
@@ -83,17 +110,37 @@
                                     @o.order_date.ToString("yyyy-MM-dd")
                                 </td>
 
-        <td>
-            <button class="btn-info" @onclick="() => OpenDetails(o)">تفاصيل</button>
+     <td>
 
-                                    <button class="btn-edit"
-                                            @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
-                                        تعديل
-                                    </button>
+    <button class="btn-info"
+            @onclick="() => OpenDetails(o)">
+        تفاصيل
+    </button>
 
-            <button class="btn-delete">تعطيل</button>
-                                   
-        </td>
+    @if (!o.is_cancelled)
+    {
+        <button class="btn-edit"
+                @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
+            تعديل
+        </button>
+
+        <button class="btn-delete"
+                @onclick="() => OpenDisableDialog(o)">
+            إلغاء
+        </button>
+
+        <button class="btn-return">
+            ترجيع
+        </button>
+    }
+    else
+    {
+        <span class="cancelled-text">
+            ملغاة
+        </span>
+    }
+
+</td>
 
     </tr>
 }
@@ -171,7 +218,7 @@
    <span class="status-text">الحالة</span>
    <span class="@GetStatusClass(SelectedOrder)">
     @(SelectedOrder.paid_amount == 0
-        ? "غير مدفوع"
+        ? "غير خالص"
         : SelectedOrder.paid_amount < SelectedOrder.net_total
             ? "جزئي"
             : "خالص")
@@ -220,17 +267,21 @@
 
                 </div>
 
-                <button class="btn-pdf-save" onclick="printOrderCard()">
-    🖨️ طباعة الفاتورة
-</button>
+                @if (!SelectedOrder.is_cancelled)
+{
+    <button class="btn-pdf-save" onclick="printOrderCard()">
+        🖨️ طباعة الفاتورة
+    </button>
+}
                 
                 <button class="btn-cancel" @onclick="CloseDetails">
                     إغلاق
                 </button>
 
             </div>
+<div class="print-only">
 
-            @if (SelectedItems.Any())
+@if (SelectedItems.Any())
 {
     <table style="margin-top:20px;">
         <thead>
@@ -256,6 +307,75 @@
     </table>
 }
 
+</div>
+
+        </div>
+
+    </div>
+}
+
+@if (ShowDisableDialog && DisableOrder != null)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <h3>إلغاء الفاتورة</h3>
+
+                <p>
+                    سيتم إرجاع المنتجات التالية إلى المخزن:
+                </p>
+
+                <div class="disable-items">
+
+                    @foreach (var item in DisableItems)
+                    {
+                        <div class="disable-row">
+                            - @item.product_name
+                            (الكمية: @item.quantity)
+                        </div>
+                    }
+
+                </div>
+
+                @if (DisableOrder.paid_amount > 0)
+                {
+                    <div class="refund-note">
+
+                        سيتم إخراج مبلغ
+                        @Fmt(DisableOrder.paid_amount)
+
+                        وإرجاعه إلى
+
+                        @(DisableOrder.person_type == "customer"
+                            ? "الزبون"
+                            : "المسوق")
+
+                    </div>
+                }
+
+                <div class="pro-dialog-actions">
+
+                   <button class="pro-save"
+        @onclick="ConfirmCancelOrder">
+    تأكيد الإلغاء
+</button>
+
+                    <button class="pro-cancel"
+                            @onclick="() => ShowDisableDialog = false">
+                        إلغاء
+                    </button>
+
+                </div>
+
+            </div>
+
         </div>
 
     </div>
@@ -279,19 +399,32 @@
 
     List<OrderItem> SelectedItems = new();
     List<string> PaymentMethods = new();
+
+    string SearchText = "";
+
+string StatusFilter = "all";
+
+bool ShowDisableDialog = false;
+
+OrderView? DisableOrder;
+
+List<OrderItem> DisableItems = new();
+
+DateTime? DateFilter;
    
     protected override async Task OnInitializedAsync()
     {
         OrdersList = await FinanceService.GetOrders();
     }
 
-    protected override void OnParametersSet()
+protected override void OnParametersSet()
+{
+    if (!string.IsNullOrEmpty(newId))
     {
-        if (!string.IsNullOrEmpty(newId))
-        {
-            _ = ClearHighlight();
-        }
+        _ = ScrollToOrder();
+        _ = ClearHighlight();
     }
+}
 
     string GetPaymentName(string method)
 {
@@ -313,9 +446,80 @@ async Task PrintInvoice()
 }
     async Task ClearHighlight()
     {
-        await Task.Delay(3000); // 3 ثواني
-        Nav.NavigateTo("/orders");
+        await Task.Delay(5000); // 5 ثواني
+        if (Nav.Uri.Contains("/orders"))
+{
+    Nav.NavigateTo("/orders");
+}
     }
+
+
+    async Task ScrollToOrder()
+{
+    await Task.Delay(300);
+
+    await JS.InvokeVoidAsync(
+        "eval",
+        $"document.getElementById('order-{HighlightId}')?.scrollIntoView({{behavior:'smooth', block:'center'}})"
+    );
+}
+
+IEnumerable<OrderView> FilteredOrders =>
+    (OrdersList ?? new List<OrderView>())
+    .Where(o =>
+
+        // البحث
+        (
+            string.IsNullOrWhiteSpace(SearchText)
+            ||
+            o.order_id.ToString().Contains(SearchText)
+            ||
+            (o.person_name != null &&
+             o.person_name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+        )
+
+        // فلترة التاريخ
+        &&
+
+        (
+            DateFilter == null
+            ||
+            o.order_date.Date == DateFilter.Value.Date
+        )
+
+        // فلترة الحالة
+        &&
+
+        (
+            StatusFilter == "all"
+
+            ||
+
+            (
+                StatusFilter == "paid"
+                &&
+                o.paid_amount >= o.net_total
+            )
+
+            ||
+
+            (
+                StatusFilter == "partial"
+                &&
+                o.paid_amount > 0
+                &&
+                o.paid_amount < o.net_total
+            )
+
+            ||
+
+            (
+                StatusFilter == "unpaid"
+                &&
+                o.paid_amount == 0
+            )
+        )
+    );
    
 async Task OpenDetails(OrderView o)
 {
@@ -353,6 +557,53 @@ string GetStatusClass(OrderView o)
     if (o.paid_amount == 0) return "status-red";
     if (o.paid_amount < o.net_total) return "status-orange";
     return "status-green";
+}
+
+async Task OpenDisableDialog(OrderView o)
+{
+    DisableOrder = o;
+
+    var order = await FinanceService.GetOrderById(o.order_id);
+
+    if (order == null)
+        return;
+
+    var products = await FinanceService.GetProductsDict();
+
+    DisableItems = order.Items;
+
+    foreach (var item in DisableItems)
+    {
+        if (products.ContainsKey(item.product_id))
+        {
+            item.product_name = products[item.product_id];
+        }
+    }
+
+    ShowDisableDialog = true;
+}
+
+async Task ConfirmCancelOrder()
+{
+    if (DisableOrder == null)
+        return;
+
+    var result = await FinanceService.CancelOrder(
+        DisableOrder.order_id,
+        CurrentAdminId);
+
+    if (result.success)
+    {
+        ToastService.ShowToast(result.message, "success");
+
+        OrdersList = await FinanceService.GetOrders();
+
+        ShowDisableDialog = false;
+    }
+    else
+    {
+        ToastService.ShowToast(result.message, "error");
+    }
 }
 
 

@@ -181,58 +181,75 @@ namespace SultanCups.Services
         public async Task<List<OrderView>> GetOrders(int page = 1, int pageSize = 20)
         {
             var query =
-                from o in _context.orders
-                join c in _context.customers on o.person_id equals c.customer_id into cg
-                from c in cg.DefaultIfEmpty()
-                join m in _context.marketers on o.person_id equals m.marketer_id into mg
-                from m in mg.DefaultIfEmpty()
-                select new OrderView
-                {
-                    order_id = o.order_id,
-                    person_id = o.person_id,
-                    person_type = o.person_type,
-                    person_name = o.person_type == "customer" ? c.name : m.name,
+    from o in _context.orders.AsNoTracking()
 
-                    is_special = o.person_type == "marketer" ? m.is_special : false,
+    join c in _context.customers.AsNoTracking()
+    on o.person_id equals c.customer_id into cg
+    from c in cg.DefaultIfEmpty()
 
-                    items_count = _context.order_items.Count(i => i.order_id == o.order_id),
+    join m in _context.marketers.AsNoTracking()
+    on o.person_id equals m.marketer_id into mg
+    from m in mg.DefaultIfEmpty()
+    select new OrderView
+    {
+        order_id = o.order_id,
 
-                    total_quantity = _context.order_items
-                        .Where(i => i.order_id == o.order_id)
-                        .Sum(i => (int?)i.quantity) ?? 0,
+        person_id = o.person_id,
 
-                    total = _context.order_items
-                        .Where(i => i.order_id == o.order_id)
-                        .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
+        person_type = o.person_type,
 
-                    net_total =
-                        ((_context.order_items
-                            .Where(i => i.order_id == o.order_id)
-                            .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
-                        - o.discount_total),
+        is_cancelled = o.is_cancelled,
 
-                    commission_total = o.person_type == "marketer"
-                        ? ((_context.order_items
-                            .Where(i => i.order_id == o.order_id)
-                            .Sum(i => (int?)i.quantity) ?? 0)
-                            * o.commission_per_box)
-                        : 0,
+        person_name = o.person_type == "customer"
+    ? c.name
+    : m.name,
 
-                    paid_amount =
-    _context.financial_events
-        .Where(x =>
-            x.ref_table == "orders" &&
-            x.ref_id == o.order_id)
-        .Sum(x =>
-            x.direction == "IN"
-                ? (decimal?)x.amount
-                : -(decimal?)x.amount
-        ) ?? 0,
+        is_special = o.person_type == "marketer"
+         ? m.is_special
+         : false,
 
-                    order_date = o.order_date
-                };
+        items_count = _context.order_items
+         .Count(i => i.order_id == o.order_id),
+
+        total_quantity = _context.order_items
+         .Where(i => i.order_id == o.order_id)
+         .Sum(i => (int?)i.quantity) ?? 0,
+
+        total = _context.order_items
+         .Where(i => i.order_id == o.order_id)
+         .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0,
+
+        discount_total = o.discount_total,
+
+        net_total =
+         ((_context.order_items
+             .Where(i => i.order_id == o.order_id)
+             .Sum(i => (decimal?)(i.quantity * i.unit_price)) ?? 0)
+         - o.discount_total),
+
+        commission_total = o.person_type == "marketer"
+         ? ((_context.order_items
+             .Where(i => i.order_id == o.order_id)
+             .Sum(i => (int?)i.quantity) ?? 0)
+             * o.commission_per_box)
+         : 0,
+
+        paid_amount =
+         _context.financial_events
+             .Where(x =>
+                 x.ref_table == "orders" &&
+                 x.ref_id == o.order_id)
+             .Sum(x =>
+                 x.direction == "IN"
+                     ? (decimal?)x.amount
+                     : -(decimal?)x.amount
+             ) ?? 0,
+
+        order_date = o.order_date
+    };
 
             return await query
+                .AsNoTracking()
                 .OrderByDescending(x => x.order_id)
                 .ToListAsync();
         }
@@ -289,6 +306,9 @@ namespace SultanCups.Services
 
                 if (order == null)
                     return (false, "الفاتورة غير موجودة");
+
+                if (order.is_cancelled)
+                    return (false, "لا يمكن تعديل فاتورة ملغاة");
 
                 // ✔ بعد التحقق فقط
                 order.person_id = updated.person_id;
@@ -523,6 +543,117 @@ namespace SultanCups.Services
             }
         }
 
+        //CancleOrder 
+
+        public async Task<(bool success, string message)> CancelOrder(
+    int orderId,
+    int adminId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var order = await _context.orders
+                    .Include(o => o.Items)
+                    .FirstOrDefaultAsync(o => o.order_id == orderId);
+
+                if (order == null)
+                    return (false, "الفاتورة غير موجودة");
+
+                if (order.is_cancelled)
+                    return (false, "الفاتورة ملغاة مسبقًا");
+
+                // =====================================
+                // 🔥 إرجاع المنتجات للمخزون
+                // =====================================
+                var stock = await _context.product_stock
+                    .ToDictionaryAsync(x => x.product_id);
+
+                foreach (var item in order.Items)
+                {
+                    if (stock.ContainsKey(item.product_id))
+                    {
+                        stock[item.product_id].quantity += item.quantity;
+                    }
+                }
+
+                // =====================================
+                // 🔥 حساب المدفوع الحقيقي
+                // =====================================
+                var paidAmount =
+                    await _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders" &&
+                            x.ref_id == order.order_id)
+                        .SumAsync(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount
+                        ) ?? 0;
+
+                // =====================================
+                // 🔥 اسم الشخص
+                // =====================================
+                string personName = "";
+
+                if (order.person_type == "customer")
+                {
+                    personName = await _context.customers
+                        .Where(c => c.customer_id == order.person_id)
+                        .Select(c => c.name)
+                        .FirstOrDefaultAsync() ?? "";
+                }
+                else
+                {
+                    personName = await _context.marketers
+                        .Where(m => m.marketer_id == order.person_id)
+                        .Select(m => m.name)
+                        .FirstOrDefaultAsync() ?? "";
+                }
+
+                personName = order.person_type == "customer"
+                    ? $"{personName} (زبون)"
+                    : $"{personName} (مسوق)";
+
+                // =====================================
+                // 🔥 تسجيل استرجاع مالي
+                // =====================================
+                if (paidAmount > 0)
+                {
+                    AddFinancialEvent(
+                        "حذف فاتورة بيع",
+                        "OUT",
+                        paidAmount,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        $"استرجاع مبلغ فاتورة رقم {order.order_id}"
+                    );
+                }
+
+                // =====================================
+                // 🔥 إلغاء الفاتورة
+                // =====================================
+                order.is_cancelled = true;
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return (true, "تم إلغاء الفاتورة ✔");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return (false, ex.InnerException?.Message ?? ex.Message);
+            }
+        }
+
         private void HandleCashBoxChange(
     Order oldOrder,
     Order updated,
@@ -641,28 +772,36 @@ namespace SultanCups.Services
 
         public async Task<List<Order>> GetOrdersRaw()
         {
-            return await _context.orders.ToListAsync();
+            return await _context.orders
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<OrderItem>> GetOrderItems()
         {
-            return await _context.order_items.ToListAsync();
+            return await _context.order_items
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<Product>> GetProducts()
         {
-            return await _context.products.ToListAsync();
+            return await _context.products
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<DebtView>> GetDebts()
         {
             var query =
-                from o in _context.orders
+                from o in _context.orders.AsNoTracking()
 
-                join c in _context.customers on o.person_id equals c.customer_id into cg
+                join c in _context.customers.AsNoTracking()
+on o.person_id equals c.customer_id into cg
                 from c in cg.DefaultIfEmpty()
 
-                join m in _context.marketers on o.person_id equals m.marketer_id into mg
+                join m in _context.marketers.AsNoTracking()
+on o.person_id equals m.marketer_id into mg
                 from m in mg.DefaultIfEmpty()
 
                 let total = _context.order_items
@@ -684,7 +823,7 @@ namespace SultanCups.Services
 
                 let remaining = net - paid
 
-                where remaining > 0
+                where remaining > 0 && !o.is_cancelled
 
                 select new DebtView
                 {
@@ -699,23 +838,100 @@ namespace SultanCups.Services
                 };
 
             return await query
-                .OrderByDescending(x => x.order_id)
-                .ToListAsync();
+    .AsNoTracking()
+    .OrderByDescending(x => x.order_id)
+    .ToListAsync();
         }
 
         //
 
         public async Task<List<Customer>> GetCustomers()
         {
-            return await _context.customers.ToListAsync();
+            return await _context.customers
+    .AsNoTracking()
+    .ToListAsync();
         }
 
         public async Task<List<Marketer>> GetMarketers()
         {
-            return await _context.marketers.ToListAsync();
+            return await _context.marketers
+    .AsNoTracking()
+    .ToListAsync();
         }
 
+        public async Task<List<MarketerCommissionView>> GetMarketerCommissions()
+        {
+            var orders = await _context.orders
+                .AsNoTracking()
+                .Where(o => o.person_type == "marketer" && !o.is_cancelled)
+                .Include(o => o.Items)
+                .ToListAsync();
 
+            var marketers = await _context.marketers
+                .AsNoTracking()
+                .ToDictionaryAsync(
+                    m => m.marketer_id,
+                    m => new
+                    {
+                        m.name,
+                        m.is_special
+                    });
 
+            var result = orders.Select(o =>
+            {
+                var totalQuantity = o.Items.Sum(i => i.quantity);
+
+                var orderTotal = o.Items.Sum(i => i.quantity * i.unit_price);
+
+                var netTotal = orderTotal - o.discount_total;
+
+                var commissionTotal = totalQuantity * o.commission_per_box;
+
+                var marketerData = marketers.ContainsKey(o.person_id)
+                    ? marketers[o.person_id]
+                    : null;
+
+                var marketerName = marketerData?.name ?? "غير معروف";
+
+                var paidAmount =
+                    _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders" &&
+                            x.ref_id == o.order_id)
+                        .Sum(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount
+                        ) ?? 0;
+
+                bool canPayCommission =
+                    marketerData != null &&
+                    (
+                        marketerData.is_special ||
+                        paidAmount >= netTotal
+                    );
+
+                return new MarketerCommissionView
+                {
+                    order_id = o.order_id,
+
+                    marketer_name = marketerName,
+
+                    order_total = netTotal,
+
+                    commission_total = commissionTotal,
+
+                    commission_status = canPayCommission
+                        ? "مستحقة"
+                        : "معلقة",
+
+                    order_date = o.order_date
+                };
+            })
+            .OrderByDescending(x => x.order_id)
+            .ToList();
+
+            return result;
+        }
     }
 }

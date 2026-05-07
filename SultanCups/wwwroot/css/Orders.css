@@ -61,7 +61,7 @@
     }
 
     .inv-table tbody td {
-        background: #fff;
+        background: transparent;
         border-top: 1px solid rgba(226,232,240,.85);
         border-bottom: 1px solid rgba(226,232,240,.85);
         padding: 14px 16px;
@@ -72,6 +72,19 @@
         .inv-table tbody td + td {
             border-right: 1px solid rgba(226,232,240,.6);
         }
+
+.commission-orange {
+    background: #fff7ed;
+    color: #ea580c;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.pro-table tbody tr.new-row,
+.pro-table tbody tr.new-row td {
+    background: #dcfce7 !important;
+}
 
 .inv-code {
     color: #0b2a66;
@@ -263,6 +276,41 @@
         font-weight: 700;
         font-size: 13px;
     }
+
+
+.btn-return {
+    border: none;
+    background: #ede9fe;
+    color: #6d28d9;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: .2s;
+}
+
+    .btn-return:hover {
+        background: #ddd6fe;
+    }
+
+.print-only {
+    display: none;
+}
+
+.cancelled-row {
+    background: #fff1f2 !important;
+}
+
+    .cancelled-row td {
+        color: #991b1b;
+    }
+
+.cancelled-text {
+    color: #dc2626;
+    font-weight: 700;
+}
+
 
 @media (max-width: 768px) {
     .inv-fields-grid {
