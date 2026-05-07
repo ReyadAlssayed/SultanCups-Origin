@@ -30,6 +30,36 @@
         <div></div>
 
     </div>
+    <div class="emp-search-bar">
+
+        <input class="emp-search-input"
+               placeholder="ابحث باسم الموظف أو رقم الهاتف"
+               @bind="SearchText"
+               @bind:event="oninput" />
+
+        <select class="emp-filter-select"
+                @bind="SelectedStatus">
+
+            <option value="الكل">الكل</option>
+            <option value="خالص">خالص</option>
+            <option value="خالص جزئي">خالص جزئي</option>
+            <option value="غير خالص">غير خالص</option>
+
+        </select>
+
+        <select class="emp-filter-select"
+                @bind="SelectedMonth">
+
+            <option value="0">كل الشهور</option>
+
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i">@i</option>
+            }
+
+        </select>
+
+    </div>
 
     <div class="pro-card">
         <div class="pro-table-wrap">
@@ -74,7 +104,7 @@
                     }
                     else
                     {
-                        @foreach (var s in Salarie)
+                        @foreach (var s in FilteredSalaries)
                         {
                             <tr>
                                 <td>@s.Employee.full_name</td>
@@ -572,6 +602,7 @@
         }
     }
 
+
     protected override async Task OnInitializedAsync()
     {
         if (!Session.IsLoggedIn)
@@ -584,6 +615,54 @@
         Employees = await FinanceService.GetActiveEmployees();
         CashBoxes = await FinanceService.GetActiveCashBoxes();
     }
+
+    string SearchText = "";
+
+    string SelectedStatus = "الكل";
+
+    int SelectedMonth = 0;
+
+    IEnumerable<Salary> FilteredSalaries =>
+        (Salarie ?? new List<Salary>())
+        .Where(s =>
+
+            // البحث
+            (
+                string.IsNullOrWhiteSpace(SearchText)
+                ||
+                (
+                    s.Employee?.full_name != null &&
+                    s.Employee.full_name
+                        .Trim()
+                        .Replace("أ", "ا")
+                        .Replace("إ", "ا")
+                        .Replace("آ", "ا")
+                        .Contains(
+                            SearchText
+                                .Trim()
+                                .Replace("أ", "ا")
+                                .Replace("إ", "ا")
+                                .Replace("آ", "ا"),
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                )
+            )
+
+            // الحالة
+            &&
+            (
+                SelectedStatus == "الكل"
+                ||
+                s.status == SelectedStatus
+            )
+            // الشهر
+            &&
+            (
+                SelectedMonth == 0
+                ||
+                s.salary_date.ToLocalTime().Month == SelectedMonth
+            )
+        );
 
     void OpenAddDialog()
     {

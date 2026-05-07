@@ -23,6 +23,50 @@
 
     </div>
 
+    <div class="emp-search-bar">
+
+        <input class="emp-search-input"
+               placeholder="ابحث باسم الموظف"
+               @bind="SearchText"
+               @bind:event="oninput" />
+
+        <select class="emp-filter-select"
+                @bind="SelectedStatus">
+
+            <option value="الكل">الكل</option>
+            <option value="خالص">خالص</option>
+            <option value="خالص جزئي">خالص جزئي</option>
+            <option value="غير خالص">غير خالص</option>
+
+        </select>
+
+        <select class="emp-filter-select"
+                @bind="SelectedMonth">
+
+            <option value="0">كل الشهور</option>
+
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i">@i</option>
+            }
+
+        </select>
+
+        <select class="emp-filter-select"
+                @bind="SelectedYear">
+
+            <option value="0">كل السنوات</option>
+
+            @foreach (var y in FilterYears)
+            {
+                <option value="@y">@y</option>
+            }
+
+        </select>
+
+    </div>
+
+
     <div class="pro-card">
         <div class="pro-table-wrap">
 
@@ -62,7 +106,7 @@
                     }
                     else
                     {
-                        @foreach (var l in Loan)
+                        @foreach (var l in FilteredLoans)
                         {
                             <tr>
 
@@ -617,6 +661,72 @@
     int DeleteLoanId;
 
     decimal PaymentAmount;
+
+    string SearchText = "";
+
+    string SelectedStatus = "الكل";
+
+    int SelectedMonth = 0;
+
+    int SelectedYear = 0;
+
+    List<int> FilterYears =>
+        (Loan ?? new List<EmployeeLoan>())
+        .Select(x => x.loan_date.ToLocalTime().Year)
+        .Distinct()
+        .OrderByDescending(x => x)
+        .ToList();
+
+    IEnumerable<EmployeeLoan> FilteredLoans =>
+        (Loan ?? new List<EmployeeLoan>())
+        .Where(l =>
+
+            (
+                string.IsNullOrWhiteSpace(SearchText)
+                ||
+                (
+                    l.Employee?.full_name != null
+                    &&
+                    l.Employee.full_name
+                        .Trim()
+                        .Replace("أ", "ا")
+                        .Replace("إ", "ا")
+                        .Replace("آ", "ا")
+                        .Contains(
+                            SearchText
+                                .Trim()
+                                .Replace("أ", "ا")
+                                .Replace("إ", "ا")
+                                .Replace("آ", "ا"),
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                )
+            )
+
+            &&
+
+            (
+                SelectedStatus == "الكل"
+                ||
+                l.status == SelectedStatus
+            )
+
+            &&
+
+            (
+                SelectedMonth == 0
+                ||
+                l.loan_date.ToLocalTime().Month == SelectedMonth
+            )
+
+            &&
+
+            (
+                SelectedYear == 0
+                ||
+                l.loan_date.ToLocalTime().Year == SelectedYear
+            )
+        );
 
 
 
