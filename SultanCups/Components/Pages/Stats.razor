@@ -1,125 +1,456 @@
 ﻿@page "/Stats"
 @layout Layout.MainLayout
 
+@using SultanCups.Models
+@using SultanCups.Services
+
+@inject StatsAndArchiveService StatsService
+
 <div class="stats-page-container">
-    
+
     @if (!isDataVisible)
     {
         <div class="privacy-lock-zone">
             <div class="glass-shield-card">
+
                 <div class="lock-anim">🔒</div>
+
                 <h3>إحصائيات الإدارة</h3>
+
                 <p>بيانات مالية حساسة ومحمية</p>
-                <button class="btn-reveal" @onclick="() => isDataVisible = true">كشف البيانات</button>
+
+                <button class="btn-reveal"
+                        @onclick="() => isDataVisible = true">
+                    كشف البيانات
+                </button>
+
             </div>
         </div>
     }
 
     <div class="stats-scrollable-content @(isDataVisible ? "content-active" : "content-blurred")">
-        
+
         <!-- HEADER -->
+
         <div class="stats-top-bar">
+
             <div class="welcome-msg">
+
                 <h1>لوحة التحكم المالي</h1>
-                <p>نظرة عامة على السيولة والأداء</p>
+
+                <p>نظرة عامة على الأداء والسيولة</p>
+
             </div>
-            <button class="btn-hide-ui" @onclick="() => isDataVisible = false">إخفاء البيانات</button>
+
+            <button class="btn-hide-ui"
+                    @onclick="() => isDataVisible = false">
+                إخفاء البيانات
+            </button>
+
         </div>
 
-        <!-- LEVEL 1: SUMMARY -->
+        <!-- SUMMARY -->
+
         <div class="summary-grid">
-            <div class="mini-card profit">
-                <div class="card-icon">📈</div>
+
+            <div class="mini-card">
+
+                <div class="card-icon">💰</div>
+
                 <div class="card-data">
-                    <span class="label">صافي الربح</span>
-                    <span class="value">12,500 <small>د.ل</small></span>
+
+                    <span class="label">
+                        صافي الربح الشهري
+                    </span>
+
+                    <span class="value">
+                        @Fmt(DashboardStats.monthly_profit)
+                    </span>
+
                 </div>
+
             </div>
-            <div class="mini-card salaries">
-                <div class="card-icon">👥</div>
-                <div class="card-data">
-                    <span class="label">صافي المرتبات</span>
-                    <span class="value">4,200 <small>د.ل</small></span>
-                </div>
-            </div>
-            <div class="mini-card debts">
-                <div class="card-icon">🚨</div>
-                <div class="card-data">
-                    <span class="label">صافي الديون</span>
-                    <span class="value">7,050 <small>د.ل</small></span>
-                </div>
-            </div>
-            <div class="mini-card inventory">
+
+            <div class="mini-card">
+
                 <div class="card-icon">📦</div>
+
                 <div class="card-data">
-                    <span class="label">قيمة المخزن</span>
-                    <span class="value">15,000 <small>د.ل</small></span>
+
+                    <span class="label">
+                        الصناديق المباعة
+                    </span>
+
+                    <span class="value">
+                        @DashboardStats.monthly_boxes_sold
+                    </span>
+
                 </div>
+
             </div>
+
+            <div class="mini-card">
+
+                <div class="card-icon">🧾</div>
+
+                <div class="card-data">
+
+                    <span class="label">
+                        عدد الفواتير
+                    </span>
+
+                    <span class="value">
+                        @DashboardStats.monthly_orders_count
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="mini-card">
+
+                <div class="card-icon">🚨</div>
+
+                <div class="card-data">
+
+                    <span class="label">
+                        إجمالي الديون
+                    </span>
+
+                    <span class="value">
+                        @Fmt(DashboardStats.total_debts)
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="mini-card">
+
+                <div class="card-icon">🏦</div>
+
+                <div class="card-data">
+
+                    <span class="label">
+                        إجمالي السيولة
+                    </span>
+
+                    <span class="value">
+                        @Fmt(DashboardStats.total_cash_balance)
+                    </span>
+
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- LEVEL 2: CHARTS -->
-        <div class="charts-layout">
-            <div class="main-chart-card">
-                <div class="chart-header">
-                    <h3>حركة الأرباح الصافية</h3>
-                    <div class="chart-filters">
-                        <span class="active">سنوي</span>
-                        <span>شهري</span>
-                    </div>
-                </div>
-                <div class="visual-graph">
-                    <div class="graph-line-path"></div>
-                    <div class="graph-dots">
-                        <span style="bottom: 20%; left: 10%"></span>
-                        <span style="bottom: 50%; left: 40%"></span>
-                        <span style="bottom: 80%; left: 85%"></span>
-                    </div>
-                </div>
+        <!-- توزيع المبيعات -->
+
+        <div class="stats-section">
+
+            <h3>توزيع المبيعات</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>المنتج</th>
+
+                            <th>الكمية</th>
+
+                            <th>النسبة</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.sales_distribution)
+                        {
+                            <tr>
+
+                                <td>@item.product_name</td>
+
+                                <td>@item.quantity</td>
+
+                                <td>@item.percentage %</td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
             </div>
 
-            <div class="distribution-card">
-                <h3>توزيع المبيعات</h3>
-                <div class="modern-donut">
-                    <svg viewBox="0 0 36 36" class="donut-svg">
-                        <path class="donut-ring" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path class="donut-segment" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <div class="donut-text">
-                        <span class="percent">75%</span>
-                        <span class="subtext">كوب 2.5</span>
-                    </div>
-                </div>
-                <div class="donut-legend">
-                    <div class="legend-item"><span class="dot p-primary"></span> كوب 2.5</div>
-                    <div class="legend-item"><span class="dot p-secondary"></span> كوب 6</div>
-                </div>
-            </div>
         </div>
 
-        <!-- LEVEL 3: VAULTS (Footer Strip) -->
-        <div class="vaults-footer-strip">
-            <div class="v-strip-card vs-blue">
-                <div class="vs-info"><label>الرئيسية</label><strong>5,000 د.ل</strong></div>
-                <div class="vs-trend">↑ 12%</div>
+        <!-- الخزنات -->
+
+        <div class="stats-section">
+
+            <h3>الخزنات</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>الخزنة</th>
+
+                            <th>الرصيد الحالي</th>
+
+                            <th>الدخل الشهري</th>
+
+                            <th>الخروج الشهري</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.cash_boxes)
+                        {
+                            <tr>
+
+                                <td>@item.cash_box_name</td>
+
+                                <td>@Fmt(item.current_balance)</td>
+
+                                <td class="green-text">
+                                    @Fmt(item.monthly_in)
+                                </td>
+
+                                <td class="red-text">
+                                    @Fmt(item.monthly_out)
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
             </div>
-            <div class="v-strip-card vs-green">
-                <div class="vs-info"><label>المصنع</label><strong>2,300 د.ل</strong></div>
-                <div class="vs-trend">↑ 5%</div>
+
+        </div>
+
+        <!-- ديون الزبائن -->
+
+        <div class="stats-section">
+
+            <h3>ديون الزبائن</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>الزبون</th>
+
+                            <th>قيمة الدين</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.customer_debts)
+                        {
+                            <tr>
+
+                                <td>@item.customer_name</td>
+
+                                <td class="red-text">
+                                    @Fmt(item.debt_amount)
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
             </div>
-            <div class="v-strip-card vs-orange">
-                <div class="vs-info"><label>الطوارئ</label><strong>1,000 د.ل</strong></div>
-                <div class="vs-trend">↓ 2%</div>
+
+        </div>
+
+        <!-- ديون المسوقين -->
+
+        <div class="stats-section">
+
+            <h3>ديون المسوقين</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>المسوق</th>
+
+                            <th>قيمة الدين</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.marketer_debts)
+                        {
+                            <tr>
+
+                                <td>@item.marketer_name</td>
+
+                                <td class="red-text">
+                                    @Fmt(item.debt_amount)
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
             </div>
-            <div class="v-strip-card vs-dark">
-                <div class="vs-info"><label>إجمالي السيولة</label><strong>8,300 د.ل</strong></div>
-                <div class="vs-icon-mini">💰</div>
+
+        </div>
+
+        <!-- المنتجات الناقصة -->
+
+        <div class="stats-section">
+
+            <h3>المنتجات الناقصة</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>المنتج</th>
+
+                            <th>الكمية الحالية</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.low_stock_products)
+                        {
+                            <tr>
+
+                                <td>@item.product_name</td>
+
+                                <td class="red-text">
+                                    @item.current_quantity
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
             </div>
+
+        </div>
+
+        <!-- أفضل المسوقين -->
+
+        <div class="stats-section">
+
+            <h3>أفضل المسوقين</h3>
+
+            <div class="stats-table-wrapper">
+
+                <table class="stats-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>المسوق</th>
+
+                            <th>عدد الفواتير</th>
+
+                            <th>إجمالي البيع</th>
+
+                            <th>إجمالي العمولات</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in DashboardStats.top_marketers)
+                        {
+                            <tr>
+
+                                <td>@item.marketer_name</td>
+
+                                <td>@item.orders_count</td>
+
+                                <td>@Fmt(item.total_sales)</td>
+
+                                <td>@Fmt(item.total_commissions)</td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
         </div>
 
     </div>
+
 </div>
 
 @code {
+
     private bool isDataVisible = false;
+
+    private StatsView DashboardStats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        DashboardStats =
+            await StatsService.GetDashboardStats();
+    }
+
+    string Fmt(decimal value)
+    {
+        return $"{value:N2} د.ل";
+    }
 }

@@ -21,6 +21,7 @@ builder.Services.AddScoped<HrService>();
 builder.Services.AddScoped<SultanCups.Services.ToastService>();
 builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<FinanceService2>();
+builder.Services.AddScoped<StatsAndArchiveService>();
 
 var app = builder.Build();
 
