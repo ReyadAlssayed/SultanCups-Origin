@@ -390,7 +390,7 @@ namespace SultanCups.Services
                     return (false, "لا يمكن تعديل فاتورة ملغاة");
 
                 // ✔ بعد التحقق فقط
-                
+
                 order.discount_total = updated.discount_total;
                 order.cash_box_id = updated.cash_box_id;
                 order.notes = updated.notes;
@@ -539,9 +539,9 @@ namespace SultanCups.Services
     ? $"{oldPersonName} (زبون)"
     : $"{oldPersonName} (مسوق)";
 
-// 🔥 بعد حفظ القديم
-order.person_id = updated.person_id;
-order.person_type = updated.person_type;
+                // 🔥 بعد حفظ القديم
+                order.person_id = updated.person_id;
+                order.person_type = updated.person_type;
 
                 string newLabel = updated.person_type == "customer"
                     ? $"{newPersonName} (زبون)"
@@ -1024,12 +1024,15 @@ ProcessPartialReturn(
 
                 decimal totalRefund = 0;
                 decimal orderPaidAmount =
-    await _context.financial_events
-        .Where(x =>
-            x.ref_table == "orders" &&
-            x.ref_id == order.order_id &&
-            x.direction == "IN")
-        .SumAsync(x => (decimal?)x.amount) ?? 0;
+await _context.financial_events
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == order.order_id)
+    .SumAsync(x =>
+        x.direction == "IN"
+            ? (decimal?)x.amount
+            : -(decimal?)x.amount
+    ) ?? 0;
                 decimal totalCommissionReturn = 0;
 
                 foreach (var item in validReturns)
@@ -1460,6 +1463,43 @@ on o.person_id equals m.marketer_id into mg
             .ToList();
 
             return result;
+        }
+
+        //جلب المرتجعات في صفحة الراجع
+
+        public async Task<List<ReturnView>> GetReturns()
+        {
+            var products = await _context.products
+                .ToDictionaryAsync(
+                    x => x.product_id,
+                    x => x.name);
+
+            var returns = await _context.returns
+                .AsNoTracking()
+                .OrderByDescending(x => x.return_id)
+                .ToListAsync();
+
+            return returns
+                .Select(x => new ReturnView
+                {
+                    return_id = x.return_id,
+
+                    order_id = x.order_id,
+
+                    product_id = x.product_id,
+
+                    returned_quantity =
+                        x.returned_quantity,
+
+                    return_date =
+                        x.return_date,
+
+                    product_name =
+                        products.ContainsKey(x.product_id)
+                            ? products[x.product_id]
+                            : "غير معروف"
+                })
+                .ToList();
         }
     }
 }

@@ -1,223 +1,182 @@
 ﻿@page "/returns"
 @layout Layout.MainLayout
 
+@using SultanCups.Models
+@using SultanCups.Services
+
+@inject FinanceService2 FinanceService
+@inject NavigationManager Nav
+
 <div class="pro-page">
 
     <div class="pro-topbar">
-        <button class="pro-btn-add" @onclick="OpenAddDialog">
-            إضافة بضاعة راجعة
-        </button>
+        <div></div>
 
-        <h2 class="pro-title">البضاعة الراجعة</h2>
+        <h2 class="pro-title">
+            سجل البضاعة الراجعة
+        </h2>
 
         <div></div>
     </div>
 
+    <div class="pro-search-bar">
+
+        <input class="mk-search-input"
+               placeholder="بحث برقم الفاتورة أو المنتج"
+               @bind="SearchText"
+               @bind:event="oninput" />
+
+        <input type="date"
+               class="pro-filter-select"
+               @bind="DateFilter" />
+
+    </div>
+
     <div class="pro-card">
+
         <div class="pro-table-wrap">
 
             <table class="pro-table">
+
                 <thead>
                     <tr>
                         <th>رقم الفاتورة</th>
                         <th>المنتج</th>
-                        <th>عدد الكراتين</th>
-                        <th>سبب الإرجاع</th>
+                        <th>الكمية الراجعة</th>
                         <th>التاريخ</th>
-                        <th>ملاحظات</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
 
                 <tbody>
+
                     @if (ReturnList == null)
                     {
                         <tr>
-                            <td colspan="7">جاري التحميل...</td>
-                        </tr>
-                    }
-                    else if (!ReturnList.Any())
-                    {
-                        <tr>
-                            <td colspan="7" class="st-empty-text">
-                                <div class="empty-state">
-                                    <img src="images/Empty.jpg" class="empty-img" />
-                                    <span>لا توجد بيانات</span>
-                                </div>
+                            <td colspan="5">
+                                جاري التحميل...
                             </td>
                         </tr>
                     }
+
+                    else if (!FilteredList.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="st-empty-text">
+
+                                <div class="empty-state">
+
+                                    <img src="images/Empty.jpg"
+                                         class="empty-img" />
+
+                                    <span>
+                                        لا توجد بيانات راجع
+                                    </span>
+
+                                </div>
+
+                            </td>
+                        </tr>
+                    }
+
                     else
                     {
-                        @foreach (var r in ReturnList)
+                        @foreach (var r in FilteredList)
                         {
                             <tr>
-                                <td class="pro-code">@r.orderNumber</td>
 
-                                <td>@r.product</td>
+                                <td class="pro-code">
+                                    @r.order_id
+                                </td>
 
-                                <td class="pro-money">@r.boxCount</td>
+                                <td>
+                                    @r.product_name
+                                </td>
 
-                                <td>@r.reason</td>
+                                <td>
+                                    <span class="pro-total">
+                                        @r.returned_quantity صندوق
+                                    </span>
+                                </td>
 
                                 <td class="pro-muted">
-                                    @r.returnDate.ToString("yyyy-MM-dd")
+                                    @r.return_date.ToString("yyyy-MM-dd")
                                 </td>
 
-                                <td class="pro-muted">@r.notes</td>
+                                <td>
 
-                                <td class="pro-actions-cell">
-                                    <button class="pro-small pro-edit"
-                                            @onclick="() => OpenEditDialog(r)">
-                                        تعديل
+                                    <button class="debt-go-order-btn"
+                                            @onclick='() => Nav.NavigateTo($"/orders/edit/{r.order_id}")'>
+
+                                        الانتقال إلى الفاتورة
+
                                     </button>
 
-                                    <button class="pro-small pro-del"
-                                            @onclick="() => OpenDeleteDialog(r)">
-                                        حذف
-                                    </button>
                                 </td>
+
                             </tr>
                         }
                     }
+
                 </tbody>
 
             </table>
 
         </div>
+
     </div>
 
 </div>
 
-@if (ShowAddDialog || ShowEditDialog)
-{
-    <div class="pro-dialog-overlay">
-
-        <div class="pro-dialog-box">
-
-            <div class="pro-dialog-body">
-
-                <h3>@(ShowAddDialog ? "إضافة إرجاع جديد" : "تعديل بيانات الإرجاع")</h3>
-
-                <div class="pro-fields-grid">
-
-                    <div class="pro-field">
-                        <label>رقم الفاتورة</label>
-                        <input class="pro-input" @bind="ReturnForm.orderNumber" />
-                    </div>
-
-                    <div class="pro-field">
-                        <label>المنتج</label>
-                        <input class="pro-input" @bind="ReturnForm.product" />
-                    </div>
-
-                    <div class="pro-field">
-                        <label>عدد الكراتين</label>
-                        <input class="pro-input" type="number" @bind="ReturnForm.boxCount" />
-                    </div>
-
-                    <div class="pro-field">
-                        <label>سبب الإرجاع</label>
-                        <input class="pro-input" @bind="ReturnForm.reason" />
-                    </div>
-
-                    <div class="pro-field">
-                        <label>التاريخ</label>
-                        <input class="pro-input" type="date" @bind="ReturnForm.returnDate" />
-                    </div>
-
-                    <div class="pro-field full-width">
-                        <label>ملاحظات</label>
-                        <textarea class="pro-input" @bind="ReturnForm.notes"></textarea>
-                    </div>
-
-                </div>
-
-                <div class="pro-dialog-actions">
-                    <button class="pro-save">حفظ</button>
-                    <button class="pro-cancel" @onclick="CloseDialogs">إلغاء</button>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-}
-
-@if (ShowDeleteDialog)
-{
-    <div class="pro-dialog-overlay">
-
-        <div class="pro-dialog-box pro-delete-dialog-box">
-
-            <div class="pro-dialog-body pro-delete-dialog-body">
-
-                <h3 class="pro-delete-title">تأكيد الحذف</h3>
-
-                <p class="pro-delete-text">
-                    هل تريد حذف سجل إرجاع الفاتورة "@ReturnForm.orderNumber"؟
-                </p>
-
-                <div class="pro-dialog-actions">
-                    <button class="pro-delete-confirm">حذف</button>
-                    <button class="pro-cancel" @onclick="CloseDialogs">إلغاء</button>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-}
-
 @code {
-    List<ReturnRow> ReturnList = new()
-    {
-        new() { orderNumber = "INV-1001", product = "أكواب 200ml", boxCount = 2, reason = "تلف في الكراتين", returnDate = new DateTime(2026,3,6), notes = "استبدال" },
-        new() { orderNumber = "INV-1002", product = "أكواب 300ml", boxCount = 1, reason = "كسر أثناء النقل", returnDate = new DateTime(2026,3,5), notes = "" }
-    };
 
-    bool ShowAddDialog, ShowEditDialog, ShowDeleteDialog;
-    ReturnRow ReturnForm = new();
+    List<ReturnView>? ReturnList;
 
-    void OpenAddDialog()
+    string SearchText = "";
+
+    DateTime? DateFilter;
+
+    protected override async Task OnInitializedAsync()
     {
-        ReturnForm = new ReturnRow { returnDate = DateTime.Now };
-        ShowAddDialog = true;
+        ReturnList = await FinanceService.GetReturns();
     }
 
-    void OpenEditDialog(ReturnRow r)
-    {
-        ReturnForm = new ReturnRow
-        {
-            orderNumber = r.orderNumber,
-            product = r.product,
-            boxCount = r.boxCount,
-            reason = r.reason,
-            returnDate = r.returnDate,
-            notes = r.notes
-        };
+    IEnumerable<ReturnView> FilteredList =>
 
-        ShowEditDialog = true;
-    }
+        (ReturnList ?? Enumerable.Empty<ReturnView>())
 
-    void OpenDeleteDialog(ReturnRow r)
-    {
-        ReturnForm = r;
-        ShowDeleteDialog = true;
-    }
+        .Where(r =>
 
-    void CloseDialogs()
-        => ShowAddDialog = ShowEditDialog = ShowDeleteDialog = false;
+            (
 
-    public class ReturnRow
-    {
-        public string orderNumber { get; set; } = "";
-        public string product { get; set; } = "";
-        public int boxCount { get; set; }
-        public string reason { get; set; } = "";
-        public DateTime returnDate { get; set; }
-        public string notes { get; set; } = "";
-    }
+                string.IsNullOrWhiteSpace(SearchText)
+
+                ||
+
+                r.order_id
+                .ToString()
+                .Contains(SearchText)
+
+                ||
+
+                r.product_name
+                .Contains(
+                    SearchText,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+
+            &&
+
+            (
+
+                DateFilter == null
+
+                ||
+
+                r.return_date.Date
+                ==
+                DateFilter.Value.Date
+            )
+        );
 }
