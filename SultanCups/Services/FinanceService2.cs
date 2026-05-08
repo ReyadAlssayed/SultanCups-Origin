@@ -105,7 +105,10 @@ namespace SultanCups.Services
                         .Select(x => x.box_cost)
                         .FirstOrDefaultAsync();
 
-                    item.production_cost = productionCost;
+                    if (item.production_cost <= 0)
+                    {
+                        item.production_cost = productionCost;
+                    }
 
                     _context.order_items.Add(item);
 
@@ -176,6 +179,31 @@ namespace SultanCups.Services
 
                 await _context.SaveChangesAsync();
 
+                if (order.person_type == "marketer" &&
+    order.pay_commission_now)
+                {
+                    var totalQuantity = items.Sum(x => x.quantity);
+
+                    var commissionAmount =
+                        totalQuantity * order.commission_per_box;
+
+                    AddFinancialEvent(
+                        "دفع عمولة",
+                        "OUT",
+                        commissionAmount,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "صرف عمولة مسوق"
+                    );
+
+                    await _context.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
                 return (true, order.order_id.ToString());
             }
@@ -238,11 +266,52 @@ namespace SultanCups.Services
          - o.discount_total),
 
         commission_total = o.person_type == "marketer"
-         ? ((_context.order_items
-             .Where(i => i.order_id == o.order_id)
-             .Sum(i => (int?)i.quantity) ?? 0)
-             * o.commission_per_box)
-         : 0,
+    ? ((_context.order_items
+        .Where(i => i.order_id == o.order_id)
+        .Sum(i => (int?)i.quantity) ?? 0)
+        * o.commission_per_box)
+    : 0,
+
+        profit =
+
+(
+    (_context.order_items
+        .Where(i => i.order_id == o.order_id)
+        .Sum(i =>
+            (decimal?)(i.quantity * i.unit_price)) ?? 0)
+
+    -
+
+    (
+
+        (_context.order_items
+            .Where(i => i.order_id == o.order_id)
+            .Sum(i =>
+                (decimal?)(i.quantity * i.production_cost)) ?? 0)
+
+       +
+
+(
+    (
+        o.person_type == "marketer"
+        &&
+        o.pay_commission_now
+    )
+    ? (
+        (_context.order_items
+            .Where(i => i.order_id == o.order_id)
+            .Sum(i => (int?)i.quantity) ?? 0)
+
+        * o.commission_per_box
+      )
+    : 0
+)
+
+)
+
+),
+
+        pay_commission_now = o.pay_commission_now,
 
         paid_amount =
          _context.financial_events
@@ -321,13 +390,17 @@ namespace SultanCups.Services
                     return (false, "لا يمكن تعديل فاتورة ملغاة");
 
                 // ✔ بعد التحقق فقط
-                order.person_id = updated.person_id;
-                order.person_type = updated.person_type;
+                
                 order.discount_total = updated.discount_total;
                 order.cash_box_id = updated.cash_box_id;
                 order.notes = updated.notes;
+
+                var oldCommissionPerBox = order.commission_per_box;
+                var oldPayCommissionNow = order.pay_commission_now;
+
                 order.commission_per_box = updated.commission_per_box;
-                order.order_date = updated.order_date; 
+
+                order.order_date = updated.order_date;
 
                 var oldItems = await _context.order_items
                     .Where(i => i.order_id == order.order_id)
@@ -363,9 +436,10 @@ namespace SultanCups.Services
                         stock[oldItem.product_id].quantity -= diff;
                     }
 
-                    // ✔ تحديث السعر والكمية
+                    // ✔ تحديث السعر والكمية والقيمة المرجعية
                     oldItem.quantity = edited.quantity;
                     oldItem.unit_price = edited.unit_price;
+                    oldItem.production_cost = edited.production_cost;
                 }
 
                 decimal oldTotal = oldItems.Sum(i => i.quantity * i.unit_price);
@@ -418,7 +492,9 @@ namespace SultanCups.Services
                         product_id = item.product_id,
                         quantity = item.quantity,
                         unit_price = item.unit_price,
-                        production_cost = productionCost
+                        production_cost = item.production_cost > 0
+    ? item.production_cost
+    : productionCost
                     });
                 }
 
@@ -460,8 +536,12 @@ namespace SultanCups.Services
                         .FirstOrDefaultAsync();
                 }
                 string oldLabel = order.person_type == "customer"
-      ? $"{oldPersonName} (زبون)"
-      : $"{oldPersonName} (مسوق)";
+    ? $"{oldPersonName} (زبون)"
+    : $"{oldPersonName} (مسوق)";
+
+// 🔥 بعد حفظ القديم
+order.person_id = updated.person_id;
+order.person_type = updated.person_type;
 
                 string newLabel = updated.person_type == "customer"
                     ? $"{newPersonName} (زبون)"
@@ -564,6 +644,107 @@ namespace SultanCups.Services
     adminId
 );
 
+                // =====================================
+                // 🔥 فروقات العمولة
+                // =====================================
+
+                var oldQuantity = oldItems.Sum(x => x.quantity);
+                var newQuantity = newItems.Sum(x => x.quantity);
+
+                var oldCommission =
+    oldQuantity * oldCommissionPerBox;
+
+                var newCommission =
+                    newQuantity * updated.commission_per_box;
+
+                // ✔ هل كانت مصروفة؟
+                bool oldPaidCommission = oldPayCommissionNow;
+
+                // ✔ هل أصبحت مصروفة؟
+                bool newPaidCommission = updated.pay_commission_now;
+
+                // =====================================
+                // 🔥 كانت غير مصروفة وأصبحت مصروفة
+                // =====================================
+                if (!oldPaidCommission && newPaidCommission)
+                {
+                    AddFinancialEvent(
+                        "دفع عمولة",
+                        "OUT",
+                        newCommission,
+                        updated.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        null,
+                        "صرف عمولة بعد تعديل"
+                    );
+                }
+
+                // =====================================
+                // 🔥 كانت مصروفة وأصبحت غير مصروفة
+                // =====================================
+                else if (oldPaidCommission && !newPaidCommission)
+                {
+                    AddFinancialEvent(
+                        "استرجاع عمولة",
+                        "IN",
+                        oldCommission,
+                        updated.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        null,
+                        "إلغاء صرف العمولة بعد تعديل"
+                    );
+                }
+
+                // =====================================
+                // 🔥 كانت مصروفة ومازالت مصروفة
+                // نحسب الفرق فقط
+                // =====================================
+                else if (oldPaidCommission && newPaidCommission)
+                {
+                    var diff = newCommission - oldCommission;
+
+                    if (diff > 0)
+                    {
+                        AddFinancialEvent(
+                            "زيادة عمولة",
+                            "OUT",
+                            diff,
+                            updated.cash_box_id,
+                            adminId,
+                            order.order_id,
+                            "orders",
+                            updated.person_id,
+                            personName,
+                            null,
+                            "زيادة عمولة بعد تعديل"
+                        );
+                    }
+                    else if (diff < 0)
+                    {
+                        AddFinancialEvent(
+                            "استرجاع فرق عمولة",
+                            "IN",
+                            Math.Abs(diff),
+                            updated.cash_box_id,
+                            adminId,
+                            order.order_id,
+                            "orders",
+                            updated.person_id,
+                            personName,
+                            null,
+                            "استرجاع فرق عمولة بعد تعديل"
+                        );
+                    }
+                }
+
                 // جلب جميع الحركات المالية المرتبطة بالفاتورة
                 var events = await _context.financial_events
                     .Where(x => x.ref_table == "orders" && x.ref_id == order.order_id)
@@ -576,6 +757,9 @@ namespace SultanCups.Services
                     ev.item_id = firstItemId;
 
                 }
+
+                order.pay_commission_now =
+    updated.pay_commission_now;
 
                 await _context.SaveChangesAsync();
 
@@ -682,6 +866,29 @@ namespace SultanCups.Services
                     );
                 }
 
+                if (order.person_type == "marketer" &&
+    order.pay_commission_now)
+                {
+                    var totalQuantity = order.Items.Sum(x => x.quantity);
+
+                    var commissionAmount =
+                        totalQuantity * order.commission_per_box;
+
+                    AddFinancialEvent(
+                        "استرجاع عمولة",
+                        "IN",
+                        commissionAmount,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "استرجاع عمولة بعد إلغاء الفاتورة"
+                    );
+                }
+
                 // =====================================
                 // 🔥 إلغاء الفاتورة
                 // =====================================
@@ -701,6 +908,15 @@ namespace SultanCups.Services
             }
         }
 
+        public async Task<decimal> GetLastProductionCost(int productId)
+        {
+            return await _context.production
+                .Where(x => x.product_id == productId)
+                .OrderByDescending(x => x.production_date)
+                .ThenByDescending(x => x.production_id)
+                .Select(x => x.box_cost)
+                .FirstOrDefaultAsync();
+        }
         private void HandleCashBoxChange(
     Order oldOrder,
     Order updated,
@@ -940,23 +1156,7 @@ on o.person_id equals m.marketer_id into mg
 
                 var marketerName = marketerData?.name ?? "غير معروف";
 
-                var paidAmount =
-                    _context.financial_events
-                        .Where(x =>
-                            x.ref_table == "orders" &&
-                            x.ref_id == o.order_id)
-                        .Sum(x =>
-                            x.direction == "IN"
-                                ? (decimal?)x.amount
-                                : -(decimal?)x.amount
-                        ) ?? 0;
-
-                bool canPayCommission =
-                    marketerData != null &&
-                    (
-                        marketerData.is_special ||
-                        paidAmount >= netTotal
-                    );
+                bool canPayCommission = o.pay_commission_now;
 
                 return new MarketerCommissionView
                 {
@@ -969,8 +1169,8 @@ on o.person_id equals m.marketer_id into mg
                     commission_total = commissionTotal,
 
                     commission_status = canPayCommission
-                        ? "مستحقة"
-                        : "معلقة",
+    ? "محتسبة"
+    : "غير محتسبة",
 
                     order_date = o.order_date
                 };

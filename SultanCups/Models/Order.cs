@@ -12,7 +12,7 @@ public class Order
     public decimal discount_total { get; set; }
 
     public decimal commission_per_box { get; set; }
-    public bool commission_paid { get; set; }
+    public bool pay_commission_now { get; set; }
 
     public DateTime order_date { get; set; }
 

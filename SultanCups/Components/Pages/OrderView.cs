@@ -23,7 +23,11 @@
 
         public decimal commission_total { get; set; }
 
+        public bool pay_commission_now { get; set; }
+
         public decimal paid_amount { get; set; }
+
+        public decimal profit { get; set; }
 
         public DateTime order_date { get; set; }
     }

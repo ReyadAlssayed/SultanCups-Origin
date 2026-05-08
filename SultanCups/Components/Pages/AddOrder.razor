@@ -80,6 +80,18 @@
             <div>
                 <label>عمولة الصندوق</label>
                 <input class="pro-input" @bind="Form.commission_per_box" />
+
+            </div>
+
+            <div class="commission-pay-check">
+                <label class="commission-check">
+
+                    <input type="checkbox"
+                           @bind="Form.pay_commission_now" />
+
+                    صرف العمولة الآن
+
+                </label>
             </div>
         }
 
@@ -118,6 +130,7 @@
                         <th>السعر</th>
                         <th>الكمية</th>
                         <th>الإجمالي</th>
+                        <th>القيمة المرجعية</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -158,6 +171,15 @@
                                 <input class="pro-input"
                                        value="@(item.quantity * item.unit_price)"
                                        readonly />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       step="0.01"
+                                       style="width: 110px;"
+                                       class="pro-input @(item.production_cost < item.original_reference_value ? "ref-warning" : "")"
+                                       @bind-value="item.production_cost"
+                                       @bind-value:event="oninput" />
                             </td>
 
                             <td>
@@ -236,7 +258,7 @@
                     <div class="sum-line1 small">
                         <span>حالة العمولة</span>
                         <strong class="commission-status @(IsCommissionAllowed ? "ok" : "no")">
-                            @(IsCommissionAllowed ? "✔ تُصرف" : "❌ معلقة حتى السداد")
+                            @(IsCommissionAllowed ? " سيتم احتسابها" : " غير محتسبة")
                         </strong>
                     </div>
                 }
@@ -303,12 +325,6 @@
                 {
                     var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
 
-                    @if (marketer != null && !marketer.is_special)
-                    {
-                        <span class="note1">
-                            لن تُصرف العمولة إلا بعد سداد الفاتورة بالكامل
-                        </span>
-                    }
                 }
 
 
@@ -561,31 +577,13 @@ if (orders.Any())
         if (marketer != null)
         {
             Form.commission_per_box = marketer.commission_per_box;
+            Form.pay_commission_now = marketer.is_special;
         }
 
         // 🔥 هذا السطر المهم
         StateHasChanged();
     }
-
-    bool IsCommissionAllowed
-    {
-        get
-        {
-            if (Form.person_type != "marketer")
-                return false;
-
-            var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
-
-            if (marketer == null)
-                return false;
-
-            // 🔥 التعديل هنا
-            if (marketer.is_special)
-                return true;
-
-            return Net > 0 && PaymentsTotal >= Net;
-        }
-    }
+    bool IsCommissionAllowed => Form.pay_commission_now;
 
     void OpenPaymentDialog()
     {
@@ -629,7 +627,12 @@ if (orders.Any())
             return;
         }
 
-        if (TempPayments.Sum(p => p.amount) > 0 && Form.cash_box_id <= 0)
+        bool hasFinancialImpact =
+     TempPayments.Sum(p => p.amount) > 0 ||
+     Form.pay_commission_now;
+
+        if (hasFinancialImpact &&
+            Form.cash_box_id <= 0)
         {
             ToastService.ShowToast("اختر الخزنة أولاً", "error");
             return;
@@ -680,26 +683,29 @@ if (orders.Any())
     }
 
 
-    void OnProductChanged(ChangeEventArgs e, OrderItem item)
+    async Task OnProductChanged(ChangeEventArgs e, OrderItem item)
     {
         int id = int.Parse(e.Value?.ToString() ?? "0");
 
         var existing = Form.Items
-     .FirstOrDefault(i =>
-         i.product_id == id &&
-         i != item &&
-         i.product_id != 0
-     );
+            .FirstOrDefault(i =>
+                i.product_id == id &&
+                i != item &&
+                i.product_id != 0
+            );
 
         if (existing != null)
         {
             Form.Items.Remove(item);
 
-            ToastService.ShowToast("هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد", "error");
+            ToastService.ShowToast(
+                "هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد",
+                "error"
+            );
+
             return;
         }
 
-        // ✔ بعد التأكد فقط
         item.product_id = id;
 
         var product = Products.FirstOrDefault(p => p.product_id == id);
@@ -707,6 +713,11 @@ if (orders.Any())
         if (product != null)
         {
             item.unit_price = product.sale_price;
+
+            var lastCost = await FinanceService.GetLastProductionCost(id);
+
+            item.production_cost = lastCost;
+            item.original_reference_value = lastCost;
         }
     }
 
@@ -759,7 +770,12 @@ if (orders.Any())
 
             var realPaid = Payments.Sum(p => p.amount);
 
-            if (realPaid > 0)
+            bool hasFinancialImpact =
+        realPaid > 0 ||
+        Form.pay_commission_now;
+
+            // 🔥 يوجد تأثير مالي
+            if (hasFinancialImpact)
             {
                 if (Form.cash_box_id <= 0)
                 {
@@ -774,8 +790,10 @@ if (orders.Any())
                 }
             }
 
-            // 🔥 هنا مباشرة
-            if (realPaid == 0 && Form.cash_box_id <= 0)
+            // 🔥 لا يوجد تأثير مالي
+            // اسمح بخزنة افتراضية
+            if (!hasFinancialImpact &&
+                Form.cash_box_id <= 0)
             {
                 var firstCashBox = CashBoxes.FirstOrDefault();
 

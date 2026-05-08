@@ -41,6 +41,18 @@
            class="pro-filter-select"
            @bind="DateFilter" />
 
+           <label class="profit-switch">
+
+    <input type="checkbox"
+           @bind="ShowProfit" />
+
+    <span class="profit-slider"></span>
+
+    <span class="profit-label">
+        عرض الربح
+    </span>
+
+</label>
 </div>
 
 
@@ -54,6 +66,9 @@
                         <th>الاسم</th>
                         <th>عدد الأصناف</th>
                         <th>الحالة</th>
+                       <th class="profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+    الربح
+</th>
                         <th>التاريخ</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -105,6 +120,34 @@
         : "خالص")
                                     
         </td>
+
+                                <td class="profit-green profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+
+   @if (o.is_cancelled)
+{
+    
+}
+else if (o.profit > 0)
+{
+    <span class="profit-up">
+        ▲ @Fmt(o.profit)
+    </span>
+}
+else if (o.profit < 0)
+{
+    <span class="profit-down">
+        ▼ @Fmt(Math.Abs(o.profit))
+    </span>
+}
+else
+{
+    <span class="profit-neutral">
+        ● 0.00 د.ل
+    </span>
+}
+
+</td>
+
 
                                 <td>
                                     @o.order_date.ToString("yyyy-MM-dd")
@@ -250,13 +293,12 @@
     </div>
 
     bool canPayCommission =
-        SelectedOrder.is_special ||
-        SelectedOrder.paid_amount >= SelectedOrder.net_total;
+    SelectedOrder.pay_commission_now;
 
     <div class="row">
         <span>حالة العمولة</span>
         <span class="@(canPayCommission ? "status-green" : "status-red")">
-            @(canPayCommission ? "تُصرف" : "معلقة")
+            @(canPayCommission ? "محتسبة" : "غير محتسبة")
         </span>
     </div>
 }
@@ -373,24 +415,32 @@
 
                     </div>
 
-                    @if (DisableOrder.paid_amount > 0)
-                    {
-                        <div class="cancel-money-box">
+                   @if (DisableOrder.paid_amount > 0)
+{
+    <div class="cancel-money-box">
 
-                            سيتم إرجاع مبلغ
+        سيتم إرجاع دفعات الفاتورة:
 
-                            <strong>
-                                @Fmt(DisableOrder.paid_amount)
-                            </strong>
+        <strong>
+            @Fmt(DisableOrder.paid_amount)
+        </strong>
 
-                            إلى
+    </div>
+}
 
-                            @(DisableOrder.person_type == "customer"
-                                ? "الزبون"
-                                : "المسوق")
+@if (DisableOrder.person_type == "marketer" &&
+     DisableOrder.commission_total > 0)
+{
+    <div class="cancel-money-box">
 
-                        </div>
-                    }
+        سيتم استرجاع عمولة المسوق:
+
+        <strong>
+            @Fmt(DisableOrder.commission_total)
+        </strong>
+
+    </div>
+}
 
                 </div>
 
@@ -445,6 +495,7 @@ OrderView? DisableOrder;
 List<OrderItem> DisableItems = new();
 
 DateTime? DateFilter;
+bool ShowProfit = false;
    
     protected override async Task OnInitializedAsync()
     {

@@ -115,7 +115,7 @@
 
                                 <td>
 
-                                    @if (c.commission_status == "مستحقة")
+                                    @if (c.commission_status == "محتسبة")
                                     {
                                         <span class="st-badge st-badge-success">
                                             تم الصرف ✔
@@ -186,9 +186,19 @@
 
             &&
 
-            (StatusFilter == "all"
-            || (StatusFilter == "ready" && x.commission_status == "تم الصرف")
-            || (StatusFilter == "pending" && x.commission_status == "معلقة"))
+            (
+    StatusFilter == "all"
+
+    ||
+
+    (StatusFilter == "ready"
+        && x.commission_status == "محتسبة")
+
+    ||
+
+    (StatusFilter == "pending"
+        && x.commission_status == "غير محتسبة")
+)
 
             &&
 

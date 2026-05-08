@@ -20,21 +20,6 @@
 
         <h3>تعديل فاتورة</h3>
 
-        <div style="background:#fff3cd; padding:10px; margin-bottom:10px; border-radius:8px; font-size:14px">
-
-            <b>تشخيص الخزنة:</b><br />
-
-            cash_box_id: @Form.cash_box_id <br />
-
-            موجود في القائمة:
-            @(CashBoxes.Any(c => c.cash_box_id == Form.cash_box_id)) <br />
-
-            عدد الخزنات: @CashBoxes.Count <br />
-
-            قائمة الخزنات:
-            @string.Join(" | ", CashBoxes.Select(c => $"{c.cash_box_id}:{c.name}"))
-
-        </div>
     </div>
 
     <div class="pro-fields-grid pro-animate">
@@ -78,6 +63,17 @@
                 <label>عمولة الصندوق</label>
                 <input class="pro-input" @bind="Form.commission_per_box" />
             </div>
+
+            <div class="commission-pay-check">
+                <label class="commission-check">
+
+                    <input type="checkbox"
+                           @bind="Form.pay_commission_now" />
+
+                    صرف العمولة الآن
+
+                </label>
+            </div>
         }
 
         <div>
@@ -108,6 +104,7 @@
                         <th>السعر</th>
                         <th>الكمية</th>
                         <th>الإجمالي</th>
+                        <th>القيمة المرجعية</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -149,6 +146,15 @@
                                 <input class="pro-input"
                                        value="@(item.quantity * item.unit_price)"
                                        readonly />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       step="0.01"
+                                       style="width: 110px;"
+                                       class="pro-input @(item.production_cost < item.original_reference_value ? "ref-warning" : "")"
+                                       @bind-value="item.production_cost"
+                                       @bind-value:event="oninput" />
                             </td>
 
                             <td>
@@ -211,7 +217,7 @@
                     <div class="sum-line1 small">
                         <span>حالة العمولة</span>
                         <strong class="commission-status @(IsCommissionAllowed ? "ok" : "no")">
-                            @(IsCommissionAllowed ? "✔ تُصرف" : "❌ معلقة")
+                            @(IsCommissionAllowed ? " سيتم احتسابها" : " غير محتسبة")
                         </strong>
                     </div>
                 }
@@ -414,6 +420,58 @@
     </div>
 }
 
+@if (ShowChangesDialog)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <h3>التغييرات المالية</h3>
+                    <img src="images/Money.jpg" />
+                </div>
+
+                <div class="cancel-preview">
+
+                    <div class="cancel-section">
+
+                        @foreach (var msg in ChangeMessages)
+                        {
+                            <div class="cancel-item">
+                                <span>@msg</span>
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+                <div class="pro-dialog-actions">
+
+                    <button class="pro-save"
+                            @onclick="ConfirmUpdate">
+                        متابعة
+                    </button>
+
+                    <button class="pro-cancel"
+                            @onclick="() => ShowChangesDialog = false">
+                        إلغاء
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 @code {
 
 
@@ -443,6 +501,18 @@
     decimal AddAmount;
     decimal RefundAmount;
     HashSet<int> OldProductIds = new();
+
+    bool ShowChangesDialog = false;
+
+    List<string> ChangeMessages = new();
+
+    List<PaymentInput> OriginalPayments = new();
+
+    decimal OriginalNet = 0;
+
+    decimal OriginalCommission = 0;
+
+    bool OriginalPayCommissionNow = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -474,30 +544,57 @@
             cash_box_id = order.cash_box_id,
             notes = order.notes,
             commission_per_box = order.commission_per_box,
+            pay_commission_now = order.pay_commission_now,
             order_date = order.order_date,
+
             Items = order.Items
-        .Select(i => new OrderItem
-        {
-            product_id = i.product_id,
-            quantity = i.quantity,
-            unit_price = i.unit_price,
-            IsNew = false
-        }).ToList()
+            .Select(i => new OrderItem
+            {
+                product_id = i.product_id,
+                quantity = i.quantity,
+                unit_price = i.unit_price,
+
+                production_cost = i.production_cost,
+                original_reference_value = i.production_cost,
+
+                IsNew = false
+            }).ToList()
         };
 
         OldProductIds = Form.Items
             .Select(x => x.product_id)
             .ToHashSet();
 
-
         Payments = payments
             .GroupBy(p => p.payment_method)
             .Select(g => new PaymentInput
             {
                 method = g.Key!,
-                amount = g.Sum(x => x.direction == "IN" ? x.amount : -x.amount)
+                amount = g.Sum(x =>
+                    x.direction == "IN"
+                        ? x.amount
+                        : -x.amount)
             })
             .ToList();
+
+        // ====================================
+        // 🔥 حفظ القيم الأصلية للمقارنة
+        // ====================================
+
+        OriginalPayments = Payments
+            .Select(x => new PaymentInput
+            {
+                method = x.method,
+                amount = x.amount
+            })
+            .ToList();
+
+        OriginalNet = Net;
+
+        OriginalCommission = Commission;
+
+        OriginalPayCommissionNow =
+            Form.pay_commission_now;
     }
 
     void OnPaymentMethodChanged(ChangeEventArgs e, PaymentInput current)
@@ -557,6 +654,7 @@
         if (marketer != null)
         {
             Form.commission_per_box = marketer.commission_per_box;
+            Form.pay_commission_now = marketer.is_special;
         }
 
         StateHasChanged();
@@ -580,6 +678,48 @@
         CurrentMethod = method;
         RefundAmount = 0;
         ShowRefundDialog = true;
+    }
+
+    async Task ConfirmUpdate()
+    {
+        ShowChangesDialog = false;
+
+        IsSaving = true;
+
+        var result = await FinanceService.UpdateOrder(
+            Form,
+            Form.Items,
+            Payments,
+            CurrentAdminId
+        );
+
+        IsSaving = false;
+
+        if (result.success)
+        {
+
+            OriginalPayments = Payments
+    .Select(x => new PaymentInput
+    {
+        method = x.method,
+        amount = x.amount
+    })
+    .ToList();
+
+            OriginalNet = Net;
+
+            OriginalCommission = Commission;
+
+            OriginalPayCommissionNow =
+                Form.pay_commission_now;
+
+            ToastService.ShowToast("تم التعديل", "success");
+            Nav.NavigateTo("/orders");
+        }
+        else
+        {
+            ToastService.ShowToast(result.message, "error");
+        }
     }
 
     void ConfirmAdd()
@@ -669,6 +809,16 @@
             return;
         }
 
+        bool hasFinancialImpact =
+            TempPayments.Sum(p => p.amount) > 0 ||
+            Form.pay_commission_now;
+
+        if (hasFinancialImpact &&
+            Form.cash_box_id <= 0)
+        {
+            ToastService.ShowToast("اختر الخزنة أولاً", "error");
+            return;
+        }
 
         Payments = TempPayments
             .Select(p => new PaymentInput
@@ -739,13 +889,112 @@
 
             var newPaid = Payments.Sum(p => p.amount);
 
-            // 🔥 هنا التعديل
-            if (newPaid == 0 && Form.cash_box_id <= 0)
+            bool hasFinancialImpact =
+    newPaid > 0 ||
+    Form.pay_commission_now;
+
+            // 🔥 لا يوجد تأثير مالي
+            // اسمح بخزنة افتراضية
+            if (!hasFinancialImpact &&
+                Form.cash_box_id <= 0)
             {
                 var firstCashBox = CashBoxes.FirstOrDefault();
 
                 if (firstCashBox != null)
                     Form.cash_box_id = firstCashBox.cash_box_id;
+            }
+
+            // 🔥 يوجد تأثير مالي
+            // يجب اختيار خزنة حقيقية
+            if (hasFinancialImpact &&
+                Form.cash_box_id <= 0)
+            {
+                ToastService.ShowToast(
+                    "اختر الخزنة أولاً",
+                    "error"
+                );
+
+                return;
+            }
+
+            ChangeMessages.Clear();
+
+            // ====================================
+            // فرق الإجمالي
+            // ====================================
+
+            var netDiff = Net - OriginalNet;
+
+            if (netDiff > 0)
+            {
+                ChangeMessages.Add(
+                    $"زيادة على الفاتورة: +{netDiff:0.00} د.ل");
+            }
+            else if (netDiff < 0)
+            {
+                ChangeMessages.Add(
+                    $"نقص من الفاتورة: {Math.Abs(netDiff):0.00} د.ل");
+            }
+
+            // ====================================
+            // فرق العمولة
+            // ====================================
+
+            var commissionDiff = Commission - OriginalCommission;
+
+            if (!OriginalPayCommissionNow &&
+                Form.pay_commission_now)
+            {
+                ChangeMessages.Add(
+                    $"سيتم تسجيل عمولة للمسوق: {Commission:0.00} د.ل");
+            }
+            else if (OriginalPayCommissionNow &&
+                     !Form.pay_commission_now)
+            {
+                ChangeMessages.Add(
+                    $"سيتم استرجاع عمولة: {OriginalCommission:0.00} د.ل");
+            }
+            else if (Form.pay_commission_now)
+            {
+                if (commissionDiff > 0)
+                {
+                    ChangeMessages.Add(
+                        $"زيادة مستحقة للمسوق: +{commissionDiff:0.00} د.ل");
+                }
+                else if (commissionDiff < 0)
+                {
+                    ChangeMessages.Add(
+                        $"سيتم خصم فرق عمولة: {Math.Abs(commissionDiff):0.00} د.ل");
+                }
+            }
+
+            // ====================================
+            // فرق الدفعات
+            // ====================================
+
+            var paidDiff = newPaid - oldPaid;
+
+
+            if (paidDiff > 0)
+            {
+                ChangeMessages.Add(
+                    $"زيادة دفعات: +{paidDiff:0.00} د.ل");
+            }
+            else if (paidDiff < 0)
+            {
+                ChangeMessages.Add(
+                    $"استرجاع دفعات: {Math.Abs(paidDiff):0.00} د.ل");
+            }
+
+            // ====================================
+            // إظهار الحوار
+            // ====================================
+
+            if (ChangeMessages.Any())
+            {
+                ShowChangesDialog = true;
+                IsSaving = false;
+                return;
             }
 
             // 🔥 بعدها مباشرة
@@ -804,24 +1053,7 @@
         item.IsRemoving = false;
     }
 
-    bool IsCommissionAllowed
-    {
-        get
-        {
-            if (Form.person_type != "marketer")
-                return false;
-
-            var marketer = Marketers.FirstOrDefault(m => m.marketer_id == Form.person_id);
-
-            if (marketer == null)
-                return false;
-
-            if (marketer.is_special)
-                return true;
-
-            return Net > 0 && PaymentsTotal >= Net;
-        }
-    }
+    bool IsCommissionAllowed => Form.pay_commission_now;
 
     decimal Commission
     {
@@ -835,7 +1067,7 @@
         }
     }
 
-    void OnProductChanged(ChangeEventArgs e, OrderItem item)
+    async Task OnProductChanged(ChangeEventArgs e, OrderItem item)
     {
         int id = int.Parse(e.Value?.ToString() ?? "0");
 
@@ -850,15 +1082,27 @@
         {
             Form.Items.Remove(item);
 
-            ToastService.ShowToast("هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد", "error");
+            ToastService.ShowToast(
+                "هذا المنتج مضاف مسبقًا، عدّل الكمية بدلًا من إضافة صف جديد",
+                "error"
+            );
+
             return;
         }
 
         item.product_id = id;
 
-        var p = Products.FirstOrDefault(x => x.product_id == id);
-        if (p != null)
-            item.unit_price = p.sale_price;
+        var product = Products.FirstOrDefault(p => p.product_id == id);
+
+        if (product != null)
+        {
+            item.unit_price = product.sale_price;
+
+            var lastCost = await FinanceService.GetLastProductionCost(id);
+
+            item.production_cost = lastCost;
+            item.original_reference_value = lastCost;
+        }
     }
 
     decimal Total => Form.Items.Sum(i => i.quantity * i.unit_price);

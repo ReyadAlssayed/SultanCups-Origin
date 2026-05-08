@@ -23,6 +23,9 @@ namespace SultanCups.Models
         public decimal production_cost { get; set; }
 
         [NotMapped]
+        public decimal original_reference_value { get; set; }
+
+        [NotMapped]
         public decimal total => quantity * unit_price;
 
         public Order? Order { get; set; }
