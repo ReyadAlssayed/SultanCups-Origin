@@ -19,6 +19,8 @@ namespace SultanCups.Data
         public DbSet<Marketer> marketers { get; set; } = null!;
         public DbSet<Order> orders { get; set; } = null!;
         public DbSet<OrderItem> order_items { get; set; } = null!;
+
+        public DbSet<Return> returns { get; set; } = null!;
         public DbSet<ProductStock> product_stock { get; set; } = null!;
         public DbSet<Purchase> purchases { get; set; } = null!;
         public DbSet<Customer> customers { get; set; } = null!;

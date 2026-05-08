@@ -908,6 +908,287 @@ order.person_type = updated.person_type;
             }
         }
 
+
+        //ارجاع جزئي بمنتج من فاتورة مبيعات
+
+        public async Task<List<ReturnItemInput>> GetOrderItemsForReturn(int orderId)
+        {
+            var order = await _context.orders
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.order_id == orderId);
+
+            if (order == null || order.is_cancelled)
+                return new List<ReturnItemInput>();
+
+            var items = await _context.order_items
+                .Where(x =>
+                    x.order_id == orderId &&
+                    x.quantity > 0)
+                .ToListAsync();
+
+            var productIds = items
+                .Select(x => x.product_id)
+                .Distinct()
+                .ToList();
+
+            var products = await _context.products
+                .Where(x => productIds.Contains(x.product_id))
+                .ToDictionaryAsync(
+                    x => x.product_id,
+                    x => x.name);
+
+            return items
+                .Select(x => new ReturnItemInput
+                {
+                    product_id = x.product_id,
+
+                    product_name =
+                        products.ContainsKey(x.product_id)
+                            ? products[x.product_id]
+                            : "غير معروف",
+
+                    sold_quantity = x.quantity,
+
+                    return_quantity = 0,
+
+                    unit_price = x.unit_price,
+
+                    commission_per_box =
+                        order.person_type == "marketer"
+                            ? order.commission_per_box
+                            : 0
+                })
+                .OrderBy(x => x.product_name)
+                .ToList();
+        }
+
+        public async Task<(bool success, string message)>
+ProcessPartialReturn(
+    int orderId,
+    List<ReturnItemInput> items,
+    int adminId)
+        {
+            using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var order = await _context.orders
+                    .Include(x => x.Items)
+                    .FirstOrDefaultAsync(x =>
+                        x.order_id == orderId);
+
+                if (order == null)
+                    return (false, "الفاتورة غير موجودة");
+
+                if (order.is_cancelled)
+                    return (false, "الفاتورة ملغاة");
+
+                var validReturns = items
+                    .Where(x => x.return_quantity > 0)
+                    .ToList();
+
+                if (!validReturns.Any())
+                    return (false, "أدخل كمية راجعة");
+
+                var stock = await _context.product_stock
+                    .ToDictionaryAsync(x => x.product_id);
+
+                string personName = "";
+
+                if (order.person_type == "customer")
+                {
+                    personName =
+                        await _context.customers
+                            .Where(x =>
+                                x.customer_id ==
+                                order.person_id)
+                            .Select(x => x.name)
+                            .FirstOrDefaultAsync() ?? "";
+                }
+                else
+                {
+                    personName =
+                        await _context.marketers
+                            .Where(x =>
+                                x.marketer_id ==
+                                order.person_id)
+                            .Select(x => x.name)
+                            .FirstOrDefaultAsync() ?? "";
+                }
+
+                personName =
+                    order.person_type == "customer"
+                    ? $"{personName} (زبون)"
+                    : $"{personName} (مسوق)";
+
+                decimal totalRefund = 0;
+                decimal orderPaidAmount =
+    await _context.financial_events
+        .Where(x =>
+            x.ref_table == "orders" &&
+            x.ref_id == order.order_id &&
+            x.direction == "IN")
+        .SumAsync(x => (decimal?)x.amount) ?? 0;
+                decimal totalCommissionReturn = 0;
+
+                foreach (var item in validReturns)
+                {
+                    var orderItem =
+                        order.Items.FirstOrDefault(x =>
+                            x.product_id ==
+                            item.product_id);
+
+                    if (orderItem == null)
+                        return (false, "منتج غير موجود بالفاتورة");
+
+                    if (item.return_quantity >
+                        orderItem.quantity)
+                    {
+                        return (
+                            false,
+                            $"الكمية المرجعة أكبر من الموجود للمنتج {item.product_name}"
+                        );
+                    }
+
+                    // ==================================
+                    // تحديث الفاتورة
+                    // ==================================
+
+                    orderItem.quantity -= item.return_quantity;
+
+                    if (orderItem.quantity <= 0)
+                    {
+                        _context.order_items.Remove(orderItem);
+                    }
+
+                    // ==================================
+                    // إرجاع للمخزون
+                    // ==================================
+
+                    if (stock.ContainsKey(item.product_id))
+                    {
+                        stock[item.product_id]
+                            .quantity +=
+                            item.return_quantity;
+                    }
+
+                    // ==================================
+                    // تسجيل returns
+                    // ==================================
+
+                    _context.returns.Add(new Return
+                    {
+                        order_id = order.order_id,
+
+                        product_id =
+                            item.product_id,
+
+                        returned_quantity =
+                            item.return_quantity,
+
+                        return_date =
+                            DateTime.UtcNow
+                    });
+
+                    // ==================================
+                    // المال الراجع
+                    // ==================================
+
+                    totalRefund +=
+                        item.return_quantity
+                        *
+                        item.unit_price;
+
+                    // ==================================
+                    // عمولة المسوق
+                    // ==================================
+
+                    if (order.person_type == "marketer"
+                        &&
+                        order.pay_commission_now)
+                    {
+                        totalCommissionReturn +=
+                            item.return_quantity
+                            *
+                            order.commission_per_box;
+                    }
+                }
+
+                // ==================================
+                // خروج مبلغ الإرجاع
+                // ==================================
+
+                if (totalRefund > 0)
+                {
+                    AddFinancialEvent(
+                        "استرجاع مبيعات",
+                        "OUT",
+                        Math.Min(totalRefund, orderPaidAmount),
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "راجع جزئي لفاتورة"
+                    );
+                }
+
+                // ==================================
+                // رجوع العمولة
+                // ==================================
+
+                if (totalCommissionReturn > 0)
+                {
+                    AddFinancialEvent(
+                        "استرجاع عمولة",
+                        "IN",
+                        totalCommissionReturn,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "استرجاع عمولة بسبب راجع جزئي"
+                    );
+                }
+
+                await _context.SaveChangesAsync();
+
+                var hasItems =
+    await _context.order_items
+        .AnyAsync(x =>
+            x.order_id == order.order_id);
+
+                if (!hasItems)
+                {
+                    order.is_cancelled = true;
+
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return (true, "تم تنفيذ الراجع ✔");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return (
+                    false,
+                    ex.InnerException?.Message
+                    ?? ex.Message
+                );
+            }
+        }
+
+
+
         public async Task<decimal> GetLastProductionCost(int productId)
         {
             return await _context.production

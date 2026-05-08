@@ -176,9 +176,10 @@ else
                 إلغاء
             </button>
 
-            <button class="btn-return">
-                ترجيع
-            </button>
+           <button class="btn-return"
+        @onclick="() => OpenReturnDialog(o)">
+    ترجيع
+</button>
         }
         else
 {
@@ -465,6 +466,188 @@ else
     </div>
 }
 
+@if (ShowReturnDialog && ReturnOrder != null)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <h3>ترجيع جزئي</h3>
+                    <img src="images/Money.jpg" />
+                </div>
+
+                <div class="return-items-box">
+
+                    @foreach (var item in ReturnItems)
+                    {
+                        <div class="return-item-card">
+
+                            <div class="return-item-top">
+
+                                <span>
+                                    @item.product_name
+                                </span>
+
+                                <strong>
+                                    @item.sold_quantity صندوق
+                                </strong>
+
+                            </div>
+
+                            <input type="number"
+                                   min="0"
+                                   max="@item.sold_quantity"
+                                   class="pro-input"
+                                   @bind="item.return_quantity" />
+
+                        </div>
+                    }
+
+                </div>
+
+                @if (PaymentMethods.Count > 1 && ReturnRefundAmount > 0)
+{
+    <button class="pro-cancel"
+            style="width:100%;margin-bottom:10px;"
+            @onclick='() => Nav.NavigateTo($"/orders/edit/{ReturnOrder.order_id}")'>
+
+        فتح الفاتورة واسترجاع المبلغ أولاً
+
+    </button>
+}
+
+                <div class="pro-dialog-actions">
+
+                    <button class="pro-save"
+                            @onclick="ConfirmPartialReturn">
+                        تأكيد الترجيع
+                    </button>
+
+                    <button class="pro-cancel"
+                            @onclick="() => ShowReturnDialog = false">
+                        إلغاء
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@if (ShowReturnPreview && ReturnOrder != null)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <h3>تأكيد الراجع</h3>
+                    <img src="images/Money.jpg" />
+                </div>
+
+                <div class="cancel-preview">
+
+                    <div class="cancel-section">
+
+                        <div class="cancel-title">
+                            المنتجات التي ستعود إلى المخزن
+                        </div>
+
+                        @foreach (var item in ReturnItems
+                            .Where(x => x.return_quantity > 0))
+                        {
+                            <div class="cancel-item">
+
+                                <span>
+                                    @item.product_name
+                                </span>
+
+                                <strong>
+                                    @item.return_quantity صندوق
+                                </strong>
+
+                            </div>
+                        }
+
+                    </div>
+
+                  @if (ReturnRefundAmount > 0)
+{
+    <div class="cancel-money-box">
+
+        سيتم إرجاع مبلغ فائض للعميل:
+
+        <strong>
+            @Fmt(ReturnRefundAmount)
+        </strong>
+
+    </div>
+
+    @if (PaymentMethods.Count > 1)
+    {
+        <div class="cancel-money-warning">
+
+            الفاتورة تحتوي على أكثر من طريقة دفع.
+
+            قم باسترجاع المبلغ من قسم الدفعات داخل تعديل الفاتورة،
+            ثم أعد تنفيذ عملية الراجع.
+
+        </div>
+    }
+}
+
+                    @if (ReturnCommissionAmount > 0)
+                    {
+                        <div class="cancel-money-box">
+
+                            سيتم استرجاع عمولة المسوق:
+
+                            <strong>
+                                @Fmt(ReturnCommissionAmount)
+                            </strong>
+
+                        </div>
+                    }
+
+                </div>
+
+                <div class="pro-dialog-actions">
+
+                    <button class="pro-save"
+                            @onclick="ExecutePartialReturn">
+                        تأكيد الترجيع
+                    </button>
+
+                    <button class="pro-cancel"
+                            @onclick="() => ShowReturnPreview = false">
+                        إلغاء
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 @code {
 
     List<OrderView>? OrdersList;
@@ -484,6 +667,12 @@ else
     List<OrderItem> SelectedItems = new();
     List<string> PaymentMethods = new();
 
+    bool ShowReturnPreview = false;
+
+decimal ReturnRefundAmount = 0;
+
+decimal ReturnCommissionAmount = 0;
+
     string SearchText = "";
 
 string StatusFilter = "all";
@@ -493,6 +682,12 @@ bool ShowDisableDialog = false;
 OrderView? DisableOrder;
 
 List<OrderItem> DisableItems = new();
+
+bool ShowReturnDialog = false;
+
+OrderView? ReturnOrder;
+
+List<ReturnItemInput> ReturnItems = new();
 
 DateTime? DateFilter;
 bool ShowProfit = false;
@@ -668,6 +863,17 @@ async Task OpenDisableDialog(OrderView o)
     ShowDisableDialog = true;
 }
 
+async Task OpenReturnDialog(OrderView o)
+{
+    ReturnOrder = o;
+
+    ReturnItems =
+        await FinanceService
+            .GetOrderItemsForReturn(o.order_id);
+
+    ShowReturnDialog = true;
+}
+
 async Task ConfirmCancelOrder()
 {
     if (DisableOrder == null)
@@ -688,6 +894,101 @@ async Task ConfirmCancelOrder()
     else
     {
         ToastService.ShowToast(result.message, "error");
+    }
+}
+
+async Task ConfirmPartialReturn()
+{
+    if (ReturnOrder == null)
+        return;
+
+    var validItems =
+        ReturnItems
+        .Where(x => x.return_quantity > 0)
+        .ToList();
+
+    if (!validItems.Any())
+    {
+        ToastService.ShowToast(
+            "أدخل كمية راجعة",
+            "error");
+
+        return;
+    }
+
+    var returnTotal =
+    validItems.Sum(x =>
+        x.return_quantity * x.unit_price);
+
+var currentNet =
+    ReturnOrder.net_total;
+
+var currentPaid =
+    ReturnOrder.paid_amount;
+
+var newNet =
+    currentNet - returnTotal;
+
+ReturnRefundAmount =
+    Math.Max(currentPaid - newNet, 0);
+
+    ReturnCommissionAmount =
+        ReturnOrder.person_type == "marketer"
+        &&
+        ReturnOrder.pay_commission_now
+            ? validItems.Sum(x =>
+                x.return_quantity *
+                x.commission_per_box)
+            : 0;
+
+    ShowReturnPreview = true;
+}
+
+async Task ExecutePartialReturn()
+{
+
+    if (PaymentMethods.Count > 1 && ReturnRefundAmount > 0)
+{
+    ToastService.ShowToast(
+        "قم باسترجاع المبلغ من الدفعات أولاً",
+        "error"
+    );
+
+    return;
+}
+    if (ReturnOrder == null)
+        return;
+
+    var result =
+        await FinanceService.ProcessPartialReturn(
+            ReturnOrder.order_id,
+            ReturnItems,
+            CurrentAdminId);
+
+   if (result.success)
+{
+    ToastService.ShowToast(
+        result.message,
+        "success");
+
+    OrdersList =
+        await FinanceService.GetOrders();
+
+    ShowReturnDialog = false;
+
+    ShowReturnPreview = false;
+
+    ReturnItems.Clear();
+
+    ReturnRefundAmount = 0;
+
+    ReturnCommissionAmount = 0;
+}
+    else
+    {
+        ToastService.ShowToast(
+            result.message,
+            "error");
     }
 }
 
