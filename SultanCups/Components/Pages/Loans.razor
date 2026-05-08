@@ -6,6 +6,7 @@
 @inject SultanCups.Services.ToastService ToastService
 @inject SultanCups.Services.UserSession Session
 @inject IJSRuntime JS
+@using ClosedXML.Excel
 
 <div class="pro-page">
 
@@ -17,11 +18,59 @@
 
         <h2 class="pro-title">السلف</h2>
 
-        <div></div>
+        <button class="pro-btn-excel"
+                @onclick="ExportToExcel"
+                disabled="@IsExporting">
+            أرشفة Excel
+        </button>
 
         <div></div>
 
     </div>
+
+    <div class="emp-search-bar">
+
+        <input class="emp-search-input"
+               placeholder="ابحث باسم الموظف"
+               @bind="SearchText"
+               @bind:event="oninput" />
+
+        <select class="emp-filter-select"
+                @bind="SelectedStatus">
+
+            <option value="الكل">الكل</option>
+            <option value="خالص">خالص</option>
+            <option value="خالص جزئي">خالص جزئي</option>
+            <option value="غير خالص">غير خالص</option>
+
+        </select>
+
+        <select class="emp-filter-select"
+                @bind="SelectedMonth">
+
+            <option value="0">كل الشهور</option>
+
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i">@i</option>
+            }
+
+        </select>
+
+        <select class="emp-filter-select"
+                @bind="SelectedYear">
+
+            <option value="0">كل السنوات</option>
+
+            @foreach (var y in FilterYears)
+            {
+                <option value="@y">@y</option>
+            }
+
+        </select>
+
+    </div>
+
 
     <div class="pro-card">
         <div class="pro-table-wrap">
@@ -62,7 +111,7 @@
                     }
                     else
                     {
-                        @foreach (var l in Loan)
+                        @foreach (var l in FilteredLoans)
                         {
                             <tr>
 
@@ -581,6 +630,14 @@
             </div>
         </div>
     </div>
+    @if (IsExporting)
+    {
+        <div class="excel-loading-overlay">
+            <div class="excel-loading-box">
+                جاري الأرشفة...
+            </div>
+        </div>
+    }
 }
 
 
@@ -600,6 +657,7 @@
     bool ShowPaymentDialog;
     bool ShowReverseDialog;
     bool ShowDeleteDialog;
+    bool IsExporting = false;
 
     bool ShowFinalDeleteDialog;
     string FinalDeleteMessage = "";
@@ -617,6 +675,72 @@
     int DeleteLoanId;
 
     decimal PaymentAmount;
+
+    string SearchText = "";
+
+    string SelectedStatus = "الكل";
+
+    int SelectedMonth = 0;
+
+    int SelectedYear = 0;
+
+    List<int> FilterYears =>
+        (Loan ?? new List<EmployeeLoan>())
+        .Select(x => x.loan_date.ToLocalTime().Year)
+        .Distinct()
+        .OrderByDescending(x => x)
+        .ToList();
+
+    IEnumerable<EmployeeLoan> FilteredLoans =>
+        (Loan ?? new List<EmployeeLoan>())
+        .Where(l =>
+
+            (
+                string.IsNullOrWhiteSpace(SearchText)
+                ||
+                (
+                    l.Employee?.full_name != null
+                    &&
+                    l.Employee.full_name
+                        .Trim()
+                        .Replace("أ", "ا")
+                        .Replace("إ", "ا")
+                        .Replace("آ", "ا")
+                        .Contains(
+                            SearchText
+                                .Trim()
+                                .Replace("أ", "ا")
+                                .Replace("إ", "ا")
+                                .Replace("آ", "ا"),
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                )
+            )
+
+            &&
+
+            (
+                SelectedStatus == "الكل"
+                ||
+                l.status == SelectedStatus
+            )
+
+            &&
+
+            (
+                SelectedMonth == 0
+                ||
+                l.loan_date.ToLocalTime().Month == SelectedMonth
+            )
+
+            &&
+
+            (
+                SelectedYear == 0
+                ||
+                l.loan_date.ToLocalTime().Year == SelectedYear
+            )
+        );
 
 
 
@@ -947,6 +1071,97 @@
         FinalDeleteMessage = "";
 
         LoanForm = new EmployeeLoan();
+    }
+
+    async Task ExportToExcel()
+    {
+        if (IsExporting)
+            return;
+
+        IsExporting = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(300);
+
+        try
+        {
+            using var workbook = new XLWorkbook();
+
+            var ws = workbook.Worksheets.Add("السلف");
+
+            ws.Cell(1, 1).Value = "رقم السلفة";
+            ws.Cell(1, 2).Value = "الموظف";
+            ws.Cell(1, 3).Value = "قيمة السلفة";
+            ws.Cell(1, 4).Value = "المسدد";
+            ws.Cell(1, 5).Value = "المتبقي";
+            ws.Cell(1, 6).Value = "الحالة";
+            ws.Cell(1, 7).Value = "التاريخ";
+            ws.Cell(1, 8).Value = "الخزنة";
+            ws.Cell(1, 9).Value = "ملاحظات";
+
+            int row = 2;
+
+            foreach (var l in FilteredLoans)
+            {
+                ws.Cell(row, 1).Value = l.loan_id;
+
+                ws.Cell(row, 2).Value =
+                    l.Employee?.full_name;
+
+                ws.Cell(row, 3).Value =
+                    l.loan_amount;
+
+                ws.Cell(row, 4).Value =
+                    l.repaid_amount;
+
+                ws.Cell(row, 5).Value =
+                    decimal.Round(
+                        l.loan_amount - l.repaid_amount,
+                        2);
+
+                ws.Cell(row, 6).Value =
+                    l.status;
+
+                ws.Cell(row, 7).Value =
+                    l.loan_date
+                        .ToLocalTime()
+                        .ToString("yyyy-MM-dd HH:mm");
+
+                ws.Cell(row, 8).Value =
+                    l.CashBox?.name;
+
+                ws.Cell(row, 9).Value =
+                    l.notes;
+
+                row++;
+            }
+
+            ws.Row(1).Style.Font.Bold = true;
+
+            ws.Row(1).Style.Fill.BackgroundColor =
+                XLColor.LightGreen;
+
+            ws.Columns().AdjustToContents();
+
+            ws.RightToLeft = true;
+
+            using var stream = new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"Loans_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+                Convert.ToBase64String(stream.ToArray())
+            );
+        }
+        finally
+        {
+            IsExporting = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
 }

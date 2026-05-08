@@ -485,16 +485,42 @@
 
 
     IEnumerable<Employee> FilteredEmployees =>
-        (EmployeeList ?? new List<Employee>())
-        .Where(e =>
-            (string.IsNullOrWhiteSpace(SearchText) ||
-                (e.full_name != null && e.full_name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
-                (e.phone != null && e.phone.Contains(SearchText)))
-            &&
-            (EmployeeStatusFilter == "all" ||
-             (EmployeeStatusFilter == "active" && e.is_active) ||
-             (EmployeeStatusFilter == "inactive" && !e.is_active))
-        );
+    (EmployeeList ?? new List<Employee>())
+    .Where(e =>
+        (
+            string.IsNullOrWhiteSpace(SearchText)
+            ||
+            (
+                e.full_name != null &&
+                e.full_name
+                    .Trim()
+                    .Replace("أ", "ا")
+                    .Replace("إ", "ا")
+                    .Replace("آ", "ا")
+                    .Contains(
+                        SearchText
+                            .Trim()
+                            .Replace("أ", "ا")
+                            .Replace("إ", "ا")
+                            .Replace("آ", "ا"),
+                        StringComparison.OrdinalIgnoreCase
+                    )
+            )
+            ||
+            (
+                e.phone != null &&
+                e.phone.Contains(SearchText)
+            )
+        )
+        &&
+        (
+            EmployeeStatusFilter == "all"
+            ||
+            (EmployeeStatusFilter == "active" && e.is_active)
+            ||
+            (EmployeeStatusFilter == "inactive" && !e.is_active)
+        )
+    );
 
     async Task ShowToast(string msg, string type)
     {

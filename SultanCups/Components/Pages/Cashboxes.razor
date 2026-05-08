@@ -193,17 +193,24 @@
 
                 <div class="pro-delete-icon">!</div>
 
-                <h3 class="pro-delete-title">تأكيد إلغاء التنشيط</h3>
+                <h3 class="pro-delete-title">
+                    @(Form.is_active ? "تأكيد إلغاء التنشيط" : "تأكيد التنشيط")
+                </h3>
 
                 <p class="pro-delete-text text-center-delete">
-                    هل تريد إلغاء تنشيط هذه الخزنة؟
+                    @(Form.is_active
+                                    ? "هل تريد إلغاء تنشيط هذه الخزنة؟"
+                                    : "هل تريد تنشيط هذه الخزنة؟")
                 </p>
 
                 <div class="pro-dialog-actions">
+
                     <button type="button"
-                            class="pro-delete-confirm"
+                            class="@(Form.is_active ? "pro-delete-confirm" : "pro-save")"
                             @onclick="() => Toggle(Form.cash_box_id)">
-                        تعطيل
+
+                        @(Form.is_active ? "تعطيل" : "تنشيط")
+
                     </button>
 
                     <button type="button"
@@ -211,6 +218,7 @@
                             @onclick="CloseDialogs">
                         إلغاء
                     </button>
+
                 </div>
 
             </div>
