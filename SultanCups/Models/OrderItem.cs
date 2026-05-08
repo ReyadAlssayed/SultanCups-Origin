@@ -20,10 +20,15 @@ namespace SultanCups.Models
 
         public decimal unit_price { get; set; }
 
+        public decimal production_cost { get; set; }
+
         [NotMapped]
         public decimal total => quantity * unit_price;
 
         public Order? Order { get; set; }
+
+        [NotMapped]
+        public bool IsNew { get; set; } = false;
 
         [NotMapped]
         public bool IsRemoving { get; set; } = false;

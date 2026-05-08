@@ -112,33 +112,45 @@
 
      <td>
 
-    <button class="btn-info"
+    <div class="order-actions">
+
+
+
+        @if (!o.is_cancelled)
+        {
+
+                    <button class="btn-info"
+                @onclick="() => OpenDetails(o)">
+            تفاصيل
+        </button>
+            <button class="btn-edit"
+                    @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
+                تعديل
+            </button>
+
+            <button class="btn-delete"
+                    @onclick="() => OpenDisableDialog(o)">
+                إلغاء
+            </button>
+
+            <button class="btn-return">
+                ترجيع
+            </button>
+        }
+        else
+{
+    <button class="cancelled-full-btn"
             @onclick="() => OpenDetails(o)">
-        تفاصيل
+
+        <span>ملغاة</span>
+
+        <span class="cancelled-divider"></span>
+
+        <span>تفاصيل</span>
+
     </button>
-
-    @if (!o.is_cancelled)
-    {
-        <button class="btn-edit"
-                @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
-            تعديل
-        </button>
-
-        <button class="btn-delete"
-                @onclick="() => OpenDisableDialog(o)">
-            إلغاء
-        </button>
-
-        <button class="btn-return">
-            ترجيع
-        </button>
-    }
-    else
-    {
-        <span class="cancelled-text">
-            ملغاة
-        </span>
-    }
+}
+    </div>
 
 </td>
 
@@ -161,7 +173,12 @@
 
             <div class="sal-dialog-body">
 
-                <h3>تفاصيل الفاتورة</h3>
+               @if (SelectedOrder?.is_cancelled == true)
+{
+    <div class="cancelled-note">
+        هذه فاتورة ملغاة — للعرض فقط ولا تؤثر على النظام.
+    </div>
+}
 
                 <div class="details-list">
 
@@ -326,46 +343,63 @@
 
             <div class="pro-dialog-body">
 
-                <h3>إلغاء الفاتورة</h3>
+                <div class="money-head">
+                    <h3>إلغاء الفاتورة</h3>
+                    <img src="images/Money.jpg" />
+                </div>
 
-                <p>
-                    سيتم إرجاع المنتجات التالية إلى المخزن:
-                </p>
+                <div class="cancel-preview">
 
-                <div class="disable-items">
+                    <div class="cancel-section">
 
-                    @foreach (var item in DisableItems)
+                        <div class="cancel-title">
+                            المنتجات التي ستعود إلى المخزن
+                        </div>
+
+                        @foreach (var item in DisableItems)
+                        {
+                            <div class="cancel-item">
+
+                                <span>
+                                    @item.product_name
+                                </span>
+
+                                <strong>
+                                    @item.quantity صندوق
+                                </strong>
+
+                            </div>
+                        }
+
+                    </div>
+
+                    @if (DisableOrder.paid_amount > 0)
                     {
-                        <div class="disable-row">
-                            - @item.product_name
-                            (الكمية: @item.quantity)
+                        <div class="cancel-money-box">
+
+                            سيتم إرجاع مبلغ
+
+                            <strong>
+                                @Fmt(DisableOrder.paid_amount)
+                            </strong>
+
+                            إلى
+
+                            @(DisableOrder.person_type == "customer"
+                                ? "الزبون"
+                                : "المسوق")
+
                         </div>
                     }
 
                 </div>
 
-                @if (DisableOrder.paid_amount > 0)
-                {
-                    <div class="refund-note">
-
-                        سيتم إخراج مبلغ
-                        @Fmt(DisableOrder.paid_amount)
-
-                        وإرجاعه إلى
-
-                        @(DisableOrder.person_type == "customer"
-                            ? "الزبون"
-                            : "المسوق")
-
-                    </div>
-                }
-
                 <div class="pro-dialog-actions">
 
-                   <button class="pro-save"
-        @onclick="ConfirmCancelOrder">
-    تأكيد الإلغاء
-</button>
+                    <button class="pro-save"
+                            @onclick="ConfirmCancelOrder">
+                        تأكيد الإلغاء
+                    </button>
 
                     <button class="pro-cancel"
                             @onclick="() => ShowDisableDialog = false">

@@ -16,6 +16,8 @@ public class Order
 
     public DateTime order_date { get; set; }
 
+    public DateTime created_at { get; set; } = DateTime.UtcNow;
+
     // 🔥 الجديد
     public int cash_box_id { get; set; } // الخزنة
     public string payment_method { get; set; } = "cash";

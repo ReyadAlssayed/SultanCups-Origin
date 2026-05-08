@@ -118,7 +118,9 @@
                         <tr @key="item"
                             class="item-row1 @(item.IsRemoving ? "" : "open")">
                             <td>
-                                <select class="pro-input" value="@item.product_id"
+                                <select class="pro-input"
+                                        value="@item.product_id"
+                                        disabled="@(!item.IsNew)"
                                         @onchange="e => OnProductChanged(e, item)">
                                     <option value="0">اختر</option>
                                     @foreach (var p in Products)
@@ -150,7 +152,7 @@
                             </td>
 
                             <td>
-                                @if (Form.Items.Count > 1)
+                                @if (Form.Items.Count > 1 && item.IsNew)
                                 {
                                     <button class="btn-delete-item1"
                                             @onclick="() => RemoveItem(item)">
@@ -440,7 +442,7 @@
 
     decimal AddAmount;
     decimal RefundAmount;
-
+    HashSet<int> OldProductIds = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -478,9 +480,14 @@
         {
             product_id = i.product_id,
             quantity = i.quantity,
-            unit_price = i.unit_price
+            unit_price = i.unit_price,
+            IsNew = false
         }).ToList()
         };
+
+        OldProductIds = Form.Items
+            .Select(x => x.product_id)
+            .ToHashSet();
 
 
         Payments = payments
@@ -786,7 +793,8 @@
             product_id = 0,
             quantity = 1,
             unit_price = 0,
-            IsRemoving = true
+            IsRemoving = true,
+            IsNew = true
         };
 
         Form.Items.Add(item);

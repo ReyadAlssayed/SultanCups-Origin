@@ -282,9 +282,9 @@
     border: none;
     background: #ede9fe;
     color: #6d28d9;
-    padding: 7px 14px;
+    padding: 5px 8px;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: .2s;
@@ -293,6 +293,44 @@
     .btn-return:hover {
         background: #ddd6fe;
     }
+
+.cancelled-full-btn {
+    width: 100%;
+    border: 1px solid #fecdd3;
+    background: #fff1f2;
+    color: #dc2626;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+    .cancelled-full-btn:hover {
+        background: #ffe4e6;
+    }
+
+.cancelled-note {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #dc2626;
+    padding: 14px 15px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 18px;
+    font-size: 14px;
+}
+
+.cancelled-divider {
+    width: 1px;
+    height: 18px;
+    background: #fda4af;
+}
 
 .print-only {
     display: none;
@@ -310,6 +348,62 @@
     color: #dc2626;
     font-weight: 700;
 }
+
+.cancel-preview {
+    margin-top: 18px;
+}
+
+.cancel-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.cancel-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 14px;
+    text-align: right;
+}
+
+.cancel-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+    .cancel-item span {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .cancel-item strong {
+        font-size: 14px;
+        color: #2563eb;
+    }
+
+.cancel-money-box {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 2;
+}
+
+    .cancel-money-box strong {
+        color: #dc2626;
+        font-size: 20px;
+        margin: 0 4px;
+    }
 
 
 @media (max-width: 768px) {

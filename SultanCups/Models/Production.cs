@@ -17,6 +17,8 @@ namespace SultanCups.Models
         [Column(TypeName = "date")]
         public DateTime production_date { get; set; }
 
+        public DateTime created_at { get; set; } = DateTime.UtcNow;
+
         [NotMapped]
         public decimal total_cost => box_cost * box_count;
 

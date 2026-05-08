@@ -97,6 +97,16 @@ namespace SultanCups.Services
                 {
                     item.order_id = order.order_id;
 
+                    var productionCost = await _context.production
+                        .Where(x =>
+                            x.product_id == item.product_id &&
+                            x.created_at <= order.created_at)
+                        .OrderByDescending(x => x.created_at)
+                        .Select(x => x.box_cost)
+                        .FirstOrDefaultAsync();
+
+                    item.production_cost = productionCost;
+
                     _context.order_items.Add(item);
 
                     stocks[item.product_id].quantity -= item.quantity;
@@ -323,29 +333,57 @@ namespace SultanCups.Services
                     .Where(i => i.order_id == order.order_id)
                     .ToListAsync();
 
+
+                var stock = await _context.product_stock
+                    .ToDictionaryAsync(s => s.product_id);
+
+                foreach (var oldItem in oldItems)
+                {
+                    var edited = newItems.FirstOrDefault(x =>
+                        x.product_id == oldItem.product_id);
+
+                    if (edited == null)
+                        continue;
+
+                    // ❌ منع إنقاص الكمية
+                    if (edited.quantity < oldItem.quantity)
+                        return (false, "لا يمكن إنقاص الكمية من التعديل، استخدم الراجع");
+
+                    // ✔ زيادة فقط
+                    var diff = edited.quantity - oldItem.quantity;
+
+                    if (diff > 0)
+                    {
+                        if (!stock.ContainsKey(oldItem.product_id))
+                            return (false, "المنتج غير موجود");
+
+                        if (stock[oldItem.product_id].quantity < diff)
+                            return (false, "المخزون غير كافي");
+
+                        stock[oldItem.product_id].quantity -= diff;
+                    }
+
+                    // ✔ تحديث السعر والكمية
+                    oldItem.quantity = edited.quantity;
+                    oldItem.unit_price = edited.unit_price;
+                }
+
                 decimal oldTotal = oldItems.Sum(i => i.quantity * i.unit_price);
                 decimal newTotal = newItems.Sum(i => i.quantity * i.unit_price);
 
                 decimal newNet = newTotal - updated.discount_total;
 
-                var stock = await _context.product_stock
-                    .ToDictionaryAsync(s => s.product_id);
 
-                foreach (var item in oldItems)
-                {
-                    if (stock.ContainsKey(item.product_id))
-                        stock[item.product_id].quantity += item.quantity;
-                }
 
-                // ❌ كان ناقص هنا
-                await _context.SaveChangesAsync();
+                var existingIds = oldItems
+     .Select(x => x.product_id)
+     .ToHashSet();
 
-                _context.order_items.RemoveRange(oldItems);
+                var addedItems = newItems
+                    .Where(x => !existingIds.Contains(x.product_id))
+                    .ToList();
 
-                // ❌ كان ناقص هنا
-                await _context.SaveChangesAsync();
-
-                foreach (var item in newItems)
+                foreach (var item in addedItems)
                 {
                     if (item.product_id <= 0)
                         return (false, "منتج غير صالح");
@@ -357,21 +395,30 @@ namespace SultanCups.Services
                         return (false, "المخزون غير كافي");
                 }
 
-                foreach (var item in newItems)
+                foreach (var item in addedItems)
                 {
                     stock[item.product_id].quantity -= item.quantity;
                 }
 
                 await _context.SaveChangesAsync();
 
-                foreach (var item in newItems)
+                foreach (var item in addedItems)
                 {
+                    var productionCost = await _context.production
+                        .Where(x =>
+                            x.product_id == item.product_id &&
+                            x.created_at <= order.created_at)
+                        .OrderByDescending(x => x.created_at)
+                        .Select(x => x.box_cost)
+                        .FirstOrDefaultAsync();
+
                     _context.order_items.Add(new OrderItem
                     {
                         order_id = order.order_id,
                         product_id = item.product_id,
                         quantity = item.quantity,
-                        unit_price = item.unit_price
+                        unit_price = item.unit_price,
+                        production_cost = productionCost
                     });
                 }
 
@@ -631,7 +678,7 @@ namespace SultanCups.Services
                         order.person_id,
                         personName,
                         null,
-                        $"استرجاع مبلغ فاتورة رقم {order.order_id}"
+                        "إلغاء الفاتورة وإرجاع الكميات إلى المخزون"
                     );
                 }
 

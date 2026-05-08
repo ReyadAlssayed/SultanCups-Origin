@@ -348,11 +348,12 @@
     border: 1px solid #bae6fd;
     color: #0369a1;
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 5px 8px;
     cursor: pointer;
     font-size: 12px;
     transition: 0.2s;
 }
+
 
     .btn-info:hover,
     .btn-edit:hover,
@@ -360,13 +361,28 @@
         background: #bae6fd;
     }
 
+.order-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.pro-table th:last-child,
+.pro-table td:last-child {
+    width: 230px;
+    min-width: 230px;
+    text-align: center;
+}
+
 
 .btn-delete {
     background: #fee2e2;
     border: 1px solid #fecaca;
     color: #dc2626;
     border-radius: 8px;
-    padding: 6px 10px;
+    padding: 5px 8px;
     cursor: pointer;
     font-size: 12px;
     transition: 0.2s;
