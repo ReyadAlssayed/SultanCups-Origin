@@ -83,16 +83,7 @@
 
             </div>
 
-            <div class="commission-pay-check">
-                <label class="commission-check">
-
-                    <input type="checkbox"
-                           @bind="Form.pay_commission_now" />
-
-                    صرف العمولة الآن
-
-                </label>
-            </div>
+            
         }
 
         <div>
@@ -102,15 +93,21 @@
                    @bind="Form.order_date" />
         </div>
 
-       
-        <div class="pay-btn-wrap">
-            <button class="btn-info fixed-btn" @onclick="OpenPaymentDialog">
-                💳 دفع
-            </button>
-        </div>
+       @if (Form.person_type == "marketer")
+{
+    <div class="commission-field-wrap">
+            <label class="commission-check">
 
-        <div>
+                <span>صرف العمولة الآن</span>
+
+                <input type="checkbox"
+                       @bind="Form.pay_commission_now" />
+
+            </label>
+
         </div>
+        }
+ 
 
     </div>
 
@@ -153,11 +150,13 @@
                             </td>
 
                             <td>
-                                <input type="number"
-                                       step="0.01"
-                                       class="pro-input"
-                                       @bind-value="item.unit_price"
-                                       @bind-value:event="oninput" />
+                                <td>
+                                    <input type="number"
+                                           step="0.01"
+                                           class="pro-input @(item.unit_price <= item.production_cost ? "ref-warning" : "")"
+                                           @bind-value="item.unit_price"
+                                           @bind-value:event="oninput" />
+                                </td>
                             </td>
                             <td>
                                 <input type="number"
@@ -238,6 +237,12 @@
         <div class="order-left1">
 
             <div class="summary-box1">
+
+                <div class="pay-btn-wrap">
+                    <button class="btn-info fixed-btn" @onclick="OpenPaymentDialog">
+                        💳 دفع
+                    </button>
+                </div>
 
                 <label>الخصم <span class="muted1">(اختياري)</span></label>
                 <input type="number"

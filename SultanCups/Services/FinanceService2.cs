@@ -963,10 +963,10 @@ namespace SultanCups.Services
         }
 
         public async Task<(bool success, string message)>
-ProcessPartialReturn(
-    int orderId,
-    List<ReturnItemInput> items,
-    int adminId)
+   ProcessPartialReturn(
+       int orderId,
+       List<ReturnItemInput> items,
+       int adminId)
         {
             using var transaction =
                 await _context.Database.BeginTransactionAsync();
@@ -1023,16 +1023,18 @@ ProcessPartialReturn(
                     : $"{personName} (مسوق)";
 
                 decimal totalRefund = 0;
+
                 decimal orderPaidAmount =
-await _context.financial_events
-    .Where(x =>
-        x.ref_table == "orders" &&
-        x.ref_id == order.order_id)
-    .SumAsync(x =>
-        x.direction == "IN"
-            ? (decimal?)x.amount
-            : -(decimal?)x.amount
-    ) ?? 0;
+                    await _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders" &&
+                            x.ref_id == order.order_id)
+                        .SumAsync(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount
+                        ) ?? 0;
+
                 decimal totalCommissionReturn = 0;
 
                 foreach (var item in validReturns)
@@ -1119,23 +1121,61 @@ await _context.financial_events
                 }
 
                 // ==================================
-                // خروج مبلغ الإرجاع
+                // طرق الدفع المستخدمة
                 // ==================================
 
-                if (totalRefund > 0)
+                var paymentMethods = await _context.financial_events
+     .Where(x =>
+         x.ref_table == "orders" &&
+         x.ref_id == order.order_id &&
+         x.payment_method != null &&
+         x.direction == "IN")
+                     .Select(x => x.payment_method!)
+                    .Distinct()
+                    .ToListAsync();
+
+                // ==================================
+                // لو أكثر من طريقة دفع
+                // ==================================
+
+                if (paymentMethods.Count > 1)
                 {
+                    return (
+                        false,
+                        "هذه الفاتورة تحتوي على أكثر من طريقة دفع، قم أولاً بتعديل الدفعات من شاشة تعديل الفاتورة ثم نفذ الراجع"
+                    );
+                }
+
+                // ==================================
+                // استرجاع مبلغ تلقائي
+                // ==================================
+
+                if (
+                    paymentMethods.Count == 1
+                    &&
+                    totalRefund > 0
+                    &&
+                    orderPaidAmount > 0
+                )
+                {
+                    var refundAmount =
+                        Math.Min(
+                            totalRefund,
+                            orderPaidAmount
+                        );
+
                     AddFinancialEvent(
                         "استرجاع مبيعات",
                         "OUT",
-                        Math.Min(totalRefund, orderPaidAmount),
+                        refundAmount,
                         order.cash_box_id,
                         adminId,
                         order.order_id,
                         "orders",
                         order.person_id,
                         personName,
-                        null,
-                        "راجع جزئي لفاتورة"
+                        paymentMethods.First(),
+                        "راجع جزئي وإرجاع مبلغ"
                     );
                 }
 
@@ -1163,9 +1203,9 @@ await _context.financial_events
                 await _context.SaveChangesAsync();
 
                 var hasItems =
-    await _context.order_items
-        .AnyAsync(x =>
-            x.order_id == order.order_id);
+                    await _context.order_items
+                        .AnyAsync(x =>
+                            x.order_id == order.order_id);
 
                 if (!hasItems)
                 {
@@ -1189,7 +1229,6 @@ await _context.financial_events
                 );
             }
         }
-
 
 
         public async Task<decimal> GetLastProductionCost(int productId)

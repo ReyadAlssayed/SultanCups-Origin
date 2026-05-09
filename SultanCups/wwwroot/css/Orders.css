@@ -279,19 +279,13 @@
 
 
 .btn-return {
-    border: none;
-    background: #ede9fe;
-    color: #6d28d9;
-    padding: 5px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: .2s;
+    background: #f3e8ff;
+    color: #7c3aed;
+    border: 1px solid #d8b4fe;
 }
 
     .btn-return:hover {
-        background: #ddd6fe;
+        background: #e9d5ff;
     }
 
 .cancelled-full-btn {
@@ -467,26 +461,24 @@
 }
 
 .profit-col {
-    transition: .25s ease;
     overflow: hidden;
     white-space: nowrap;
+    transition: .35s ease;
 }
 
 .hide-profit {
     opacity: 0;
     width: 0;
     min-width: 0;
-    max-width: 0;
     padding: 0 !important;
     border: none !important;
-    overflow: hidden;
-    font-size: 0;
-    transform: translateX(10px);
+    transform: translateX(12px);
 }
 
 .show-profit {
     opacity: 1;
-    min-width: 120px;
+    width: 150px;
+    min-width: 150px;
     transform: translateX(0);
 }
 
@@ -504,6 +496,112 @@
     color: #64748b;
     font-weight: 700;
 }
+
+/* ===== Return Dialog ===== */
+
+.return-dialog-box {
+    width: 100%;
+    max-width: 470px;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.return-dialog-body {
+    padding: 22px;
+}
+
+.return-title {
+    text-align: center;
+    font-size: 34px;
+    margin-bottom: 10px;
+}
+
+.return-main-title {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 18px;
+}
+
+.return-product-name {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    color: #334155;
+    margin-bottom: 14px;
+}
+
+.return-qty-input {
+    width: 100%;
+    height: 50px;
+    border-radius: 14px;
+    border: 1px solid #dbe3ee;
+    background: #f8fafc;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 18px;
+    transition: .18s ease;
+}
+
+    .return-qty-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(37,99,235,.08);
+    }
+
+.return-dialog-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.return-confirm-btn,
+.return-cancel-btn {
+    flex: 1;
+    height: 46px;
+    border: 0;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: .18s ease;
+}
+
+.return-confirm-btn {
+    background: #2563eb;
+    color: white;
+}
+
+    .return-confirm-btn:hover {
+        background: #1d4ed8;
+    }
+
+.return-cancel-btn {
+    background: #64748b;
+    color: white;
+}
+
+    .return-cancel-btn:hover {
+        background: #475569;
+    }
+
+
+.pay-modal-actions-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+    .pay-modal-actions-row .pro-save,
+    .pay-modal-actions-row .pro-cancel {
+        flex: 1;
+        margin: 0 !important;
+    }
+
 
 
 @media (max-width: 768px) {

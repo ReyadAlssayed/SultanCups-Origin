@@ -66,9 +66,10 @@
                         <th>الاسم</th>
                         <th>عدد الأصناف</th>
                         <th>الحالة</th>
-                       <th class="profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+                      <th class="profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
     الربح
 </th>
+
                         <th>التاريخ</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -121,32 +122,32 @@
                                     
         </td>
 
-                                <td class="profit-green profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+                                            <td class="profit-green profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+                                        @if (o.is_cancelled)
+                                        {
 
-   @if (o.is_cancelled)
-{
-    
-}
-else if (o.profit > 0)
-{
-    <span class="profit-up">
-        ▲ @Fmt(o.profit)
-    </span>
-}
-else if (o.profit < 0)
-{
-    <span class="profit-down">
-        ▼ @Fmt(Math.Abs(o.profit))
-    </span>
-}
-else
-{
-    <span class="profit-neutral">
-        ● 0.00 د.ل
-    </span>
-}
+                                        }
+                                        else if (o.profit > 0)
+                                        {
+                                            <span class="profit-up">
+                                                ▲ @Fmt(o.profit)
+                                            </span>
+                                        }
+                                        else if (o.profit < 0)
+                                        {
+                                            <span class="profit-down">
+                                                ▼ @Fmt(Math.Abs(o.profit))
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="profit-neutral">
+                                                ● 0.00 د.ل
+                                            </span>
+                                        }
 
-</td>
+                                    </td>
+                                
 
 
                                 <td>
@@ -176,7 +177,7 @@ else
                 إلغاء
             </button>
 
-           <button class="btn-return"
+           <button class="inv-small btn-return"
         @onclick="() => OpenReturnDialog(o)">
     ترجيع
 </button>
@@ -470,41 +471,46 @@ else
 {
     <div class="pro-dialog-overlay">
 
-        <div class="pro-dialog-box small-dialog">
+        <div class="pro-dialog-box return-dialog-box">
 
             <div class="pro-dialog-top-image">
                 <img src="images/Background.png" />
             </div>
 
-            <div class="pro-dialog-body">
+            <div class="pro-dialog-body return-dialog-body">
 
-                <div class="money-head">
-                    <h3>ترجيع جزئي</h3>
-                    <img src="images/Money.jpg" />
+               <div class="return-title">
+    <img src="images/Money.jpg"
+         style="width:55px;height:55px;object-fit:contain;" />
+</div>
+
+                <div class="return-main-title">
+                    ترجيع جزئي
                 </div>
 
                 <div class="return-items-box">
 
                     @foreach (var item in ReturnItems)
                     {
-                        <div class="return-item-card">
+                        <div class="return-item-card modern-return-card">
 
-                            <div class="return-item-top">
-
+                            <div class="return-product-name">
+                                @item.product_name
                                 <span>
-                                    @item.product_name
-                                </span>
-
-                                <strong>
                                     @item.sold_quantity صندوق
-                                </strong>
-
+                                </span>
                             </div>
+
+                            <div class="inv-muted"
+     style="text-align:center;margin-bottom:10px;font-size:13px;">
+    أدخل العدد المراد إرجاعه بالصناديق
+</div>
 
                             <input type="number"
                                    min="0"
                                    max="@item.sold_quantity"
-                                   class="pro-input"
+                                   class="return-qty-input"
+                                   placeholder="أدخل الكمية المراد إرجاعها"
                                    @bind="item.return_quantity" />
 
                         </div>
@@ -513,26 +519,29 @@ else
                 </div>
 
                 @if (PaymentMethods.Count > 1 && ReturnRefundAmount > 0)
-{
-    <button class="pro-cancel"
-            style="width:100%;margin-bottom:10px;"
-            @onclick='() => Nav.NavigateTo($"/orders/edit/{ReturnOrder.order_id}")'>
+                {
+                    <button class="return-warning-btn"
+                            @onclick='() => Nav.NavigateTo($"/orders/edit/{ReturnOrder.order_id}")'>
 
-        فتح الفاتورة واسترجاع المبلغ أولاً
+                        فتح الفاتورة واسترجاع المبلغ أولاً
 
-    </button>
-}
+                    </button>
+                }
 
-                <div class="pro-dialog-actions">
+                <div class="return-dialog-actions">
 
-                    <button class="pro-save"
+                    <button class="return-confirm-btn"
                             @onclick="ConfirmPartialReturn">
+
                         تأكيد الترجيع
+
                     </button>
 
-                    <button class="pro-cancel"
+                    <button class="return-cancel-btn"
                             @onclick="() => ShowReturnDialog = false">
+
                         إلغاء
+
                     </button>
 
                 </div>

@@ -347,10 +347,13 @@
     background: #e0f2fe;
     border: 1px solid #bae6fd;
     color: #0369a1;
-    border-radius: 8px;
-    padding: 5px 8px;
+    border-radius: 10px;
+    padding: 7px 12px;
+    min-width: 58px;
+    min-height: 34px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 700;
     transition: 0.2s;
 }
 
@@ -381,10 +384,13 @@
     background: #fee2e2;
     border: 1px solid #fecaca;
     color: #dc2626;
-    border-radius: 8px;
-    padding: 5px 8px;
+    border-radius: 10px;
+    padding: 7px 12px;
+    min-width: 58px;
+    min-height: 34px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 700;
     transition: 0.2s;
 }
 
@@ -733,12 +739,17 @@
         border-radius: 10px;
     }
 
-    /* الأزرار */
     .small-dialog .pro-dialog-actions {
         display: flex;
-        flex-direction: row; /* 👈 جنب بعض */
-        gap: 8px;
-        margin-top: 10px;
+        flex-direction: row;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .small-dialog .pro-save,
+    .small-dialog .pro-cancel {
+        flex: 1;
+        width: 50%;
     }
 
     /* زر التأكيد */
@@ -792,4 +803,93 @@
     100% {
         background: transparent;
     }
+}
+
+
+.commission-check {
+    position: relative;
+    min-height: 43px;
+    width: 88%;
+    margin-top: 8px;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #dbe3ee;
+    transition: .18s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+    .commission-check:hover {
+        border-color: #93c5fd;
+        background: #f9fbff;
+    }
+
+    .commission-check span {
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+.commission-field-wrap {
+    padding-top: 4px;
+}
+
+
+
+    /* إخفاء الشكل الافتراضي */
+    .commission-check input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        border: 2px solid #cbd5e1;
+        background: white;
+        position: relative;
+        transition: .18s ease;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+        /* عند التفعيل */
+        .commission-check input[type="checkbox"]:checked {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+            /* علامة الصح */
+            .commission-check input[type="checkbox"]:checked::after {
+                content: "";
+                position: absolute;
+                top: 3px;
+                left: 6px;
+                width: 5px;
+                height: 10px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: rotate(45deg);
+            }
+
+.commission-check {
+    display: flex !important;
+}
+
+
+.order-table1 td:nth-child(2) {
+    width: 23%;
+}
+
+.order-table1 td:nth-child(3) {
+    width: 18%;
+}
+
+.order-table1 td:nth-child(4) {
+    width: 23%;
+}
+
+.order-table1 td:nth-child(5) {
+    width: 18%;
 }
