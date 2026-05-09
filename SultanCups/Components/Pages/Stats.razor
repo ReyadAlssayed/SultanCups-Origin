@@ -20,8 +20,18 @@
                 <p>بيانات مالية حساسة ومحمية</p>
 
                 <button class="btn-reveal"
-                        @onclick="() => isDataVisible = true">
-                    كشف البيانات
+                        @onclick="LoadStats"
+                        disabled="@isLoadingStats">
+
+                    @if (isLoadingStats)
+                    {
+                        <span class="btn-loader"></span>
+                    }
+                    else
+                    {
+                        <span>كشف البيانات</span>
+                    }
+
                 </button>
 
             </div>
@@ -29,6 +39,7 @@
     }
 
     <div class="stats-scrollable-content @(isDataVisible ? "content-active" : "content-blurred")">
+
 
         <!-- HEADER -->
 
@@ -433,9 +444,11 @@
 
         </div>
 
+        
     </div>
 
 </div>
+
 
 @code {
 
@@ -443,10 +456,21 @@
 
     private StatsView DashboardStats = new();
 
-    protected override async Task OnInitializedAsync()
+    private bool isLoadingStats = false;
+
+    private async Task LoadStats()
     {
+        isDataVisible = true;
+
+        if (DashboardStats.monthly_orders_count > 0)
+            return;
+
+        isLoadingStats = true;
+
         DashboardStats =
             await StatsService.GetDashboardStats();
+
+        isLoadingStats = false;
     }
 
     string Fmt(decimal value)

@@ -984,6 +984,26 @@ namespace SultanCups.Services
                 if (order.is_cancelled)
                     return (false, "الفاتورة ملغاة");
 
+                var paymentMethods = await _context.financial_events
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == order.order_id &&
+        x.payment_method != null &&
+        x.direction == "IN")
+    .Select(x => x.payment_method!)
+    .Distinct()
+    .ToListAsync();
+
+                if (paymentMethods.Count > 1)
+                {
+                    return (
+                        false,
+                        "هذه الفاتورة تحتوي على أكثر من طريقة دفع، قم أولاً بتعديل الدفعات من شاشة تعديل الفاتورة ثم نفذ الراجع مره أخرى "
+                    );
+                }
+
+
+
                 var validReturns = items
                     .Where(x => x.return_quantity > 0)
                     .ToList();
@@ -1123,28 +1143,6 @@ namespace SultanCups.Services
                 // ==================================
                 // طرق الدفع المستخدمة
                 // ==================================
-
-                var paymentMethods = await _context.financial_events
-     .Where(x =>
-         x.ref_table == "orders" &&
-         x.ref_id == order.order_id &&
-         x.payment_method != null &&
-         x.direction == "IN")
-                     .Select(x => x.payment_method!)
-                    .Distinct()
-                    .ToListAsync();
-
-                // ==================================
-                // لو أكثر من طريقة دفع
-                // ==================================
-
-                if (paymentMethods.Count > 1)
-                {
-                    return (
-                        false,
-                        "هذه الفاتورة تحتوي على أكثر من طريقة دفع، قم أولاً بتعديل الدفعات من شاشة تعديل الفاتورة ثم نفذ الراجع"
-                    );
-                }
 
                 // ==================================
                 // استرجاع مبلغ تلقائي
