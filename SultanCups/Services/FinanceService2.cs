@@ -314,10 +314,11 @@ namespace SultanCups.Services
         pay_commission_now = o.pay_commission_now,
 
         paid_amount =
-         _context.financial_events
-             .Where(x =>
-                 x.ref_table == "orders" &&
-                 x.ref_id == o.order_id)
+_context.financial_events
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == o.order_id &&
+        x.payment_method != null)
              .Sum(x =>
                  x.direction == "IN"
                      ? (decimal?)x.amount
@@ -1396,10 +1397,11 @@ on o.person_id equals m.marketer_id into mg
 
                 // 🔥 المدفوع الحقيقي
                 let paid = _context.financial_events
-    .Where(x =>
-        x.ref_table == "orders" &&
-        x.ref_id == o.order_id)
-    .Sum(x =>
+     .Where(x =>
+         x.ref_table == "orders" &&
+         x.ref_id == o.order_id &&
+         x.payment_method != null)
+     .Sum(x =>
         x.direction == "IN"
             ? (decimal?)x.amount
             : -(decimal?)x.amount

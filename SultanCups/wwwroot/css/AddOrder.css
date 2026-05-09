@@ -873,6 +873,10 @@
                 transform: rotate(45deg);
             }
 
+.money-in strong {
+    color: #16a34a !important;
+}
+
 .commission-check {
     display: flex !important;
 }
@@ -892,4 +896,27 @@
 
 .order-table1 td:nth-child(5) {
     width: 18%;
+}
+
+.ref-box {
+    width: 82px;
+    opacity: .82;
+    font-size: 13px;
+}
+
+.price-box {
+    width: 98px;
+}
+
+.qty-box {
+    width: 80px;
+}
+
+.total-box {
+    width: 145px;
+    font-weight: 900;
+}
+
+.order-table1 td:first-child {
+    width: 34%;
 }

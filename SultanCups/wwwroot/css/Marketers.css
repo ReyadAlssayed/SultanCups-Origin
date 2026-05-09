@@ -171,5 +171,12 @@
         padding: 10px;
         font-weight: 700;
     }
+
+.st-col-name {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /* ملاحظة: استخدم كلاسات inv-dialog التي أرسلتها في الـ CSS الكامل 
 لأنها تدعم توزيع الحقول حقلين في كل سطر بشكل تلقائي */

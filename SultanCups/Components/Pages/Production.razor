@@ -309,20 +309,25 @@
         {
             await InventoryService.AddProduction(ProForm);
             ShowToast("✔️ تم إضافة الإنتاج بنجاح", "success");
+            CloseDialogs();
         }
         else
         {
             var result = await InventoryService.UpdateProduction(ProForm);
-
-            if (result.StartsWith("✔️"))
+            if (result == "updated")
             {
-                ShowToast(result, "success");
+                ShowToast("✔️ تم تعديل الإنتاج بنجاح", "success");
+
+                ProductionList = await InventoryService.GetProduction();
+
                 CloseDialogs();
+
+                await InvokeAsync(StateHasChanged);
             }
             else
             {
                 ShowToast(result, "error");
-                return; // ❌ لا تقفل النافذة
+                return;
             }
         }
 

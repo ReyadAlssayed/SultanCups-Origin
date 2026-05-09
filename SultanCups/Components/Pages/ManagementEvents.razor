@@ -8,16 +8,20 @@
 
         <h2 class="pro-title">
             الأحداث الإدارية
-            <span class="mg-readonly">قراءة فقط 🔒</span>
+            <span class="mg-readonly">
+                قراءة فقط 🔒
+            </span>
         </h2>
 
         <div></div>
     </div>
 
     <div class="pro-card">
+
         <div class="pro-table-wrap">
 
             <table class="pro-table">
+
                 <thead>
                     <tr>
                         <th>رقم</th>
@@ -27,96 +31,40 @@
                         <th>البيانات القديمة</th>
                         <th>البيانات الجديدة</th>
                         <th>بواسطة</th>
-                        <th style="text-align:center;">التاريخ</th>
+                        <th style="text-align:center;">
+                            التاريخ
+                        </th>
                     </tr>
                 </thead>
 
                 <tbody>
-                    @if (Logs.Count == 0)
-                    {
-                        <tr>
-                            <td colspan="8" class="pro-empty">لا توجد بيانات حالياً</td>
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Logs)
-                        {
-                            <tr>
-                                <td>@item.audit_id</td>
-                                <td>@item.table_name</td>
-                                <td>@item.operation</td>
-                                <td>@item.record_id</td>
-                                <td>@(string.IsNullOrWhiteSpace(item.old_data) ? "لا توجد بيانات سابقة" : item.old_data)</td>
-                                <td>@(string.IsNullOrWhiteSpace(item.new_data) ? "لا توجد بيانات جديدة" : item.new_data)</td>
-                                <td>@item.performed_by</td>
-                                <td>
-                                    <span class="mg-time">@item.performed_at.ToString("HH:mm")</span>
-                                    <span class="mg-date">@item.performed_at.ToString("yyyy-MM-dd")</span>
-                                </td>
-                            </tr>
-                        }
-                    }
+
+                    <tr>
+                        <td colspan="8" class="st-empty-text">
+                            <div class="empty-state">
+
+                                <img src="images/Develop.png"
+                                     class="empty-img develop-img" />
+
+                                <span>
+                                    للحصول على ميزة الأحداث الإدارية يرجى التواصل مع إدارة فريق الحداثة عبر قسم الدعم الفني في صفحة الإعدادات
+                                </span>
+
+                            </div>
+
+                        </td>
+                    </tr>
+
                 </tbody>
 
             </table>
 
         </div>
+
     </div>
 
 </div>
 
 @code {
-
-    List<AuditLogRow> Logs = new()
-    {
-        new AuditLogRow
-        {
-            audit_id = 1,
-            table_name = "employees",
-            operation = "إضافة",
-            record_id = 12,
-            old_data = "",
-            new_data = "إضافة موظف جديد",
-            performed_by = "رياض",
-            performed_at = DateTime.Now.AddMinutes(-40)
-        },
-
-        new AuditLogRow
-{
-    audit_id = 2,
-    table_name = "departments",
-    operation = "تعديل",
-    record_id = 3,
-    old_data = "قسم الموارد البشرية",
-    new_data = "قسم الشؤون الإدارية",
-    performed_by = "محمود",
-    performed_at = DateTime.Now.AddMinutes(-15)
-},
-
-        new AuditLogRow
-        {
-            audit_id = 3,
-            table_name = "products",
-            operation = "حذف",
-            record_id = 8,
-            old_data = "كوب 6",
-            new_data = "",
-            performed_by = "رياض",
-            performed_at = DateTime.Now.AddMinutes(-5)
-        }
-    };
-
-    public class AuditLogRow
-    {
-        public int audit_id { get; set; }
-        public string table_name { get; set; } = "";
-        public string operation { get; set; } = "";
-        public int record_id { get; set; }
-        public string old_data { get; set; } = "";
-        public string new_data { get; set; } = "";
-        public string performed_by { get; set; } = "";
-        public DateTime performed_at { get; set; }
-    }
 
 }

@@ -41,6 +41,34 @@
            class="pro-filter-select"
            @bind="DateFilter" />
 
+           <select class="pro-filter-select"
+        @bind="SelectedMonth">
+
+    <option value="0">كل الشهور</option>
+
+    @for (int i = 1; i <= 12; i++)
+    {
+        <option value="@i">
+            شهر @i
+        </option>
+    }
+
+</select>
+
+<select class="pro-filter-select"
+        @bind="SelectedYear">
+
+    <option value="0">كل السنوات</option>
+
+    @for (int y = 2026; y <= 2040; y++)
+    {
+        <option value="@y">
+            @y
+        </option>
+    }
+
+</select>
+
            <label class="profit-switch">
 
     <input type="checkbox"
@@ -66,11 +94,11 @@
                         <th>الاسم</th>
                         <th>عدد الأصناف</th>
                         <th>الحالة</th>
-                      <th class="profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
-    الربح
+                      <th class="profit-col">
+    صافي الربح
 </th>
 
-                        <th>التاريخ</th>
+                        
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
@@ -122,7 +150,8 @@
                                     
         </td>
 
-                                            <td class="profit-green profit-col @(ShowProfit ? "show-profit" : "hide-profit")">
+                                            <td class="profit-col">
+                                                <span class="@(ShowProfit ? "show-profit" : "hide-profit")">
                                         @if (o.is_cancelled)
                                         {
 
@@ -145,14 +174,12 @@
                                                 ● 0.00 د.ل
                                             </span>
                                         }
-
+                                        </span>
                                     </td>
                                 
 
 
-                                <td>
-                                    @o.order_date.ToString("yyyy-MM-dd")
-                                </td>
+                               
 
      <td>
 
@@ -163,23 +190,24 @@
         @if (!o.is_cancelled)
         {
 
-                    <button class="btn-info"
-                @onclick="() => OpenDetails(o)">
-            تفاصيل
-        </button>
-            <button class="btn-edit"
-                    @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
-                تعديل
-            </button>
+                   <button class="btn-info"
+        @onclick="() => OpenDetails(o)">
+    تفاصيل
+</button>
 
-            <button class="btn-delete"
-                    @onclick="() => OpenDisableDialog(o)">
-                إلغاء
-            </button>
+<button class="btn-edit"
+        @onclick='() => Nav.NavigateTo($"/orders/edit/{o.order_id}")'>
+    تعديل
+</button>
 
-           <button class="inv-small btn-return"
+<button class="inv-small btn-return"
         @onclick="() => OpenReturnDialog(o)">
     ترجيع
+</button>
+
+<button class="btn-delete"
+        @onclick="() => OpenDisableDialog(o)">
+    إلغاء
 </button>
         }
         else
@@ -433,9 +461,9 @@
 @if (DisableOrder.person_type == "marketer" &&
      DisableOrder.commission_total > 0)
 {
-    <div class="cancel-money-box">
+    <div class="cancel-money-box money-in">
 
-        سيتم استرجاع عمولة المسوق:
+        سيتم استرجاع عمولة من المسوق:
 
         <strong>
             @Fmt(DisableOrder.commission_total)
@@ -446,19 +474,19 @@
 
                 </div>
 
-                <div class="pro-dialog-actions">
+              <div class="return-dialog-actions">
 
-                    <button class="pro-save"
-                            @onclick="ConfirmCancelOrder">
-                        تأكيد الإلغاء
-                    </button>
+    <button class="return-confirm-btn"
+            @onclick="ConfirmCancelOrder">
+        تأكيد الإلغاء
+    </button>
 
-                    <button class="pro-cancel"
-                            @onclick="() => ShowDisableDialog = false">
-                        إلغاء
-                    </button>
+    <button class="return-cancel-btn"
+            @onclick="() => ShowDisableDialog = false">
+        إلغاء
+    </button>
 
-                </div>
+</div>
 
             </div>
 
@@ -623,9 +651,9 @@
 
                     @if (ReturnCommissionAmount > 0)
                     {
-                        <div class="cancel-money-box">
+                        <div class="cancel-money-box money-in">
 
-                            سيتم استرجاع عمولة المسوق:
+                            سيتم استرجاع عمولة من المسوق:
 
                             <strong>
                                 @Fmt(ReturnCommissionAmount)
@@ -636,14 +664,14 @@
 
                 </div>
 
-                <div class="pro-dialog-actions">
+                <div class="return-dialog-actions">
 
-                    <button class="pro-save"
+                    <button class="return-confirm-btn"
                             @onclick="ExecutePartialReturn">
                         تأكيد الترجيع
                     </button>
 
-                    <button class="pro-cancel"
+                    <button class="return-cancel-btn"
                             @onclick="() => ShowReturnPreview = false">
                         إلغاء
                     </button>
@@ -687,6 +715,9 @@ decimal ReturnCommissionAmount = 0;
 string StatusFilter = "all";
 
 bool ShowDisableDialog = false;
+
+int SelectedMonth = 0;
+int SelectedYear = 0;
 
 OrderView? DisableOrder;
 
@@ -807,6 +838,24 @@ IEnumerable<OrderView> FilteredOrders =>
                 &&
                 o.paid_amount == 0
             )
+        )
+
+        // فلترة الشهر
+        &&
+
+        (
+            SelectedMonth == 0
+            ||
+            o.order_date.Month == SelectedMonth
+        )
+
+        // فلترة السنة
+        &&
+
+        (
+            SelectedYear == 0
+            ||
+            o.order_date.Year == SelectedYear
         )
     );
    

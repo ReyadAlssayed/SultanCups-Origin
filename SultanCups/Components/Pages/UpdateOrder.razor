@@ -100,15 +100,14 @@
         <div class="order-right1">
 
             <h4>الأصناف</h4>
-
             <table class="order-table1">
                 <thead>
-                    <tr>
+                    <tr class="item-row1 open">
                         <th>المنتج</th>
+                        <th>القيمة المرجعية</th>
                         <th>السعر</th>
                         <th>الكمية</th>
                         <th>الإجمالي</th>
-                        <th>القيمة المرجعية</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -118,12 +117,14 @@
                     {
                         <tr @key="item"
                             class="item-row1 @(item.IsRemoving ? "" : "open")">
+
                             <td>
                                 <select class="pro-input"
                                         value="@item.product_id"
                                         disabled="@(!item.IsNew)"
                                         @onchange="e => OnProductChanged(e, item)">
                                     <option value="0">اختر</option>
+
                                     @foreach (var p in Products)
                                     {
                                         <option value="@p.product_id">@p.name</option>
@@ -132,35 +133,32 @@
                             </td>
 
                             <td>
-                                <td>
-                                    <input type="number"
-                                           step="0.01"
-                                           class="pro-input @(item.unit_price <= item.production_cost ? "ref-warning" : "")"
-                                           @bind-value="item.unit_price"
-                                           @bind-value:event="oninput" />
-                                </td>
-                            </td>
-
-                            <td>
                                 <input type="number"
-                                       class="pro-input"
-                                       @bind-value="item.quantity"
+                                       step="0.01"
+                                       class="pro-input ref-box @(item.production_cost < item.original_reference_value ? "ref-warning" : "")"
+                                       @bind-value="item.production_cost"
                                        @bind-value:event="oninput" />
-                            </td>
-
-                            <td>
-                                <input class="pro-input"
-                                       value="@(item.quantity * item.unit_price)"
-                                       readonly />
                             </td>
 
                             <td>
                                 <input type="number"
                                        step="0.01"
-                                       style="width: 110px;"
-                                       class="pro-input @(item.production_cost < item.original_reference_value ? "ref-warning" : "")"
-                                       @bind-value="item.production_cost"
+                                       class="pro-input price-box @(item.unit_price <= item.production_cost ? "ref-warning" : "")"
+                                       @bind-value="item.unit_price"
                                        @bind-value:event="oninput" />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       class="pro-input qty-box"
+                                       @bind-value="item.quantity"
+                                       @bind-value:event="oninput" />
+                            </td>
+
+                            <td>
+                                <input class="pro-input total-box"
+                                       value="@(item.quantity * item.unit_price)"
+                                       readonly />
                             </td>
 
                             <td>
@@ -172,6 +170,7 @@
                                     </button>
                                 }
                             </td>
+
                         </tr>
                     }
                 </tbody>

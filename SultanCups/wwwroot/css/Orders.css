@@ -467,19 +467,17 @@
 }
 
 .hide-profit {
-    opacity: 0;
-    width: 0;
-    min-width: 0;
-    padding: 0 !important;
-    border: none !important;
-    transform: translateX(12px);
+    display: inline-block;
+    filter: blur(7px);
+    transition: .35s ease;
 }
+
 
 .show-profit {
     opacity: 1;
+    filter: blur(0);
     width: 150px;
     min-width: 150px;
-    transform: translateX(0);
 }
 
 .profit-up {
