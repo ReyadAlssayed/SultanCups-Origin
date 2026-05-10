@@ -873,6 +873,87 @@
                 transform: rotate(45deg);
             }
 
+.return-dialog-box {
+    width: 520px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 25px 70px rgba(0,0,0,.22);
+    animation: returnDialogShow .22s ease;
+}
+
+.return-dialog-top-image {
+    width: 100%;
+    height: 115px;
+    overflow: hidden;
+    border-bottom: 3px solid #2563eb;
+}
+
+    .return-dialog-top-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+.return-dialog-body {
+    padding: 20px 26px 26px;
+}
+
+.return-help-head {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.return-help-img {
+    width: 340px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.return-help-preview {
+    margin-bottom: 18px;
+}
+
+.return-help-item {
+    background: #faf7ff;
+    border: 2px solid #e9d5ff;
+    border-radius: 22px;
+    padding: 22px 18px;
+    text-align: center;
+}
+
+    .return-help-item span {
+        font-size: 14px;
+        line-height: 2;
+        font-weight: 900;
+        color: #111827;
+    }
+
+.return-dialog-actions {
+    margin-top: 8px;
+}
+
+.return-dialog-btn {
+    width: 100%;
+    height: 56px;
+    border: none;
+    border-radius: 18px;
+    background: linear-gradient(135deg,#2563eb,#1d4ed8);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: .18s;
+}
+
+    .return-dialog-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(37,99,235,.25);
+    }
+
 .money-in strong {
     color: #16a34a !important;
 }
@@ -898,6 +979,18 @@
     width: 18%;
 }
 
+.return-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.45);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    padding: 20px;
+}
+
 .ref-box {
     width: 82px;
     opacity: .82;
@@ -920,3 +1013,4 @@
 .order-table1 td:first-child {
     width: 34%;
 }
+

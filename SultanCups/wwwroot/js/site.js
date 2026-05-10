@@ -27,14 +27,21 @@ window.printPurchaseCard = function () {
 
     const win = window.open('', '', 'width=900,height=700');
 
-
+    win.document.title = "";
 
     win.document.write(`
         <html dir="rtl">
         <head>
+
             ${css}
+
             <title></title>
+
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"
+                  rel="stylesheet">
+
             <style>
+
                 @page{
                     size:auto;
                     margin:10mm;
@@ -44,6 +51,7 @@ window.printPurchaseCard = function () {
                     margin:0;
                     padding:0;
                     background:#ffffff;
+                    font-family:'Cairo', sans-serif;
                 }
 
                 .print-head{
@@ -59,6 +67,7 @@ window.printPurchaseCard = function () {
                     margin:0 auto !important;
                     width:700px !important;
                     box-shadow:none !important;
+                    padding-bottom:70px;
                 }
 
                 .pro-dialog-actions{
@@ -68,9 +77,25 @@ window.printPurchaseCard = function () {
                 .pro-dialog-overlay{
                     background:none !important;
                 }
+
+                .print-footer{
+                    position:fixed;
+                    bottom:0;
+                    left:0;
+                    right:0;
+                    text-align:center;
+                    font-size:13px;
+                    font-weight:600;
+                    border-top:1px solid #000;
+                    padding-top:8px;
+                    padding-bottom:4px;
+                    background:#fff;
+                }
+
             </style>
 
         </head>
+
         <body>
 
             <div class="print-head">
@@ -78,6 +103,10 @@ window.printPurchaseCard = function () {
             </div>
 
             ${content}
+
+            <div class="print-footer">
+                صناعة نفخر بها
+            </div>
 
         </body>
         </html>
@@ -103,102 +132,130 @@ window.printOrderCard = function () {
 
     const win = window.open('', '', 'width=900,height=700');
 
+    win.document.title = "";
+
     win.document.write(`
+
         <html dir="rtl">
+
         <head>
+
             ${css}
-          <style>
-    @page{
-        margin:10mm;
-    }
 
-    body{
-        background:#fff;
-    }
+            <title></title>
 
-    .sal-dialog-box{
-        width:700px !important;
-        margin:auto !important;
-        box-shadow:none !important;
-    }
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"
+                  rel="stylesheet">
 
-    .btn-cancel,
-    .btn-pdf-save{
-        display:none !important;
-    }
+            <style>
 
-    .pro-dialog-actions{
-        display:none !important;
-    }
+                @page{
+                    size:auto;
+                    margin:10mm;
+                }
 
-    table{
-        width:100%;
-        border-collapse:collapse;
-        margin-top:15px;
-    }
+                body{
+                    background:#fff;
+                    font-family:'Cairo', sans-serif;
+                    margin:0;
+                    padding:0;
+                }
 
-    th, td{
-        border:1px solid #ddd;
-        padding:8px;
-        text-align:center;
-    }
+                .sal-dialog-box{
+                    width:700px !important;
+                    margin:auto !important;
+                    box-shadow:none !important;
+                    padding-bottom:70px;
+                }
 
-    th{
-        background:#f3f4f6;
-        font-weight:bold;
-    }
+                .btn-cancel,
+                .btn-pdf-save{
+                    display:none !important;
+                }
 
-    .print-only{
-    display:block !important;
-}
+                .pro-dialog-actions{
+                    display:none !important;
+                }
 
-    img{
-        object-fit:contain;
-    }
-</style>
+                table{
+                    width:100%;
+                    border-collapse:collapse;
+                    margin-top:15px;
+                }
+
+                th, td{
+                    border:1px solid #ddd;
+                    padding:8px;
+                    text-align:center;
+                }
+
+                th{
+                    background:#f3f4f6;
+                    font-weight:bold;
+                }
+
+                .print-only{
+                    display:block !important;
+                }
+
+                img{
+                    object-fit:contain;
+                }
+
+                .print-footer{
+                    position:fixed;
+                    bottom:0;
+                    left:0;
+                    right:0;
+                    text-align:center;
+                    font-size:13px;
+                    font-weight:600;
+                    border-top:1px solid #000;
+                    padding-top:8px;
+                    padding-bottom:4px;
+                    background:#fff;
+                }
+
+            </style>
+
         </head>
 
         <body>
-           <div style="
-    width:700px;
-    margin:0 auto 20px auto;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-">
 
-    <img src="/images/logo2.jpg"
-         style="width:65px; height:auto;" />
+            <div style="
+                width:700px;
+                margin:0 auto 20px auto;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:10px;
+            ">
 
-    <div style="text-align:right; line-height:1.3;">
-        <div style="font-size:18px; font-weight:700;">
-            مصنع السلطان للأكواب الورقية
-        </div>
+                <img src="/images/logo2.jpg"
+                     style="width:65px; height:auto;" />
 
-        <div style="font-size:12px; color:#444;">
-            أبناء السيد
-        </div>
-    </div>
+                <div style="text-align:right; line-height:1.3;">
 
-</div>
+                    <div style="font-size:18px; font-weight:700;">
+                        مصنع السلطان للأكواب الورقية
+                    </div>
+
+                    <div style="font-size:12px; color:#444;">
+                        أبناء السيد
+                    </div>
+
+                </div>
+
+            </div>
+
             ${content}
 
-<div style="
-    width:700px;
-    margin:25px auto 0 auto;
-    text-align:center;
-    font-size:13px;
-    border-top:1px solid #000;
-    padding-top:8px;
-">
+            <div class="print-footer">
+                صناعة نفخر بها
+            </div>
 
-    <div style="font-weight:600;">
-        صناعة نفخر بها
-    </div>
-
-</div>
         </body>
+
         </html>
     `);
 

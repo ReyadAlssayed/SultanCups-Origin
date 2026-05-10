@@ -531,13 +531,13 @@
 }
 
 .return-qty-input {
-    width: 100%;
-    height: 50px;
+    width: 130px;
+    height: 42px;
     border-radius: 14px;
     border: 1px solid #dbe3ee;
     background: #f8fafc;
     padding: 0 16px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 800;
     text-align: center;
     margin-bottom: 18px;
@@ -587,6 +587,46 @@
         background: #475569;
     }
 
+.return-item-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid #edf2f7;
+    border-radius: 18px;
+    margin-bottom: 16px;
+    background: #ffffff;
+}
+
+.rt-card-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.rt-card-product {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111827;
+}
+
+.rt-card-qty {
+    font-size: 15px;
+    color: #64748b;
+}
+
+    .rt-card-qty strong {
+        color: #2563eb;
+        font-weight: 900;
+    }
+
+.rt-card-note {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
 
 .pay-modal-actions-row {
     display: flex;
@@ -599,6 +639,40 @@
         flex: 1;
         margin: 0 !important;
     }
+
+
+.rt-card-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.rt-card-product {
+    font-size: 20px;
+    font-weight: 900;
+    color: #111827;
+    text-align: center;
+}
+
+.rt-card-qty {
+    font-size: 14px;
+    color: #64748b;
+    text-align: center;
+}
+
+    .rt-card-qty strong {
+        color: #2563eb;
+        font-weight: 900;
+    }
+
+.rt-card-note {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.7;
+}
 
 
 

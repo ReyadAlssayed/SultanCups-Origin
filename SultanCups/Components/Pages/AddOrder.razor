@@ -29,7 +29,9 @@
 
         <div>
             <label>نوع الشخص</label>
-            <select class="pro-input" @bind="Form.person_type">
+            <select class="pro-input"
+                    value="@Form.person_type"
+                    @onchange="OnPersonTypeChanged">
                 <option value="customer">زبون</option>
                 <option value="marketer">مسوق</option>
             </select>
@@ -587,6 +589,21 @@ if (orders.Any())
         StateHasChanged();
     }
     bool IsCommissionAllowed => Form.pay_commission_now;
+
+
+    void OnPersonTypeChanged(ChangeEventArgs e)
+    {
+        Form.person_type = e.Value?.ToString() ?? "";
+
+        Form.person_id = 0;
+
+        if (Form.person_type == "customer")
+        {
+            Form.pay_commission_now = false;
+
+            Form.commission_per_box = 0;
+        }
+    }
 
     void OpenPaymentDialog()
     {

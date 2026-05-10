@@ -145,10 +145,22 @@ namespace SultanCups.Services
                 // =========================================
                 // 🔥 جلب أول منتج
                 // =========================================
-                var firstProduct = await _context.products
-                    .Where(p => p.product_id == items.First().product_id)
-                    .Select(p => new { p.product_id, p.name })
-                    .FirstOrDefaultAsync();
+                var productIdsForSnapshot = items
+    .Select(x => x.product_id)
+    .Distinct()
+    .Take(2)
+    .ToList();
+
+                var productNamesForSnapshot = await _context.products
+                    .Where(p => productIdsForSnapshot.Contains(p.product_id))
+                    .Select(p => p.name)
+                    .ToListAsync();
+
+                string itemSnapshotName =
+                    string.Join(" + ", productNamesForSnapshot);
+
+                var firstItemId =
+                    productIdsForSnapshot.FirstOrDefault();
 
                 // =========================================
                 // 🔥 تسجيل الحركة المالية
@@ -171,8 +183,10 @@ namespace SultanCups.Services
                             personName,
                             p.method,
                             "دفعة فاتورة",
-                            firstProduct?.product_id,
-                            firstProduct != null ? $"{firstProduct.name} (منتج)" : null
+                            firstItemId,
+string.IsNullOrWhiteSpace(itemSnapshotName)
+    ? null
+    : itemSnapshotName
                         );
                     }
                 }
@@ -813,10 +827,11 @@ _context.financial_events
                 // 🔥 حساب المدفوع الحقيقي
                 // =====================================
                 var paidAmount =
-                    await _context.financial_events
-                        .Where(x =>
-                            x.ref_table == "orders" &&
-                            x.ref_id == order.order_id)
+    await _context.financial_events
+        .Where(x =>
+            x.ref_table == "orders" &&
+            x.ref_id == order.order_id &&
+            x.payment_method != null)
                         .SumAsync(x =>
                             x.direction == "IN"
                                 ? (decimal?)x.amount
@@ -1046,11 +1061,12 @@ _context.financial_events
                 decimal totalRefund = 0;
 
                 decimal orderPaidAmount =
-                    await _context.financial_events
-                        .Where(x =>
-                            x.ref_table == "orders" &&
-                            x.ref_id == order.order_id)
-                        .SumAsync(x =>
+     await _context.financial_events
+         .Where(x =>
+             x.ref_table == "orders" &&
+             x.ref_id == order.order_id &&
+             x.payment_method != null)
+                         .SumAsync(x =>
                             x.direction == "IN"
                                 ? (decimal?)x.amount
                                 : -(decimal?)x.amount
@@ -1149,6 +1165,17 @@ _context.financial_events
                 // استرجاع مبلغ تلقائي
                 // ==================================
 
+                var returnNames = validReturns
+    .Select(x => x.product_name)
+    .Distinct()
+    .ToList();
+
+                string returnItemName =
+                    string.Join(" + ", returnNames);
+
+                var firstReturnItemId =
+                    validReturns.FirstOrDefault()?.product_id;
+
                 if (
                     paymentMethods.Count == 1
                     &&
@@ -1164,18 +1191,20 @@ _context.financial_events
                         );
 
                     AddFinancialEvent(
-                        "استرجاع مبيعات",
-                        "OUT",
-                        refundAmount,
-                        order.cash_box_id,
-                        adminId,
-                        order.order_id,
-                        "orders",
-                        order.person_id,
-                        personName,
-                        paymentMethods.First(),
-                        "راجع جزئي وإرجاع مبلغ"
-                    );
+    "استرجاع مبيعات",
+    "OUT",
+    refundAmount,
+    order.cash_box_id,
+    adminId,
+    order.order_id,
+    "orders",
+    order.person_id,
+    personName,
+    paymentMethods.First(),
+    "راجع جزئي وإرجاع مبلغ",
+    firstReturnItemId,
+    returnItemName
+);
                 }
 
                 // ==================================

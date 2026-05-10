@@ -522,18 +522,27 @@
                     {
                         <div class="return-item-card modern-return-card">
 
-                            <div class="return-product-name">
-                                @item.product_name
-                                <span>
-                                    @item.sold_quantity صندوق
-                                </span>
-                            </div>
+                          <div class="rt-card-head">
 
-                            <div class="inv-muted"
-     style="text-align:center;margin-bottom:10px;font-size:13px;">
-    أدخل العدد المراد إرجاعه بالصناديق
+    <div class="rt-card-product">
+        @item.product_name
+    </div>
+
+    <div class="rt-card-qty">
+
+        الكمية الحالية:
+
+        <strong>
+            @item.sold_quantity صندوق
+        </strong>
+
+    </div>
+
+    <div class="rt-card-note">
+        أدخل العدد المراد إرجاعه بالصناديق
+    </div>
+
 </div>
-
                             <input type="number"
                                    min="0"
                                    max="@item.sold_quantity"

@@ -26,9 +26,13 @@
 
         <div>
             <label>نوع الشخص</label>
-            <select class="pro-input" @bind="Form.person_type">
+            <select class="pro-input"
+                    value="@Form.person_type"
+                    disabled>
+
                 <option value="customer">زبون</option>
                 <option value="marketer">مسوق</option>
+
             </select>
         </div>
 
@@ -50,7 +54,10 @@
         {
             <div>
                 <label>المسوق</label>
-                <select class="pro-input" value="@Form.person_id" @onchange="OnMarketerChanged">
+
+                <select class="pro-input"
+                        value="@Form.person_id"
+                        disabled>
                     <option value="0">اختر مسوق</option>
                     @foreach (var m in Marketers)
                     {
@@ -483,6 +490,62 @@
 
     </div>
 }
+
+@if (ShowErrorDialog)
+{
+    <div class="return-dialog-overlay">
+
+        <div class="return-dialog-box">
+
+            <div class="return-dialog-top-image">
+
+                <img src="images/Background.png" />
+
+            </div>
+
+            <div class="return-dialog-body">
+
+                <div class="return-help-head">
+
+                    <img src="images/Buttons.png"
+                         class="return-help-img" />
+
+                </div>
+
+                <div class="return-help-preview">
+
+                    <div class="return-help-item">
+
+                        <span>
+
+                            لا يمكن إنقاص الكمية من واجهة التعديل مباشرة،
+                            استخدم زر الراجع لهذه الفاتورة.
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="return-dialog-actions">
+
+                    <button class="return-dialog-btn"
+                            @onclick="() => ShowErrorDialog = false">
+
+                        فهمت
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
 @code {
 
 
@@ -499,6 +562,10 @@
     List<PaymentInput> TempPayments = new();
 
     bool ShowPaymentDialog;
+
+    bool ShowErrorDialog = false;
+
+    string ErrorDialogMessage = "";
 
     int CurrentAdminId => Session.AdminId;
 
@@ -654,23 +721,6 @@
         _ => m
     };
 
-    void OnMarketerChanged(ChangeEventArgs e)
-    {
-        int id = int.Parse(e.Value?.ToString() ?? "0");
-
-        Form.person_id = id;
-
-        var marketer = Marketers.FirstOrDefault(m => m.marketer_id == id);
-
-        if (marketer != null)
-        {
-            Form.commission_per_box = marketer.commission_per_box;
-            Form.pay_commission_now = marketer.is_special;
-        }
-
-        StateHasChanged();
-    }
-
     void OpenAddDialog(string method)
     {
         // 🔥 اقفل الباقي
@@ -729,7 +779,8 @@
         }
         else
         {
-            ToastService.ShowToast(result.message, "error");
+            ErrorDialogMessage = result.message;
+            ShowErrorDialog = true;
         }
     }
 
@@ -1023,7 +1074,8 @@
             }
             else
             {
-                ToastService.ShowToast(result.message, "error");
+                ErrorDialogMessage = result.message;
+                ShowErrorDialog = true;
             }
         }
         catch (Exception ex)
