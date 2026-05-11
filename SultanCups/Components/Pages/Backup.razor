@@ -7,132 +7,165 @@
 <div class="bk-page">
 
     <div class="bk-top-bar">
-        <button class="bk-btn-back" @onclick="GoBack">
+
+        <button class="bk-btn-back"
+                @onclick="GoBack">
+
             <span class="back-icon">➡️</span>
+
             الرجوع للإعدادات
+
         </button>
+
     </div>
 
     @if (isLoading)
     {
         <div class="bk-loader">
-            <p>جاري فحص حالة التخزين الحقيقية...</p>
+
+            <p>
+                جاري فحص حالة التخزين الحقيقية...
+            </p>
+
         </div>
     }
     else
     {
         <div class="storage-monitor-section">
+
             <div class="storage-card">
+
                 <div class="storage-header">
+
                     <div class="storage-title">
+
                         <span class="storage-icon">💾</span>
+
                         <div>
-                            <h4>حالة تخزين قاعدة البيانات</h4>
-                            <p>PostgreSQL الحقيقية (Local)</p>
+
+                            <h4>
+                                حالة تخزين قاعدة البيانات
+                            </h4>
+
+                            <p>
+                                PostgreSQL الحقيقية (Local)
+                            </p>
+
                         </div>
+
                     </div>
-                    @* عرض النسبة المئوية كبادج احترافي *@
+
                     <div class="storage-percentage-badge">
-                        @StoragePercent.ToString("0.00")% ممتلئ
+
+                        @StoragePercent.ToString("0.00")%
+
                     </div>
+
                 </div>
 
                 <div class="storage-progress-container">
-                    @* جعل الحد الأدنى للشريط 2% لضمان ظهوره حتى لو كانت القاعدة صغيرة جداً *@
-                    <div class="storage-progress-bar" style="width: @(Math.Max(2, StoragePercent))%">
+
+                    <div class="storage-progress-bar"
+                         style="width:@(Math.Max(2, StoragePercent))%">
+
                         @if (StoragePercent > 5)
                         {
-                            <span class="inner-pct">@StoragePercent.ToString("0.0")%</span>
+                            <span class="inner-pct">
+                                @StoragePercent.ToString("0.0")%
+                            </span>
                         }
+
                     </div>
+
                 </div>
 
                 <div class="storage-footer">
+
                     <span class="status-msg">
+
                         <i class="state-dot"></i>
+
                         @if (UsedStorageMB < 100)
                         {
-                            <span style="color: #059669;">حالة ممتازة: استهلاك البيانات ضئيل جداً.</span>
+                            <span style="color:#059669;">
+                                حالة ممتازة: استهلاك البيانات منخفض جدًا.
+                            </span>
                         }
                         else if (UsedStorageMB < 500)
                         {
-                            <span style="color: #2563eb;">حالة جيدة: نمو البيانات طبيعي.</span>
+                            <span style="color:#2563eb;">
+                                حالة جيدة: نمو البيانات طبيعي.
+                            </span>
                         }
                         else
                         {
-                            <span style="color: #dc2626;">تنبيه: حجم البيانات بدأ يزداد.</span>
+                            <span style="color:#dc2626;">
+                                تنبيه: حجم البيانات بدأ يزداد.
+                            </span>
                         }
+
                     </span>
+
                     <div class="storage-info-text">
-                        <span>حجم القاعدة: <strong>@UsedStorageMB ميجا</strong></span>
+
+                        <span>
+                            حجم القاعدة:
+                            <strong>
+                                @UsedStorageMB MB
+                            </strong>
+                        </span>
+
                         <span class="separator">|</span>
-                        <span>المساحة الفارغة في القرص: <strong>@FreeDiskGb جيجا</strong></span>
+
+                        <span>
+                            المساحة الفارغة:
+                            <strong>
+                                @FreeDiskGb GB
+                            </strong>
+                        </span>
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     }
 
-    <div class="bk-header-center">
-        <div class="bk-main-icon-circle">
-            <span class="excel-icon-text">📄</span>
-        </div>
-        <h2 class="bk-title-blue">تصدير بيانات المصنع</h2>
-    </div>
-
-    <div class="bk-card-grid">
-        <div class="bk-export-card">
-            <div class="bk-icon">📊</div>
-            <h3>سجل المبيعات</h3>
-            <p>تصدير كافة الفواتير والديون والطلبيات إلى ملف Excel</p>
-            <button class="bk-btn-download" @onclick='() => ExportToExcel("sales")'>تحميل ملف الإكسيل</button>
-        </div>
-
-        <div class="bk-export-card">
-            <div class="bk-icon">📦</div>
-            <h3>المشتريات والمخزون</h3>
-            <p>تصدير سجل المشتريات الخام والموردين وحالة المخزن</p>
-            <button class="bk-btn-download" @onclick='() => ExportToExcel("stock")'>تحميل ملف الإكسيل</button>
-        </div>
-
-        <div class="bk-export-card">
-            <div class="bk-icon">👥</div>
-            <h3>الموظفين والمالية</h3>
-            <p>تصدير بيانات الموظفين، الرواتب، والخزنات</p>
-            <button class="bk-btn-download" @onclick='() => ExportToExcel("hr")'>تحميل ملف الإكسيل</button>
-        </div>
-    </div>
 </div>
 
 @code {
+
     double UsedStorageMB;
+
     double FreeDiskGb;
+
     double StoragePercent;
+
     bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        // جلب البيانات من الدالة التي أضفناها في AdminService
-        var result = await AdminService.GetStorageStatus();
+        var result =
+            await AdminService.GetStorageStatus();
 
         UsedStorageMB = result.usedMb;
+
         FreeDiskGb = result.freeGb;
 
-        // حساب النسبة المئوية من إجمالي مساحة القرص
-        double totalDiskMb = (FreeDiskGb * 1024) + UsedStorageMB;
-        StoragePercent = (UsedStorageMB / totalDiskMb) * 100;
+        double totalDiskMb =
+            (FreeDiskGb * 1024)
+            + UsedStorageMB;
+
+        StoragePercent =
+            (UsedStorageMB / totalDiskMb) * 100;
 
         isLoading = false;
-        StateHasChanged();
     }
 
-    private void ExportToExcel(string type)
+    void GoBack()
     {
-        Console.WriteLine($"جاري استخراج بيانات {type}...");
-    }
-
-    private void GoBack()
-    {
-        Nav.NavigateTo("/Settings"); // تأكد أن هذا هو مسار صفحة الإعدادات لديك
+        Nav.NavigateTo("/Settings");
     }
 }
