@@ -128,8 +128,8 @@
 
                 <h3>@(ShowAddDialog ? "إضافة مصروف" : "تعديل مصروف")</h3>
 
-                <div class="inv-fields-grid">   
-                    
+                <div class="inv-fields-grid">
+
                     <div class="inv-field">
                         <label class="inv-label">الوصف</label>
                         <input maxlength="200"
@@ -524,7 +524,7 @@
 
     async Task ConfirmDelete()
     {
-        await FinanceService.DeleteOtherPurchase(Form.other_purchase_id,adminId);
+        await FinanceService.DeleteOtherPurchase(Form.other_purchase_id, adminId);
         List = await FinanceService.GetOtherPurchases();
         Close();
         ToastService.ShowToast("تم حذف المصروف بنجاح", "success");

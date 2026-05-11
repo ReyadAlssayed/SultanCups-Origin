@@ -91,8 +91,10 @@
                                 <td style="text-align:center;">
                                     <button class="pro-small pro-edit" @onclick="() => OpenEditDialog(p)">تعديل</button>
 
-                                    <button class="pro-small pro-del" @onclick="() => OpenDeleteDialog(p)">
-                                        @(p.is_active ? "حذف" : "تنشيط")
+                                    <button type="button"
+                                            class="emp-delete"
+                                            @onclick="() => OpenDeleteDialog(p)">
+                                        حذف
                                     </button>
                                 </td>
                             </tr>
@@ -244,7 +246,7 @@
     string ToastMessage = string.Empty;
     string ToastClass = "success";
 
-    string StatusFilter = "all";
+    string StatusFilter = "active";
 
     bool ShowActivatePrompt = false;
     SultanCups.Models.Product? DuplicateProduct;
@@ -312,10 +314,25 @@
             return;
         }
 
+        // تنظيف الاسم ومنع ثغرات المسافات والحروف العربية
+        string normalizedName = Regex
+            .Replace(name.ToLower(), @"\s+", " ")
+            .Trim()
+            .Replace("أ", "ا")
+            .Replace("إ", "ا")
+            .Replace("آ", "ا");
+
         var allProducts = await InventoryService.GetAllProducts();
 
         DuplicateProduct = allProducts.FirstOrDefault(p =>
-            p.name?.Trim().ToLower() == name.ToLower());
+            p.name != null &&
+            Regex.Replace(p.name.ToLower(), @"\s+", " ")
+                .Trim()
+                .Replace("أ", "ا")
+                .Replace("إ", "ا")
+                .Replace("آ", "ا")
+                == normalizedName
+        );
 
         if (ShowAddDialog)
         {
@@ -335,6 +352,10 @@
             }
 
             ProductForm.is_active = true;
+
+            // حفظ الاسم بشكل مرتب بدون مسافات مضاعفة
+            ProductForm.name = Regex.Replace(name, @"\s+", " ").Trim();
+
             await InventoryService.AddProduct(ProductForm);
         }
         else
@@ -353,6 +374,9 @@
 
                 return;
             }
+
+            // حفظ الاسم بشكل مرتب بدون مسافات مضاعفة
+            ProductForm.name = Regex.Replace(name, @"\s+", " ").Trim();
 
             await InventoryService.UpdateProduct(ProductForm);
         }
@@ -454,11 +478,13 @@
     }
 
     IEnumerable<SultanCups.Models.Product> FilteredProducts =>
-      (ProductList ?? new())
-      .Where(p =>
-          StatusFilter == "all" ||
-          (StatusFilter == "active" && p.is_active) ||
-          (StatusFilter == "inactive" && !p.is_active));
+    (ProductList ?? new())
+    .Where(p =>
+        (StatusFilter == "active" && p.is_active)
+        ||
+        (StatusFilter == "inactive" && !p.is_active)
+        ||
+        (StatusFilter == "all"));
 
     async Task RefreshData()
     {
