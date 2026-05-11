@@ -91,8 +91,10 @@
                                 <td style="text-align:center;">
                                     <button class="pro-small pro-edit" @onclick="() => OpenEditDialog(p)">تعديل</button>
 
-                                    <button class="pro-small pro-del" @onclick="() => OpenDeleteDialog(p)">
-                                        @(p.is_active ? "حذف" : "تنشيط")
+                                    <button type="button"
+                                            class="emp-delete"
+                                            @onclick="() => OpenDeleteDialog(p)">
+                                        حذف
                                     </button>
                                 </td>
                             </tr>
@@ -244,7 +246,7 @@
     string ToastMessage = string.Empty;
     string ToastClass = "success";
 
-    string StatusFilter = "all";
+    string StatusFilter = "active";
 
     bool ShowActivatePrompt = false;
     SultanCups.Models.Product? DuplicateProduct;
@@ -476,11 +478,13 @@
     }
 
     IEnumerable<SultanCups.Models.Product> FilteredProducts =>
-      (ProductList ?? new())
-      .Where(p =>
-          StatusFilter == "all" ||
-          (StatusFilter == "active" && p.is_active) ||
-          (StatusFilter == "inactive" && !p.is_active));
+    (ProductList ?? new())
+    .Where(p =>
+        (StatusFilter == "active" && p.is_active)
+        ||
+        (StatusFilter == "inactive" && !p.is_active)
+        ||
+        (StatusFilter == "all"));
 
     async Task RefreshData()
     {
