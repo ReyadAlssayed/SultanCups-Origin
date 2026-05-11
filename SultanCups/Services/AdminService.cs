@@ -88,6 +88,8 @@ namespace SultanCups.Services
             admin.role = updatedAdmin.role;
             admin.is_active = updatedAdmin.is_active;
 
+            admin.password_hash = updatedAdmin.password_hash;
+
             await _context.SaveChangesAsync();
             return true;
         }
