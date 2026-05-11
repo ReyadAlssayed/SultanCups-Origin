@@ -178,5 +178,33 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.commission-status-paid {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+    font-size: 13px;
+    font-weight: 800;
+    border: 1px solid #bbf7d0;
+}
+
+.commission-status-pending {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 95px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 800;
+    border: 1px solid #fecaca;
+}
 /* ملاحظة: استخدم كلاسات inv-dialog التي أرسلتها في الـ CSS الكامل 
 لأنها تدعم توزيع الحقول حقلين في كل سطر بشكل تلقائي */

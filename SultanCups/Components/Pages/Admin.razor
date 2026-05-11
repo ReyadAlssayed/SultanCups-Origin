@@ -136,6 +136,17 @@
                         }
                     </div>
 
+                    <div>
+                        <label class="ad-label">كلمة مرور جديدة</label>
+
+                        <input type="password"
+                               class="ad-input"
+                               @bind="NewPassword"
+                               maxlength="40"
+                               autocomplete="new-password"
+                               placeholder="اتركه فارغًا إذا لا تريد تغييرها" />
+                    </div>
+
                     <div class="full-width">
                         <label class="ad-label">الدور الوظيفي</label>
                         <select class="ad-input @(RoleError != null ? "ad-input-error" : "")" @bind="EditAdmin.role">
@@ -242,6 +253,8 @@
     string? ToastMessage;
     bool IsErrorToast = false;
 
+    string NewPassword = "";
+
     SultanCups.Models.Admain? EditAdmin;
     SultanCups.Models.Admain? DeleteAdminItem;
 
@@ -335,6 +348,11 @@
 
         if (hasError) return;
         // ---------------------------------------------------------
+
+        if (!string.IsNullOrWhiteSpace(NewPassword))
+        {
+            EditAdmin.password_hash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+        }
 
         // 4. تنفيذ التحديث
         var updated = await AdminService.UpdateAdmin(EditAdmin);
@@ -436,6 +454,7 @@
         UsernameError = null;
         PhoneError = null;
         RoleError = null;
+        NewPassword = "";
     }
 
     protected override async Task OnInitializedAsync()

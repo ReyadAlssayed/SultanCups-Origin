@@ -102,7 +102,16 @@
                     <span class="chev">@(OpenKey == "admin" ? "▾" : "▸")</span>
                 </button>
                 <div class="nav-children @(OpenKey == "admin" ? "open" : "")">
-                    <button type="button" class="nav-child" @onclick='@(() => Go("/Admins"))'>المسؤولين</button>
+                    @if (Session.Role == "Admin1")
+                    {
+                        <button type="button"
+                                class="nav-child"
+                                @onclick='@(() => Go("/Admins"))'>
+
+                            المسؤولين
+
+                        </button>
+                    }
                     <button type="button" class="nav-child" @onclick='@(() => Go("/Settings"))'>الإعدادات</button>
                    
                 </div>

@@ -838,6 +838,24 @@ _context.financial_events
                                 : -(decimal?)x.amount
                         ) ?? 0;
 
+                var paymentMethods = await _context.financial_events
+    .Where(x =>
+        x.ref_table == "orders" &&
+        x.ref_id == order.order_id &&
+        x.payment_method != null &&
+        x.direction == "IN")
+    .Select(x => x.payment_method!)
+    .Distinct()
+    .ToListAsync();
+
+                if (paymentMethods.Count > 1 && paidAmount > 0)
+                {
+                    return (
+                        false,
+                        "هذه الفاتورة تحتوي على أكثر من طريقة دفع، قم أولاً بتعديل الدفعات من شاشة تعديل الفاتورة ثم أعد محاولة الإلغاء"
+                    );
+                }
+
                 // =====================================
                 // 🔥 اسم الشخص
                 // =====================================
