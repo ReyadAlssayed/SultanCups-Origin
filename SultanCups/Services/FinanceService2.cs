@@ -289,6 +289,7 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
         profit =
 
 (
+
     (_context.order_items
         .Where(i => i.order_id == o.order_id)
         .Sum(i =>
@@ -303,25 +304,29 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
             .Sum(i =>
                 (decimal?)(i.quantity * i.production_cost)) ?? 0)
 
-       +
+        +
 
-(
-    (
-        o.person_type == "marketer"
-        &&
-        o.pay_commission_now
+        (
+            (
+                o.person_type == "marketer"
+                &&
+                o.pay_commission_now
+            )
+            ? (
+                (_context.order_items
+                    .Where(i => i.order_id == o.order_id)
+                    .Sum(i => (int?)i.quantity) ?? 0)
+
+                * o.commission_per_box
+              )
+            : 0
+        )
+
+        +
+
+        o.discount_total
+
     )
-    ? (
-        (_context.order_items
-            .Where(i => i.order_id == o.order_id)
-            .Sum(i => (int?)i.quantity) ?? 0)
-
-        * o.commission_per_box
-      )
-    : 0
-)
-
-)
 
 ),
 

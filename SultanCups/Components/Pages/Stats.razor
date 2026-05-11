@@ -6,9 +6,7 @@
 
 @inject StatsAndArchiveService StatsService
 
-
-
-    <div class="stats-page-container">
+<div class="stats-page-container">
 
     @if (NoAccess)
     {
@@ -31,9 +29,11 @@
     }
     else
     {
+
         @if (!isDataVisible)
         {
             <div class="privacy-lock-zone">
+
                 <div class="glass-shield-card">
 
                     <div class="lock-anim">🔒</div>
@@ -43,8 +43,8 @@
                     <p>بيانات مالية حساسة ومحمية</p>
 
                     <button class="btn-reveal"
-                    @onclick="LoadStats"
-                    disabled="@isLoadingStats">
+                            @onclick="LoadStats"
+                            disabled="@isLoadingStats">
 
                         @if (isLoadingStats)
                         {
@@ -58,11 +58,11 @@
                     </button>
 
                 </div>
+
             </div>
         }
 
         <div class="stats-scrollable-content @(isDataVisible ? "content-active" : "content-blurred")">
-
 
             <!-- HEADER -->
 
@@ -72,95 +72,24 @@
 
                     <h1>لوحة التحكم المالي</h1>
 
-                    <p>نظرة عامة على الأداء والسيولة</p>
+                    <p>إحصائيات حقيقية مباشرة من النظام</p>
 
                 </div>
 
                 <button class="btn-hide-ui"
-                @onclick="() => isDataVisible = false">
+                        @onclick="() => isDataVisible = false">
+
                     إخفاء البيانات
+
                 </button>
 
             </div>
 
-            <!-- SUMMARY -->
+            <!-- البطاقات -->
 
             <div class="summary-grid">
 
                 <div class="mini-card">
-
-                    <div class="card-icon">💰</div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            صافي الربح الشهري
-                        </span>
-
-                        <span class="value">
-                            @Fmt(DashboardStats.monthly_profit)
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="mini-card">
-
-                    <div class="card-icon">📦</div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            الصناديق المباعة
-                        </span>
-
-                        <span class="value">
-                            @DashboardStats.monthly_boxes_sold
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="mini-card">
-
-                    <div class="card-icon">🧾</div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            عدد الفواتير
-                        </span>
-
-                        <span class="value">
-                            @DashboardStats.monthly_orders_count
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="mini-card">
-
-                    <div class="card-icon">🚨</div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            إجمالي الديون
-                        </span>
-
-                        <span class="value">
-                            @Fmt(DashboardStats.total_debts)
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="mini-card">
-
                     <div class="card-icon">🏦</div>
 
                     <div class="card-data">
@@ -174,53 +103,308 @@
                         </span>
 
                     </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">📈</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            أرباح الفواتير
+                        </span>
+
+                        <span class="value green-text">
+                            @Fmt(DashboardStats.total_orders_profit)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">📉</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            خسائر الفواتير
+                        </span>
+
+                        <span class="value red-text">
+                            @Fmt(DashboardStats.total_orders_loss)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">🚨</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            إجمالي الديون
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.total_debts)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">⬇️</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الداخل هذا الشهر
+                        </span>
+
+                        <span class="value green-text">
+                            @Fmt(DashboardStats.monthly_in)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">⬆️</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الخارج هذا الشهر
+                        </span>
+
+                        <span class="value red-text">
+                            @Fmt(DashboardStats.monthly_out)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">🧾</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            المبيعات المحصلة
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.monthly_sales_collected)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">📦</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            المشتريات هذا الشهر
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.monthly_purchases)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">💵</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            السلف هذا الشهر
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.monthly_loans)
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">👨‍💼</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            عدد الموظفين
+                        </span>
+
+                        <span class="value">
+                            @DashboardStats.employees_count
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">🏭</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الإنتاج هذا الشهر
+                        </span>
+
+                        <span class="value">
+                            @DashboardStats.monthly_production_quantity
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+                    <div class="card-icon">↩️</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            عدد المرجوعات
+                        </span>
+
+                        <span class="value">
+                            @DashboardStats.monthly_returns_count
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon">📦</div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الصناديق الراجعة
+                        </span>
+
+                        <span class="value">
+                            @DashboardStats.monthly_returns_boxes
+                        </span>
+
+                    </div>
 
                 </div>
 
             </div>
 
-            <!-- توزيع المبيعات -->
+            <!-- أفضل العناصر -->
 
             <div class="stats-section">
 
-                <h3>توزيع المبيعات</h3>
+                <h3>أفضل العناصر هذا الشهر</h3>
 
-                <div class="stats-table-wrapper">
+                <div class="top-stats-grid">
 
-                    <table class="stats-table">
+                    @if (DashboardStats.best_marketer != null)
+                    {
+                        <div class="top-stat-card">
 
-                        <thead>
+                            <h4>أفضل مسوق</h4>
 
-                            <tr>
+                            <span>
+                                @DashboardStats.best_marketer.marketer_name
+                            </span>
 
-                                <th>المنتج</th>
+                            <small>
+                                @Fmt(DashboardStats.best_marketer.total_sales)
+                            </small>
 
-                                <th>الكمية</th>
+                        </div>
+                    }
 
-                                <th>النسبة</th>
+                    @if (DashboardStats.best_customer != null)
+                    {
+                        <div class="top-stat-card">
 
-                            </tr>
+                            <h4>أفضل زبون</h4>
 
-                        </thead>
+                            <span>
+                                @DashboardStats.best_customer.customer_name
+                            </span>
 
-                        <tbody>
+                            <small>
+                                @Fmt(DashboardStats.best_customer.total_sales)
+                            </small>
 
-                            @foreach (var item in DashboardStats.sales_distribution)
-                            {
-                                <tr>
+                        </div>
+                    }
 
-                                    <td>@item.product_name</td>
+                    @if (DashboardStats.best_supplier != null)
+                    {
+                        <div class="top-stat-card">
 
-                                    <td>@item.quantity</td>
+                            <h4>أفضل مورد</h4>
 
-                                    <td>@item.percentage %</td>
+                            <span>
+                                @DashboardStats.best_supplier.supplier_name
+                            </span>
 
-                                </tr>
-                            }
+                            <small>
+                                @Fmt(DashboardStats.best_supplier.total_purchases)
+                            </small>
 
-                        </tbody>
+                        </div>
+                    }
 
-                    </table>
+                </div>
+
+            </div>
+
+            <!-- المنتجات -->
+
+            <div class="stats-section">
+
+                <h3>المنتجات</h3>
+
+                <div class="top-stats-grid">
+
+                    @if (DashboardStats.most_sold_product != null)
+                    {
+                        <div class="top-stat-card">
+
+                            <h4>الأكثر مبيعًا</h4>
+
+                            <span>
+                                @DashboardStats.most_sold_product.product_name
+                            </span>
+
+                            <small>
+                                @DashboardStats.most_sold_product.quantity صندوق
+                            </small>
+
+                        </div>
+                    }
+
+                    @if (DashboardStats.most_produced_product != null)
+                    {
+                        <div class="top-stat-card">
+
+                            <h4>الأكثر إنتاجًا</h4>
+
+                            <span>
+                                @DashboardStats.most_produced_product.product_name
+                            </span>
+
+                            <small>
+                                @DashboardStats.most_produced_product.quantity صندوق
+                            </small>
+
+                        </div>
+                    }
 
                 </div>
 
@@ -241,11 +425,8 @@
                             <tr>
 
                                 <th>الخزنة</th>
-
                                 <th>الرصيد الحالي</th>
-
                                 <th>الدخل الشهري</th>
-
                                 <th>الخروج الشهري</th>
 
                             </tr>
@@ -260,7 +441,9 @@
 
                                     <td>@item.cash_box_name</td>
 
-                                    <td>@Fmt(item.current_balance)</td>
+                                    <td>
+                                        @Fmt(item.current_balance)
+                                    </td>
 
                                     <td class="green-text">
                                         @Fmt(item.monthly_in)
@@ -281,205 +464,15 @@
 
             </div>
 
-            <!-- ديون الزبائن -->
-
-            <div class="stats-section">
-
-                <h3>ديون الزبائن</h3>
-
-                <div class="stats-table-wrapper">
-
-                    <table class="stats-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>الزبون</th>
-
-                                <th>قيمة الدين</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @foreach (var item in DashboardStats.customer_debts)
-                            {
-                                <tr>
-
-                                    <td>@item.customer_name</td>
-
-                                    <td class="red-text">
-                                        @Fmt(item.debt_amount)
-                                    </td>
-
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <!-- ديون المسوقين -->
-
-            <div class="stats-section">
-
-                <h3>ديون المسوقين</h3>
-
-                <div class="stats-table-wrapper">
-
-                    <table class="stats-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>المسوق</th>
-
-                                <th>قيمة الدين</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @foreach (var item in DashboardStats.marketer_debts)
-                            {
-                                <tr>
-
-                                    <td>@item.marketer_name</td>
-
-                                    <td class="red-text">
-                                        @Fmt(item.debt_amount)
-                                    </td>
-
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <!-- المنتجات الناقصة -->
-
-            <div class="stats-section">
-
-                <h3>المنتجات الناقصة</h3>
-
-                <div class="stats-table-wrapper">
-
-                    <table class="stats-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>المنتج</th>
-
-                                <th>الكمية الحالية</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @foreach (var item in DashboardStats.low_stock_products)
-                            {
-                                <tr>
-
-                                    <td>@item.product_name</td>
-
-                                    <td class="red-text">
-                                        @item.current_quantity
-                                    </td>
-
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <!-- أفضل المسوقين -->
-
-            <div class="stats-section">
-
-                <h3>أفضل المسوقين</h3>
-
-                <div class="stats-table-wrapper">
-
-                    <table class="stats-table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>المسوق</th>
-
-                                <th>عدد الفواتير</th>
-
-                                <th>إجمالي البيع</th>
-
-                                <th>إجمالي العمولات</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @foreach (var item in DashboardStats.top_marketers)
-                            {
-                                <tr>
-
-                                    <td>@item.marketer_name</td>
-
-                                    <td>@item.orders_count</td>
-
-                                    <td>@Fmt(item.total_sales)</td>
-
-                                    <td>@Fmt(item.total_commissions)</td>
-
-                                </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-
         </div>
     }
 
-
-        </div>
-
-    
-
+</div>
 
 @code {
 
     private bool isDataVisible = false;
+
     bool NoAccess = false;
 
     private StatsView DashboardStats = new();
@@ -488,13 +481,11 @@
 
     [Inject] UserSession Session { get; set; } = default!;
 
-    [Inject] NavigationManager Nav { get; set; } = default!;
-
     private async Task LoadStats()
     {
         isDataVisible = true;
 
-        if (DashboardStats.monthly_orders_count > 0)
+        if (DashboardStats.total_cash_balance > 0)
             return;
 
         isLoadingStats = true;
@@ -510,13 +501,15 @@
         if (Session.Role != "Admin1")
         {
             NoAccess = true;
-
             return;
         }
     }
 
     string Fmt(decimal value)
     {
+        if (value % 1 == 0)
+            return $"{value:N0} د.ل";
+
         return $"{value:N2} د.ل";
     }
 }

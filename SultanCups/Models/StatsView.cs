@@ -2,89 +2,83 @@
 {
     public class StatsView
     {
-        // =========================
-        // البطاقات العلوية
-        // =========================
+        // =====================================
+        // البطاقات الرئيسية
+        // =====================================
 
-        public decimal monthly_profit { get; set; }
-
-        public int monthly_boxes_sold { get; set; }
-
-        public int monthly_orders_count { get; set; }
-
-        public decimal total_debts { get; set; }
-
+        // إجمالي السيولة الحقيقية
         public decimal total_cash_balance { get; set; }
 
-        // =========================
-        // الرسم البياني
-        // =========================
+        // إجمالي أرباح الفواتير
+        public decimal total_orders_profit { get; set; }
 
-        public List<ProfitChartItem> daily_profit_chart { get; set; } = new();
+        // إجمالي خسائر الفواتير
+        public decimal total_orders_loss { get; set; }
 
-        public List<ProfitChartItem> weekly_profit_chart { get; set; } = new();
+        // إجمالي الديون الحالية
+        public decimal total_debts { get; set; }
 
-        public List<ProfitChartItem> monthly_profit_chart { get; set; } = new();
+        // الداخل هذا الشهر
+        public decimal monthly_in { get; set; }
 
-        // =========================
-        // توزيع المبيعات
-        // =========================
+        // الخارج هذا الشهر
+        public decimal monthly_out { get; set; }
 
-        public List<ProductSalesDistribution> sales_distribution { get; set; } = new();
+        // المبيعات المحصلة هذا الشهر
+        public decimal monthly_sales_collected { get; set; }
 
-        // =========================
+        // المشتريات هذا الشهر
+        public decimal monthly_purchases { get; set; }
+
+        // السلف هذا الشهر
+        public decimal monthly_loans { get; set; }
+
+        // الرواتب المدفوعة
+        public decimal salaries_paid { get; set; }
+
+        // الرواتب المستحقة
+        public decimal salaries_remaining { get; set; }
+
+        // العمولات المدفوعة
+        public decimal commissions_paid { get; set; }
+
+        // العمولات غير المدفوعة
+        public decimal commissions_unpaid { get; set; }
+
+        // عدد الموظفين
+        public int employees_count { get; set; }
+
+        // إجمالي الإنتاج هذا الشهر
+        public int monthly_production_quantity { get; set; }
+
+        // عدد المرجوعات هذا الشهر
+        public int monthly_returns_count { get; set; }
+
+        public int monthly_returns_boxes { get; set; }
+
+        // =====================================
+        // أفضل العناصر
+        // =====================================
+
+        public BestMarketerItem? best_marketer { get; set; }
+
+        public BestCustomerItem? best_customer { get; set; }
+
+        public BestSupplierItem? best_supplier { get; set; }
+
+        // =====================================
+        // المنتجات
+        // =====================================
+
+        public ProductStatsItem? most_sold_product { get; set; }
+
+        public ProductStatsItem? most_produced_product { get; set; }
+
+        // =====================================
         // الخزنات
-        // =========================
+        // =====================================
 
         public List<CashBoxStatsItem> cash_boxes { get; set; } = new();
-
-        // =========================
-        // ديون الزبائن
-        // =========================
-
-        public List<CustomerDebtItem> customer_debts { get; set; } = new();
-
-        // =========================
-        // ديون المسوقين
-        // =========================
-
-        public List<MarketerDebtItem> marketer_debts { get; set; } = new();
-
-        // =========================
-        // المنتجات الناقصة
-        // =========================
-
-        public List<LowStockItem> low_stock_products { get; set; } = new();
-
-        // =========================
-        // أفضل المسوقين
-        // =========================
-
-        public List<TopMarketerItem> top_marketers { get; set; } = new();
-    }
-
-    // =========================================
-    // الرسم البياني
-    // =========================================
-
-    public class ProfitChartItem
-    {
-        public string label { get; set; } = "";
-
-        public decimal value { get; set; }
-    }
-
-    // =========================================
-    // توزيع المنتجات
-    // =========================================
-
-    public class ProductSalesDistribution
-    {
-        public string product_name { get; set; } = "";
-
-        public int quantity { get; set; }
-
-        public decimal percentage { get; set; }
     }
 
     // =========================================
@@ -105,58 +99,58 @@
     }
 
     // =========================================
-    // ديون الزبائن
+    // أفضل مسوق
     // =========================================
 
-    public class CustomerDebtItem
+    public class BestMarketerItem
+    {
+        public int marketer_id { get; set; }
+
+        public string marketer_name { get; set; } = "";
+
+        public decimal total_sales { get; set; }
+
+        public int orders_count { get; set; }
+    }
+
+    // =========================================
+    // أفضل زبون
+    // =========================================
+
+    public class BestCustomerItem
     {
         public int customer_id { get; set; }
 
         public string customer_name { get; set; } = "";
 
-        public decimal debt_amount { get; set; }
+        public decimal total_sales { get; set; }
+
+        public int orders_count { get; set; }
     }
 
     // =========================================
-    // ديون المسوقين
+    // أفضل مورد
     // =========================================
 
-    public class MarketerDebtItem
+    public class BestSupplierItem
     {
-        public int marketer_id { get; set; }
+        public int supplier_id { get; set; }
 
-        public string marketer_name { get; set; } = "";
+        public string supplier_name { get; set; } = "";
 
-        public decimal debt_amount { get; set; }
+        public decimal total_purchases { get; set; }
     }
 
     // =========================================
-    // المنتجات الناقصة
+    // المنتجات
     // =========================================
 
-    public class LowStockItem
+    public class ProductStatsItem
     {
         public int product_id { get; set; }
 
         public string product_name { get; set; } = "";
 
-        public int current_quantity { get; set; }
-    }
-
-    // =========================================
-    // أفضل المسوقين
-    // =========================================
-
-    public class TopMarketerItem
-    {
-        public int marketer_id { get; set; }
-
-        public string marketer_name { get; set; } = "";
-
-        public int orders_count { get; set; }
-
-        public decimal total_sales { get; set; }
-
-        public decimal total_commissions { get; set; }
+        public int quantity { get; set; }
     }
 }
