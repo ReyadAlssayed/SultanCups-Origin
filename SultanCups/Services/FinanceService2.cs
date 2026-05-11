@@ -885,6 +885,25 @@ _context.financial_events
                 // =====================================
                 if (paidAmount > 0)
                 {
+
+                    var currentCashBalance =
+    await _context.financial_events
+        .Where(x =>
+            x.cash_box_id ==
+            order.cash_box_id)
+        .SumAsync(x =>
+            x.direction == "IN"
+                ? (decimal?)x.amount
+                : -(decimal?)x.amount
+        ) ?? 0;
+
+                    if (currentCashBalance < paidAmount)
+                    {
+                        return (
+                            false,
+                            "الخزنة لا تحتوي حالياً على المبلغ المطلوب للاسترجاع، قم بتحويل مبلغ إلى الخزنة ثم أعد المحاولة"
+                        );
+                    }
                     AddFinancialEvent(
                         "حذف فاتورة بيع",
                         "OUT",
@@ -1203,7 +1222,28 @@ _context.financial_events
                     &&
                     overPaid > 0
                 )
+
+
                 {
+
+                    var currentCashBalance =
+    await _context.financial_events
+        .Where(x =>
+            x.cash_box_id ==
+            order.cash_box_id)
+        .SumAsync(x =>
+            x.direction == "IN"
+                ? (decimal?)x.amount
+                : -(decimal?)x.amount
+        ) ?? 0;
+
+                    if (currentCashBalance < overPaid)
+                    {
+                        return (
+                            false,
+                            "الخزنة لا تحتوي حالياً على المبلغ المطلوب للاسترجاع، قم بتحويل مبلغ إلى الخزنة ثم أعد المحاولة"
+                        );
+                    }
                     AddFinancialEvent(
                         "استرجاع مبيعات",
                         "OUT",
