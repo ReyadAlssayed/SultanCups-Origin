@@ -2,6 +2,7 @@
 @layout MainLayout
 @inject NavigationManager Nav
 @inject SultanCups.Services.AdminService AdminService
+@inject SultanCups.Services.UserSession Session
 
 <div class="settings-page">
 
@@ -35,7 +36,7 @@
         <div class="settings-item" @onclick="GoToBackups">
             <div class="item-left">
                 <img src="images/tracking.png" class="item-icon" />
-                <span>النسخ الاحتياطي الى ملف excel</span>
+                <span>اكتشاف حالة التخزين</span>
             </div>
             <span class="arrow">›</span>
         </div>
@@ -221,8 +222,12 @@
 }
 
 @code {
-    string CurrentUserName = "رياض";
-    string CurrentUserRole = "مسؤول أول";
+    string CurrentUserName => Session.FullName;
+
+    string CurrentUserRole =>
+        Session.Role == "Admin1"
+            ? "مسؤول أول"
+            : "مسؤول ثانٍ";
     string AppVersionText = "SultanCups · .NET · v1.0";
 
     bool ShowProfileDialog;
