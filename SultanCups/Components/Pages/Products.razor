@@ -312,10 +312,25 @@
             return;
         }
 
+        // تنظيف الاسم ومنع ثغرات المسافات والحروف العربية
+        string normalizedName = Regex
+            .Replace(name.ToLower(), @"\s+", " ")
+            .Trim()
+            .Replace("أ", "ا")
+            .Replace("إ", "ا")
+            .Replace("آ", "ا");
+
         var allProducts = await InventoryService.GetAllProducts();
 
         DuplicateProduct = allProducts.FirstOrDefault(p =>
-            p.name?.Trim().ToLower() == name.ToLower());
+            p.name != null &&
+            Regex.Replace(p.name.ToLower(), @"\s+", " ")
+                .Trim()
+                .Replace("أ", "ا")
+                .Replace("إ", "ا")
+                .Replace("آ", "ا")
+                == normalizedName
+        );
 
         if (ShowAddDialog)
         {
@@ -335,6 +350,10 @@
             }
 
             ProductForm.is_active = true;
+
+            // حفظ الاسم بشكل مرتب بدون مسافات مضاعفة
+            ProductForm.name = Regex.Replace(name, @"\s+", " ").Trim();
+
             await InventoryService.AddProduct(ProductForm);
         }
         else
@@ -353,6 +372,9 @@
 
                 return;
             }
+
+            // حفظ الاسم بشكل مرتب بدون مسافات مضاعفة
+            ProductForm.name = Regex.Replace(name, @"\s+", " ").Trim();
 
             await InventoryService.UpdateProduct(ProductForm);
         }
