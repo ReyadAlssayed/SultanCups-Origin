@@ -113,12 +113,30 @@ window.printPurchaseCard = function () {
     `);
 
     win.document.close();
-    win.focus();
 
-    setTimeout(() => {
-        win.print();
-        win.close();
-    }, 700);
+    const waitForLoad = setInterval(() => {
+
+        const skeletons =
+            win.document.querySelectorAll(
+                '.skeleton-box,.loading-skeleton,.skeleton-card,.skeleton');
+
+        if (skeletons.length === 0) {
+
+            clearInterval(waitForLoad);
+
+            win.document.fonts.ready.then(() => {
+
+                setTimeout(() => {
+
+                    win.print();
+                    win.close();
+
+                }, 700);
+
+            });
+        }
+
+    }, 300);
 };
 
 
@@ -265,5 +283,220 @@ window.printOrderCard = function () {
     setTimeout(() => {
         win.print();
         win.close();
+    }, 700);
+};
+
+
+
+//
+window.printStatsCard = function () {
+
+    const clone =
+        document.querySelector('.stats-scrollable-content')
+            .cloneNode(true);
+
+    clone.querySelectorAll(
+        '[class*="skeleton"],[class*="loading"]')
+        .forEach(x => x.remove());
+
+    const content = clone.outerHTML;
+
+    const css = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"],style'))
+        .map(x => x.outerHTML)
+        .join('');
+
+    const win = window.open('', '', 'width=1200,height=900');
+
+    win.document.write(`
+
+        <html dir="rtl">
+
+        <head>
+
+            ${css}
+
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+                  rel="stylesheet">
+
+            <style>
+
+                @page{
+                    size:A4;
+                    margin:10mm;
+                }
+
+                body{
+                    margin:0;
+                    padding:0;
+                    background:#fff;
+                    font-family:'Cairo',sans-serif;
+                    color:#111827;
+                }
+
+                .stats-scrollable-content{
+                    filter:none !important;
+                }
+
+                .stats-top-bar{
+                    margin-bottom:18px !important;
+                }
+
+                .top-actions{
+                    display:none !important;
+                }
+
+                .summary-grid{
+                    display:grid !important;
+                    grid-template-columns:repeat(3,1fr) !important;
+                    gap:12px !important;
+                    margin-bottom:18px !important;
+                }
+
+                .mini-card{
+                    min-height:auto !important;
+                    height:auto !important;
+                    padding:14px 16px !important;
+                    border-radius:14px !important;
+                    box-shadow:none !important;
+                    break-inside:avoid;
+                    page-break-inside:avoid;
+                }
+
+                .card-data .label{
+                    font-size:12px !important;
+                    margin-bottom:6px !important;
+                }
+
+                .card-data .value{
+                    font-size:28px !important;
+                    line-height:1.1 !important;
+                }
+
+                .stats-section{
+                    margin-bottom:16px !important;
+                    border-radius:18px !important;
+                    overflow:hidden;
+                    break-inside:avoid;
+                    page-break-inside:avoid;
+                }
+
+                .stats-section h3{
+                    padding:14px 18px !important;
+                    font-size:20px !important;
+                    margin:0 !important;
+                }
+
+                .top-stats-grid{
+                    display:grid !important;
+                    grid-template-columns:1fr 1fr !important;
+                    gap:12px !important;
+                    padding:14px !important;
+                }
+
+                .top-stat-card{
+                    min-height:auto !important;
+                    height:auto !important;
+                    padding:16px !important;
+                    border-radius:14px !important;
+                    box-shadow:none !important;
+                }
+
+                .top-stat-card h4{
+                    font-size:12px !important;
+                    margin-bottom:6px !important;
+                }
+
+                .top-stat-card span{
+                    font-size:22px !important;
+                    margin-bottom:4px !important;
+                    display:block;
+                }
+
+                .top-stat-card small{
+                    font-size:13px !important;
+                }
+
+                .stats-table-wrapper{
+                    padding:10px !important;
+                }
+
+                .stats-table{
+                    width:100%;
+                    border-collapse:collapse !important;
+                }
+
+                .stats-table td,
+                .stats-table th{
+                    border:1px solid #d1d5db !important;
+                    padding:10px !important;
+                    font-size:13px !important;
+                }
+
+                .print-header{
+                    width:100%;
+                    text-align:center;
+                    margin-bottom:18px;
+                }
+
+                .print-title{
+                    font-size:24px;
+                    font-weight:900;
+                    margin-bottom:4px;
+                }
+
+                .print-sub{
+                    font-size:13px;
+                    color:#6b7280;
+                }
+
+                .print-footer{
+                    margin-top:20px;
+                    text-align:center;
+                    font-size:12px;
+                    color:#6b7280;
+                    border-top:1px solid #ddd;
+                    padding-top:8px;
+                }
+
+            </style>
+
+        </head>
+
+        <body>
+
+            <div class="print-header">
+
+                <div class="print-title">
+                    مصنع السلطان للأكواب الورقية
+                </div>
+
+                <div class="print-sub">
+                    تقرير إحصائي رسمي
+                </div>
+
+            </div>
+
+            ${content}
+
+            <div class="print-footer">
+
+                تم إنشاء التقرير بتاريخ:
+                ${new Date().toLocaleString()}
+
+            </div>
+
+        </body>
+
+        </html>
+    `);
+
+    win.document.close();
+
+    setTimeout(() => {
+
+        win.print();
+        win.close();
+
     }, 700);
 };

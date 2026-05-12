@@ -1,5 +1,6 @@
 ﻿@page "/Stats"
 @layout Layout.MainLayout
+@inject IJSRuntime JS
 
 @using SultanCups.Models
 @using SultanCups.Services
@@ -87,9 +88,17 @@
 
                     </button>
 
-                    <button class="btn-archive-ui">
+                    <button class="btn-archive-ui"
+                            @onclick="OpenArchiveDialog">
 
                         تنفيذ جرد وأرشفة
+
+                    </button>
+
+                    <button class="btn-archive-ui"
+                            @onclick="PrintStatsPdf">
+
+                        طباعة PDF
 
                     </button>
 
@@ -321,64 +330,59 @@
 
             </div>
 
-            <!-- أفضل العناصر -->
-
             <div class="stats-section">
 
                 <h3>أفضل العناصر</h3>
 
                 <div class="top-stats-grid">
 
-                    @if (DashboardStats.best_marketer != null)
-                    {
-                        <div class="top-stat-card">
+                    <div class="top-stat-card">
 
-                            <h4>أفضل مسوق</h4>
+                        <h4>أفضل مسوق</h4>
 
-                            <span>
-                                @DashboardStats.best_marketer.marketer_name
-                            </span>
+                        <span>
+                            @(DashboardStats.best_marketer?.marketer_name ?? "-")
+                        </span>
 
-                            <small>
-                                @Fmt(DashboardStats.best_marketer.total_sales)
-                            </small>
+                        <small>
+                            @(DashboardStats.best_marketer != null
+                                ? Fmt(DashboardStats.best_marketer.total_sales)
+                                : "0 د.ل")
+                        </small>
 
-                        </div>
-                    }
+                    </div>
 
-                    @if (DashboardStats.best_customer != null)
-                    {
-                        <div class="top-stat-card">
+                    <div class="top-stat-card">
 
-                            <h4>أفضل زبون</h4>
+                        <h4>أفضل زبون</h4>
 
-                            <span>
-                                @DashboardStats.best_customer.customer_name
-                            </span>
+                        <span>
+                            @(DashboardStats.best_customer?.customer_name ?? "-")
+                        </span>
 
-                            <small>
-                                @Fmt(DashboardStats.best_customer.total_sales)
-                            </small>
+                        <small>
+                            @(DashboardStats.best_customer != null
+                                ? Fmt(DashboardStats.best_customer.total_sales)
+                                : "0 د.ل")
+                        </small>
 
-                        </div>
-                    }
+                    </div>
 
-                    @if (DashboardStats.best_supplier != null)
-                    {
-                        <div class="top-stat-card">
+                    <div class="top-stat-card">
 
-                            <h4>أفضل مورد</h4>
+                        <h4>أفضل مورد</h4>
 
-                            <span>
-                                @DashboardStats.best_supplier.supplier_name
-                            </span>
+                        <span>
+                            @(DashboardStats.best_supplier?.supplier_name ?? "-")
+                        </span>
 
-                            <small>
-                                @Fmt(DashboardStats.best_supplier.total_purchases)
-                            </small>
+                        <small>
+                            @(DashboardStats.best_supplier != null
+                                ? Fmt(DashboardStats.best_supplier.total_purchases)
+                                : "0 د.ل")
+                        </small>
 
-                        </div>
-                    }
+                    </div>
 
                 </div>
 
@@ -392,39 +396,37 @@
 
                 <div class="top-stats-grid">
 
-                    @if (DashboardStats.most_sold_product != null)
-                    {
-                        <div class="top-stat-card">
+                    <div class="top-stat-card">
 
-                            <h4>الأكثر مبيعًا</h4>
+                        <h4>الأكثر مبيعًا</h4>
 
-                            <span>
-                                @DashboardStats.most_sold_product.product_name
-                            </span>
+                        <span>
+                            @(DashboardStats.most_sold_product?.product_name ?? "-")
+                        </span>
 
-                            <small>
-                                @DashboardStats.most_sold_product.quantity صندوق
-                            </small>
+                        <small>
+                            @(DashboardStats.most_sold_product != null
+                                ? $"{DashboardStats.most_sold_product.quantity} صندوق"
+                                : "0 صندوق")
+                        </small>
 
-                        </div>
-                    }
+                    </div>
 
-                    @if (DashboardStats.most_produced_product != null)
-                    {
-                        <div class="top-stat-card">
+                    <div class="top-stat-card">
 
-                            <h4>الأكثر إنتاجًا</h4>
+                        <h4>الأكثر إنتاجًا</h4>
 
-                            <span>
-                                @DashboardStats.most_produced_product.product_name
-                            </span>
+                        <span>
+                            @(DashboardStats.most_produced_product?.product_name ?? "-")
+                        </span>
 
-                            <small>
-                                @DashboardStats.most_produced_product.quantity صندوق
-                            </small>
+                        <small>
+                            @(DashboardStats.most_produced_product != null
+                                ? $"{DashboardStats.most_produced_product.quantity} صندوق"
+                                : "0 صندوق")
+                        </small>
 
-                        </div>
-                    }
+                    </div>
 
                 </div>
 
@@ -489,6 +491,67 @@
 
 </div>
 
+@if (showArchiveDialog)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="sal-dialog-box archive-dialog">
+
+            <h3>
+                تأكيد تنفيذ الجرد والأرشفة
+            </h3>
+
+            <p>
+                سيتم نقل جميع البيانات الإحصائية الحالية إلى سجل الأرشيف.
+            </p>
+
+            <div class="archive-dates-box">
+
+                <div>
+
+                    <span>من تاريخ:</span>
+
+                    <strong>
+                        @archiveFromDate
+                    </strong>
+
+                </div>
+
+                <div>
+
+                    <span>إلى تاريخ:</span>
+
+                    <strong>
+                        @archiveToDate
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="pro-dialog-actions">
+
+                <button class="btn-cancel"
+                        @onclick="() => showArchiveDialog = false">
+
+                    إلغاء
+
+                </button>
+
+                <button class="btn-save"
+                        @onclick="ConfirmArchive">
+
+                    تنفيذ الأرشفة
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 @code {
 
     private bool isDataVisible = false;
@@ -500,6 +563,12 @@
     private bool isLoadingStats = false;
 
     [Inject] UserSession Session { get; set; } = default!;
+
+    bool showArchiveDialog = false;
+
+    string archiveFromDate = "";
+
+    string archiveToDate = "";
 
     private async Task LoadStats()
     {
@@ -523,6 +592,53 @@
             NoAccess = true;
             return;
         }
+    }
+
+    async Task PrintStatsPdf()
+    {
+        StateHasChanged();
+
+        await Task.Delay(1200);
+
+        await JS.InvokeVoidAsync("printStatsCard");
+    }
+
+    async Task ConfirmArchive()
+    {
+        var result =
+            await StatsService
+    .ArchiveCurrentCycle(Session.AdminId);
+
+        showArchiveDialog = false;
+
+        DashboardStats =
+            await StatsService.GetDashboardStats();
+    }
+
+    async Task OpenArchiveDialog()
+    {
+        DateTime lastArchiveDate =
+
+            await StatsService
+                .GetLastArchiveDate();
+
+        if (lastArchiveDate == default)
+        {
+            lastArchiveDate =
+    DateTime.SpecifyKind(
+        new DateTime(2000, 1, 1),
+        DateTimeKind.Utc);
+        }
+
+        archiveFromDate =
+            lastArchiveDate
+                .ToString("yyyy/MM/dd hh:mm tt");
+
+        archiveToDate =
+            DateTime.Now
+                .ToString("yyyy/MM/dd hh:mm tt");
+
+        showArchiveDialog = true;
     }
 
     string Fmt(decimal value)

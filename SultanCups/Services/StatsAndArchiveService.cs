@@ -476,19 +476,26 @@ namespace SultanCups.Services
             // =====================================
 
             var mostSold =
-                await _context.order_items
-                    .AsNoTracking()
-                    .GroupBy(x => x.product_id)
-                    .Select(g => new
-                    {
-                        product_id = g.Key,
+     await _context.order_items
+         .AsNoTracking()
+         .Include(x => x.Order)
+         .Where(x =>
+             x.Order != null
+             &&
+             x.Order.order_date >= lastArchiveDate
+             &&
+             !x.Order.is_cancelled)
+         .GroupBy(x => x.product_id)
+         .Select(g => new
+         {
+             product_id = g.Key,
 
-                        quantity =
-                            g.Sum(x => x.quantity)
-                    })
-                    .OrderByDescending(x =>
-                        x.quantity)
-                    .FirstOrDefaultAsync();
+             quantity =
+                 g.Sum(x => x.quantity)
+         })
+         .OrderByDescending(x =>
+             x.quantity)
+         .FirstOrDefaultAsync();
 
             if (mostSold != null)
             {
@@ -517,19 +524,21 @@ namespace SultanCups.Services
             // =====================================
 
             var mostProduced =
-                await _context.production
-                    .AsNoTracking()
-                    .GroupBy(x => x.product_id)
-                    .Select(g => new
-                    {
-                        product_id = g.Key,
+    await _context.production
+        .AsNoTracking()
+        .Where(x =>
+            x.production_date >= lastArchiveDate)
+        .GroupBy(x => x.product_id)
+        .Select(g => new
+        {
+            product_id = g.Key,
 
-                        quantity =
-                            g.Sum(x => x.box_count)
-                    })
-                    .OrderByDescending(x =>
-                        x.quantity)
-                    .FirstOrDefaultAsync();
+            quantity =
+                g.Sum(x => x.box_count)
+        })
+        .OrderByDescending(x =>
+            x.quantity)
+        .FirstOrDefaultAsync();
 
             if (mostProduced != null)
             {
@@ -628,6 +637,117 @@ namespace SultanCups.Services
             }
 
             return stats;
+        }
+
+
+        //
+
+        public async Task<DateTime> GetLastArchiveDate()
+        {
+            return await _context.archive_cycles
+                .AsNoTracking()
+                .OrderByDescending(x => x.archive_date)
+                .Select(x => x.archive_date)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<(bool success, string fromDate, string toDate)>
+        ArchiveCurrentCycle(int adminId)
+        {
+            DateTime lastArchiveDate =
+                await GetLastArchiveDate();
+
+            if (lastArchiveDate == default)
+            {
+                lastArchiveDate =
+    DateTime.SpecifyKind(
+        new DateTime(2000, 1, 1),
+        DateTimeKind.Utc);
+            }
+
+            var stats =
+                await GetDashboardStats();
+
+            var archive =
+                new ArchiveCycle
+                {
+                    archive_date = DateTime.UtcNow,
+
+                    archived_by = adminId,
+
+                    total_cash_balance =
+                        stats.total_cash_balance,
+
+                    real_financial_balance =
+                        stats.real_financial_balance,
+
+                    total_debts =
+                        stats.total_debts,
+
+                    total_in =
+                        stats.total_in,
+
+                    total_out =
+                        stats.total_out,
+
+                    total_sales_collected =
+                        stats.total_sales_collected,
+
+                    total_purchases =
+                        stats.total_purchases,
+
+                    total_loans =
+                        stats.total_loans,
+
+                    salaries_paid =
+                        stats.salaries_paid,
+
+                    salaries_remaining =
+                        stats.salaries_remaining,
+
+                    commissions_paid =
+                        stats.commissions_paid,
+
+                    commissions_unpaid =
+                        stats.commissions_unpaid,
+
+                    employees_count =
+                        stats.employees_count,
+
+                    total_production_quantity =
+                        stats.total_production_quantity,
+
+                    total_returns_count =
+                        stats.total_returns_count,
+
+                    total_returns_boxes =
+                        stats.total_returns_boxes,
+
+                    best_marketer_name =
+                        stats.best_marketer?.marketer_name,
+
+                    best_customer_name =
+                        stats.best_customer?.customer_name,
+
+                    best_supplier_name =
+                        stats.best_supplier?.supplier_name,
+
+                    most_sold_product_name =
+                        stats.most_sold_product?.product_name,
+
+                    most_produced_product_name =
+                        stats.most_produced_product?.product_name
+                };
+
+            _context.archive_cycles.Add(archive);
+
+            await _context.SaveChangesAsync();
+
+            return (
+                true,
+                lastArchiveDate.ToString("yyyy/MM/dd hh:mm tt"),
+                DateTime.Now.ToString("yyyy/MM/dd hh:mm tt")
+            );
         }
     }
 }
