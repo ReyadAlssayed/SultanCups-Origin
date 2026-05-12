@@ -263,6 +263,24 @@
                     <div class="card-data">
 
                         <span class="label">
+                            السلف غير المسددة
+                        </span>
+
+                        <span class="value red-text">
+                            @Fmt(DashboardStats.loans_remaining)
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
                             عدد الموظفين
                         </span>
 
@@ -502,7 +520,15 @@
             </h3>
 
             <p>
-                سيتم نقل جميع البيانات الإحصائية الحالية إلى سجل الأرشيف.
+                تأكد من:
+                <br />
+                • أرشفة ملفات Excel
+                <br />
+                • أخذ نسخة احتياطية
+                <br />
+                • تصفية جميع الحسابات
+                <br /><br />
+                سيتم بدء دورة إحصائية جديدة بعد الجرد.
             </p>
 
             <div class="archive-dates-box">
@@ -574,8 +600,6 @@
     {
         isDataVisible = true;
 
-        if (DashboardStats.total_cash_balance > 0)
-            return;
 
         isLoadingStats = true;
 
@@ -607,9 +631,22 @@
     {
         var result =
             await StatsService
-    .ArchiveCurrentCycle(Session.AdminId);
+                .ArchiveCurrentCycle(Session.AdminId);
+
+        if (!result.success)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                result.toDate);
+
+            return;
+        }
 
         showArchiveDialog = false;
+
+        await JS.InvokeVoidAsync(
+    "alert",
+    "تم تنفيذ الجرد والأرشفة بنجاح");
 
         DashboardStats =
             await StatsService.GetDashboardStats();

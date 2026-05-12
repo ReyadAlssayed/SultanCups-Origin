@@ -30,6 +30,9 @@
 
         // إجمالي السلف منذ آخر جرد
         public decimal total_loans { get; set; }
+
+        // السلف غير المسددة الحالية
+        public decimal loans_remaining { get; set; }
         // الرواتب المدفوعة منذ آخر جرد
         public decimal salaries_paid { get; set; }
 

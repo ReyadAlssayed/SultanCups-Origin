@@ -500,3 +500,314 @@ window.printStatsCard = function () {
 
     }, 700);
 };
+
+
+//
+
+window.printArchiveDetails = function () {
+
+    const content =
+        document.querySelector('.archive-dialog-box')
+            .outerHTML;
+
+    const css = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"],style'))
+        .map(x => x.outerHTML)
+        .join('');
+
+    const cards =
+        document.querySelectorAll('.archive-detail-card strong');
+
+    const win =
+        window.open('', '', 'width=1000,height=900');
+
+    win.document.write(`
+
+        <html dir="rtl">
+
+        <head>
+
+            ${css}
+
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+                  rel="stylesheet">
+
+            <style>
+
+                @page{
+                    size:A4;
+                    margin:14mm;
+                }
+
+                body{
+                    margin:0;
+                    padding:0;
+                    background:#fff;
+                    font-family:'Cairo',sans-serif;
+                    color:#111827;
+                }
+
+                .archive-dialog-box{
+                    width:100% !important;
+                    max-width:none !important;
+                    margin:auto !important;
+                    box-shadow:none !important;
+                    border:none !important;
+                    overflow:visible !important;
+                }
+
+                .emp-dialog-actions{
+                    display:none !important;
+                }
+
+                .emp-dialog-top-image{
+                    display:none !important;
+                }
+
+                .print-header{
+                    text-align:center;
+                    margin-bottom:24px;
+                    border-bottom:2px solid #e5e7eb;
+                    padding-bottom:14px;
+                }
+
+                .print-title{
+                    font-size:28px;
+                    font-weight:900;
+                    margin-bottom:6px;
+                }
+
+                .print-subtitle{
+                    font-size:14px;
+                    color:#6b7280;
+                }
+
+                .official-text{
+                    margin-top:24px;
+                    margin-bottom:20px;
+                    line-height:2.3;
+                    font-size:15px;
+                    text-align:justify;
+                }
+
+                .archive-details-grid{
+                    display:grid !important;
+                    grid-template-columns:repeat(2,1fr) !important;
+                    gap:12px !important;
+                    margin-top:18px;
+                }
+
+                .archive-detail-card{
+                    border:1px solid #d1d5db;
+                    border-radius:12px;
+                    padding:14px;
+                    background:#fff;
+                    break-inside:avoid;
+                    page-break-inside:avoid;
+                }
+
+                .archive-detail-card span{
+                    display:block;
+                    font-size:13px;
+                    color:#6b7280;
+                    margin-bottom:6px;
+                }
+
+                .archive-detail-card strong{
+                    font-size:18px;
+                    font-weight:800;
+                    color:#111827;
+                }
+
+                .green-text{
+                    color:#059669 !important;
+                }
+
+                .red-text{
+                    color:#dc2626 !important;
+                }
+
+                .print-footer{
+                    margin-top:28px;
+                    border-top:1px solid #e5e7eb;
+                    padding-top:10px;
+                    text-align:center;
+                    font-size:12px;
+                    color:#6b7280;
+                }
+
+                .signature-box{
+                    margin-top:45px;
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                }
+
+                .signature-item{
+                    width:220px;
+                    text-align:center;
+                }
+
+                .signature-line{
+                    border-top:1px solid #111827;
+                    margin-top:55px;
+                    padding-top:8px;
+                    font-size:14px;
+                    font-weight:700;
+                }
+
+            </style>
+
+        </head>
+
+        <body>
+
+            <div class="print-header">
+
+                <div class="print-title">
+                    مصنع السلطان للأكواب الورقية
+                </div>
+
+                <div class="print-subtitle">
+                    تقرير رسمي لدورة الجرد والأرشفة
+                </div>
+
+            </div>
+
+            <div class="official-text">
+
+                إلى السيد / مدير مصنع السلطان للأكواب الورقية المحترم،
+
+                <br><br>
+
+                السلام عليكم ورحمة الله وبركاته،
+
+                <br><br>
+
+                نفيدكم علمًا بأنه تم تنفيذ عملية الجرد
+                والأرشفة للدورة المالية الحالية بنجاح،
+                وذلك اعتمادًا على البيانات الفعلية
+                المسجلة داخل النظام حتى لحظة
+                تنفيذ عملية الإغلاق والأرشفة.
+
+                <br><br>
+
+                وقد أظهرت نتائج التقرير أن إجمالي
+                السيولة الفعلية داخل الخزنات بلغ:
+
+                <strong>${cards[2]?.innerText}</strong>
+
+                بينما بلغ صافي الوضع المالي الحالي:
+
+                <strong>${cards[3]?.innerText}</strong>
+
+                كما بلغ إجمالي حركة الداخل:
+
+                <strong>${cards[4]?.innerText}</strong>
+
+                في حين بلغ إجمالي حركة الخارج:
+
+                <strong>${cards[5]?.innerText}</strong>
+
+                أما إجمالي الديون الحالية فقد بلغ:
+
+                <strong>${cards[6]?.innerText}</strong>
+
+                <br><br>
+
+                وقد سجل النظام إجمالي مبيعات محصلة
+                بقيمة:
+
+                <strong>${cards[7]?.innerText}</strong>
+
+                بينما بلغت قيمة المشتريات:
+
+                <strong>${cards[8]?.innerText}</strong>
+
+                كما بلغت السلف المالية المسجلة:
+
+                <strong>${cards[9]?.innerText}</strong>
+
+                وبلغت الرواتب المدفوعة:
+
+                <strong>${cards[10]?.innerText}</strong>
+
+                إضافة إلى العمولات المدفوعة
+                بقيمة:
+
+                <strong>${cards[12]?.innerText}</strong>
+
+                <br><br>
+
+                وأظهرت النتائج الإحصائية أن أفضل
+                مسوق خلال الدورة الحالية هو:
+
+                <strong>${cards[18]?.innerText}</strong>
+
+                بينما كان المنتج الأكثر مبيعًا:
+
+                <strong>${cards[21]?.innerText}</strong>
+
+                وقد تم اعتماد هذه البيانات رسميًا
+                كمرجع نهائي للدورة المؤرشفة الحالية،
+                وتم حفظها داخل نظام الأرشفة المركزي
+                الخاص بالمصنع.
+
+                <br><br>
+
+                وتفضلوا بقبول فائق الاحترام والتقدير.
+
+                <br><br>
+
+                فريق العمل — نظام الحداثة لإدارة المصانع
+
+            </div>
+
+            ${content}
+
+            <div class="signature-box">
+
+                <div class="signature-item">
+
+                    <div class="signature-line">
+                        مسؤول النظام
+                    </div>
+
+                </div>
+
+                <div class="signature-item">
+
+                    <div class="signature-line">
+                        مدير المصنع
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="print-footer">
+
+                تم إنشاء التقرير بتاريخ:
+                ${new Date().toLocaleString()}
+
+                <br>
+
+                مصنع السلطان للأكواب الورقية — صناعة نفخر بها
+
+            </div>
+
+        </body>
+
+        </html>
+    `);
+
+    win.document.close();
+
+    setTimeout(() => {
+
+        win.print();
+        win.close();
+
+    }, 700);
+};
+

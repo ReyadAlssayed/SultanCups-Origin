@@ -192,12 +192,26 @@ namespace SultanCups.Services
 
             stats.total_loans =
                 await _context.employee_loans
+
                     .AsNoTracking()
                     .Where(x =>
                         x.loan_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.loan_amount)
                     ?? 0;
+
+            // =====================================
+            // السلف غير المسددة
+            // =====================================
+
+            stats.loans_remaining =
+     await _context.employee_loans
+         .AsNoTracking()
+         .Where(x => x.status != "خالص")
+         .SumAsync(x =>
+             (decimal?)
+             (x.loan_amount - x.repaid_amount))
+     ?? 0;
 
             // =====================================
             // الرواتب المدفوعة
@@ -603,18 +617,14 @@ namespace SultanCups.Services
                     ?? 0;
 
                 decimal currentBalance =
-                    await _context.financial_events
-                        .AsNoTracking()
-                        .Where(x =>
-                            x.cash_box_id ==
-                            box.cash_box_id)
-                        .SumAsync(x =>
-                            (decimal?)
-                            (
-                                x.direction == "IN"
-                                    ? x.amount
-                                    : -x.amount
-                            )) ?? 0;
+    await _context.cash_box_balances
+        .AsNoTracking()
+        .Where(x =>
+            x.cash_box_id ==
+            box.cash_box_id)
+        .Select(x => (decimal?)x.balance)
+        .FirstOrDefaultAsync()
+    ?? 0;
 
                 stats.cash_boxes.Add(
                     new CashBoxStatsItem
@@ -667,6 +677,23 @@ namespace SultanCups.Services
 
             var stats =
                 await GetDashboardStats();
+
+            if (
+    stats.total_debts > 0
+    ||
+    stats.salaries_remaining > 0
+    ||
+    stats.commissions_unpaid > 0
+||
+stats.loans_remaining > 0
+)
+            {
+                return (
+                    false,
+                    "",
+                    "لا يمكن تنفيذ الجرد حتى تتم تصفية جميع الحسابات."
+                );
+            }
 
             var archive =
                 new ArchiveCycle
