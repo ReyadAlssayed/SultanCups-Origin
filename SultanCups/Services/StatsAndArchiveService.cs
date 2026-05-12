@@ -17,19 +17,38 @@ namespace SultanCups.Services
         {
             var stats = new StatsView();
 
-            var now = DateTime.UtcNow;
+            // =====================================
+            // آخر تاريخ جرد
+            // =====================================
 
-            var monthStart = new DateTime(
-                now.Year,
-                now.Month,
-                1,
-                0,
-                0,
-                0,
-                DateTimeKind.Utc);
+            DateTime lastArchiveDate =
+
+                await _context.Set<ArchiveCycle>()
+
+                    .AsNoTracking()
+
+                    .OrderByDescending(x => x.archive_date)
+
+                    .Select(x => x.archive_date)
+
+                    .FirstOrDefaultAsync();
+
+            if (lastArchiveDate == default)
+            {
+                lastArchiveDate =
+                    new DateTime(
+                        2000,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
+            }
 
             // =====================================
             // إجمالي السيولة الحقيقية
+            // يشمل الرصيد الافتتاحي
             // =====================================
 
             stats.total_cash_balance =
@@ -44,7 +63,25 @@ namespace SultanCups.Services
                         )) ?? 0;
 
             // =====================================
-            // أرباح الفواتير
+            // صافي الوضع المالي الحقيقي
+            // بدون الرصيد الافتتاحي
+            // =====================================
+
+            stats.real_financial_balance =
+                await _context.financial_events
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.event_type != "رصيد افتتاحي")
+                    .SumAsync(x =>
+                        (decimal?)
+                        (
+                            x.direction == "IN"
+                                ? x.amount
+                                : -x.amount
+                        )) ?? 0;
+
+            // =====================================
+            // إجمالي الديون الحالية
             // =====================================
 
             var orders =
@@ -54,8 +91,6 @@ namespace SultanCups.Services
                     .Where(x => !x.is_cancelled)
                     .ToListAsync();
 
-            decimal totalProfit = 0;
-            decimal totalLoss = 0;
             decimal totalDebts = 0;
 
             foreach (var order in orders)
@@ -63,27 +98,6 @@ namespace SultanCups.Services
                 decimal sales =
                     order.Items.Sum(i =>
                         i.unit_price * i.quantity);
-
-                decimal cost =
-                    order.Items.Sum(i =>
-                        i.production_cost * i.quantity);
-
-                decimal commission =
-    order.person_type == "marketer"
-        ? order.Items.Sum(i => i.quantity)
-            * order.commission_per_box
-        : 0;
-
-                decimal profit =
-                    sales
-                    - cost
-                    - commission
-                    - order.discount_total;
-
-                if (profit >= 0)
-                    totalProfit += profit;
-                else
-                    totalLoss += Math.Abs(profit);
 
                 decimal paid =
                     await _context.financial_events
@@ -105,43 +119,41 @@ namespace SultanCups.Services
                     totalDebts += remain;
             }
 
-            stats.total_orders_profit = totalProfit;
-            stats.total_orders_loss = totalLoss;
             stats.total_debts = totalDebts;
 
             // =====================================
-            // الداخل هذا الشهر
+            // إجمالي الداخل منذ آخر جرد
             // =====================================
 
-            stats.monthly_in =
+            stats.total_in =
                 await _context.financial_events
                     .AsNoTracking()
                     .Where(x =>
                         x.direction == "IN"
                         &&
-                        x.event_date >= monthStart)
+                        x.event_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.amount) ?? 0;
 
             // =====================================
-            // الخارج هذا الشهر
+            // إجمالي الخارج منذ آخر جرد
             // =====================================
 
-            stats.monthly_out =
+            stats.total_out =
                 await _context.financial_events
                     .AsNoTracking()
                     .Where(x =>
                         x.direction == "OUT"
                         &&
-                        x.event_date >= monthStart)
+                        x.event_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.amount) ?? 0;
 
             // =====================================
-            // المبيعات المحصلة
+            // إجمالي المبيعات المحصلة
             // =====================================
 
-            stats.monthly_sales_collected =
+            stats.total_sales_collected =
                 await _context.financial_events
                     .AsNoTracking()
                     .Where(x =>
@@ -149,19 +161,19 @@ namespace SultanCups.Services
                         &&
                         x.direction == "IN"
                         &&
-                        x.event_date >= monthStart)
+                        x.event_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.amount) ?? 0;
 
             // =====================================
-            // المشتريات
+            // إجمالي المشتريات
             // =====================================
 
-            stats.monthly_purchases =
+            stats.total_purchases =
                 await _context.purchases
                     .AsNoTracking()
                     .Where(x =>
-                        x.purchase_date >= monthStart)
+                        x.purchase_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)
                         (
@@ -175,14 +187,14 @@ namespace SultanCups.Services
                         )) ?? 0;
 
             // =====================================
-            // السلف
+            // إجمالي السلف
             // =====================================
 
-            stats.monthly_loans =
+            stats.total_loans =
                 await _context.employee_loans
                     .AsNoTracking()
                     .Where(x =>
-                        x.loan_date >= monthStart)
+                        x.loan_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.loan_amount)
                     ?? 0;
@@ -195,7 +207,7 @@ namespace SultanCups.Services
                 await _context.salaries
                     .AsNoTracking()
                     .Where(x =>
-                        x.salary_date >= monthStart)
+                        x.salary_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.paid_amount)
                     ?? 0;
@@ -223,7 +235,9 @@ namespace SultanCups.Services
                     .Where(x =>
                         x.event_type.Contains("عمولة")
                         &&
-                        x.direction == "OUT")
+                        x.direction == "OUT"
+                        &&
+                        x.event_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)x.amount) ?? 0;
 
@@ -240,7 +254,9 @@ namespace SultanCups.Services
                         &&
                         !x.pay_commission_now
                         &&
-                        !x.is_cancelled)
+                        !x.is_cancelled
+                        &&
+                        x.order_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (decimal?)
                         (
@@ -261,32 +277,36 @@ namespace SultanCups.Services
             // إجمالي الإنتاج
             // =====================================
 
-            stats.monthly_production_quantity =
+            stats.total_production_quantity =
                 await _context.production
                     .AsNoTracking()
                     .Where(x =>
-                        x.production_date >= monthStart)
+                        x.production_date >= lastArchiveDate)
                     .SumAsync(x =>
                         (int?)x.box_count)
                     ?? 0;
 
             // =====================================
-            // عدد المرجوعات
+            // عدد عمليات المرجوعات
             // =====================================
 
-            // عدد عمليات الراجع
-            stats.monthly_returns_count =
+            stats.total_returns_count =
                 await _context.returns
                     .AsNoTracking()
                     .CountAsync(x =>
-                        x.return_date >= monthStart);
+                        x.return_date >= lastArchiveDate);
 
-            // إجمالي الصناديق الراجعة
-            stats.monthly_returns_boxes =
+            // =====================================
+            // عدد الصناديق الراجعة
+            // =====================================
+
+            stats.total_returns_boxes =
                 await _context.returns
                     .AsNoTracking()
-                    .Where(x => x.return_date >= monthStart)
-                    .SumAsync(x => (int?)x.returned_quantity)
+                    .Where(x =>
+                        x.return_date >= lastArchiveDate)
+                    .SumAsync(x =>
+                        (int?)x.returned_quantity)
                 ?? 0;
 
             // =====================================
@@ -302,18 +322,21 @@ namespace SultanCups.Services
                         &&
                         !x.is_cancelled
                         &&
-                        x.order_date >= monthStart)
+                        x.order_date >= lastArchiveDate)
                     .GroupBy(x => x.person_id)
                     .Select(g => new
                     {
                         marketer_id = g.Key,
+
                         total_sales =
                             g.Sum(x =>
                                 x.Items.Sum(i =>
                                     i.quantity * i.unit_price)),
+
                         orders_count = g.Count()
                     })
-                    .OrderByDescending(x => x.total_sales)
+                    .OrderByDescending(x =>
+                        x.total_sales)
                     .FirstOrDefaultAsync();
 
             if (bestMarketer != null)
@@ -354,18 +377,21 @@ namespace SultanCups.Services
                         &&
                         !x.is_cancelled
                         &&
-                        x.order_date >= monthStart)
+                        x.order_date >= lastArchiveDate)
                     .GroupBy(x => x.person_id)
                     .Select(g => new
                     {
                         customer_id = g.Key,
+
                         total_sales =
                             g.Sum(x =>
                                 x.Items.Sum(i =>
                                     i.quantity * i.unit_price)),
+
                         orders_count = g.Count()
                     })
-                    .OrderByDescending(x => x.total_sales)
+                    .OrderByDescending(x =>
+                        x.total_sales)
                     .FirstOrDefaultAsync();
 
             if (bestCustomer != null)
@@ -401,7 +427,7 @@ namespace SultanCups.Services
                 await _context.purchases
                     .AsNoTracking()
                     .Where(x =>
-                        x.purchase_date >= monthStart
+                        x.purchase_date >= lastArchiveDate
                         &&
                         x.supplier_id != null)
                     .GroupBy(x => x.supplier_id)
@@ -456,10 +482,12 @@ namespace SultanCups.Services
                     .Select(g => new
                     {
                         product_id = g.Key,
+
                         quantity =
                             g.Sum(x => x.quantity)
                     })
-                    .OrderByDescending(x => x.quantity)
+                    .OrderByDescending(x =>
+                        x.quantity)
                     .FirstOrDefaultAsync();
 
             if (mostSold != null)
@@ -495,10 +523,12 @@ namespace SultanCups.Services
                     .Select(g => new
                     {
                         product_id = g.Key,
+
                         quantity =
                             g.Sum(x => x.box_count)
                     })
-                    .OrderByDescending(x => x.quantity)
+                    .OrderByDescending(x =>
+                        x.quantity)
                     .FirstOrDefaultAsync();
 
             if (mostProduced != null)
@@ -535,7 +565,7 @@ namespace SultanCups.Services
 
             foreach (var box in cashBoxes)
             {
-                decimal monthlyIn =
+                decimal totalIn =
                     await _context.financial_events
                         .AsNoTracking()
                         .Where(x =>
@@ -544,12 +574,12 @@ namespace SultanCups.Services
                             &&
                             x.direction == "IN"
                             &&
-                            x.event_date >= monthStart)
+                            x.event_date >= lastArchiveDate)
                         .SumAsync(x =>
                             (decimal?)x.amount)
                     ?? 0;
 
-                decimal monthlyOut =
+                decimal totalOut =
                     await _context.financial_events
                         .AsNoTracking()
                         .Where(x =>
@@ -558,7 +588,7 @@ namespace SultanCups.Services
                             &&
                             x.direction == "OUT"
                             &&
-                            x.event_date >= monthStart)
+                            x.event_date >= lastArchiveDate)
                         .SumAsync(x =>
                             (decimal?)x.amount)
                     ?? 0;
@@ -589,11 +619,11 @@ namespace SultanCups.Services
                         current_balance =
                             currentBalance,
 
-                        monthly_in =
-                            monthlyIn,
+                        total_in =
+                            totalIn,
 
-                        monthly_out =
-                            monthlyOut
+                        total_out =
+                            totalOut
                     });
             }
 

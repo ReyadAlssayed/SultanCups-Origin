@@ -9,53 +9,50 @@
         // إجمالي السيولة الحقيقية
         public decimal total_cash_balance { get; set; }
 
-        // إجمالي أرباح الفواتير
-        public decimal total_orders_profit { get; set; }
-
-        // إجمالي خسائر الفواتير
-        public decimal total_orders_loss { get; set; }
+        // صافي الوضع المالي الحقيقي الحالي
+        //  كل الداخل (بما في دلك الرصيد الابتدائي)- كل الخارج
+        public decimal real_financial_balance { get; set; }
 
         // إجمالي الديون الحالية
         public decimal total_debts { get; set; }
 
-        // الداخل هذا الشهر
-        public decimal monthly_in { get; set; }
+        // إجمالي الداخل منذ آخر جرد
+        public decimal total_in { get; set; }
 
-        // الخارج هذا الشهر
-        public decimal monthly_out { get; set; }
+        // إجمالي الخارج منذ آخر جرد
+        public decimal total_out { get; set; }
 
-        // المبيعات المحصلة هذا الشهر
-        public decimal monthly_sales_collected { get; set; }
+        // إجمالي المبيعات المحصلة منذ آخر جرد
+        public decimal total_sales_collected { get; set; }
 
-        // المشتريات هذا الشهر
-        public decimal monthly_purchases { get; set; }
+        // إجمالي المشتريات منذ آخر جرد
+        public decimal total_purchases { get; set; }
 
-        // السلف هذا الشهر
-        public decimal monthly_loans { get; set; }
-
-        // الرواتب المدفوعة
+        // إجمالي السلف منذ آخر جرد
+        public decimal total_loans { get; set; }
+        // الرواتب المدفوعة منذ آخر جرد
         public decimal salaries_paid { get; set; }
 
-        // الرواتب المستحقة
+        // الرواتب المستحقة الحالية
         public decimal salaries_remaining { get; set; }
 
-        // العمولات المدفوعة
+        // العمولات المدفوعة منذ آخر جرد
         public decimal commissions_paid { get; set; }
 
-        // العمولات غير المدفوعة
+        // العمولات غير المدفوعة الحالية
         public decimal commissions_unpaid { get; set; }
 
         // عدد الموظفين
         public int employees_count { get; set; }
 
-        // إجمالي الإنتاج هذا الشهر
-        public int monthly_production_quantity { get; set; }
+        // إجمالي الإنتاج منذ آخر جرد
+        public int total_production_quantity { get; set; }
 
-        // عدد المرجوعات هذا الشهر
-        public int monthly_returns_count { get; set; }
+        // عدد عمليات المرجوعات منذ آخر جرد
+        public int total_returns_count { get; set; }
 
-        public int monthly_returns_boxes { get; set; }
-
+        // عدد الصناديق الراجعة منذ آخر جرد
+        public int total_returns_boxes { get; set; }
         // =====================================
         // أفضل العناصر
         // =====================================
@@ -93,9 +90,9 @@
 
         public decimal current_balance { get; set; }
 
-        public decimal monthly_in { get; set; }
+        public decimal total_in { get; set; }
 
-        public decimal monthly_out { get; set; }
+        public decimal total_out { get; set; }
     }
 
     // =========================================

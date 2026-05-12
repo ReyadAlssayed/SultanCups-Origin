@@ -72,16 +72,30 @@
 
                     <h1>لوحة التحكم المالي</h1>
 
-                    <p>إحصائيات حقيقية مباشرة من النظام</p>
+                    <p>
+                        إحصائيات تراكمية حقيقية منذ آخر جرد
+                    </p>
 
                 </div>
 
-                <button class="btn-hide-ui"
-                        @onclick="() => isDataVisible = false">
+                <div class="top-actions">
 
-                    إخفاء البيانات
+                    <button class="btn-hide-ui"
+                            @onclick="() => isDataVisible = false">
 
-                </button>
+                        إخفاء البيانات
+
+                    </button>
+
+                    <button class="btn-archive-ui">
+
+                        تنفيذ جرد وأرشفة
+
+                    </button>
+
+                   
+
+                </div>
 
             </div>
 
@@ -90,7 +104,8 @@
             <div class="summary-grid">
 
                 <div class="mini-card">
-                    <div class="card-icon">🏦</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -103,42 +118,30 @@
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">📈</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            أرباح الفواتير
+                            صافي الوضع المالي الحالي
                         </span>
 
-                        <span class="value green-text">
-                            @Fmt(DashboardStats.total_orders_profit)
-                        </span>
-
-                    </div>
-                </div>
-
-                <div class="mini-card">
-                    <div class="card-icon">📉</div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            خسائر الفواتير
-                        </span>
-
-                        <span class="value red-text">
-                            @Fmt(DashboardStats.total_orders_loss)
+                        <span class="value">
+                            @Fmt(DashboardStats.real_financial_balance)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">🚨</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -151,42 +154,48 @@
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">⬇️</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            الداخل هذا الشهر
+                            إجمالي الداخل
                         </span>
 
                         <span class="value green-text">
-                            @Fmt(DashboardStats.monthly_in)
+                            @Fmt(DashboardStats.total_in)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">⬆️</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            الخارج هذا الشهر
+                            إجمالي الخارج
                         </span>
 
                         <span class="value red-text">
-                            @Fmt(DashboardStats.monthly_out)
+                            @Fmt(DashboardStats.total_out)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">🧾</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -195,46 +204,52 @@
                         </span>
 
                         <span class="value">
-                            @Fmt(DashboardStats.monthly_sales_collected)
+                            @Fmt(DashboardStats.total_sales_collected)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">📦</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            المشتريات هذا الشهر
+                            إجمالي المشتريات
                         </span>
 
                         <span class="value">
-                            @Fmt(DashboardStats.monthly_purchases)
+                            @Fmt(DashboardStats.total_purchases)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">💵</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            السلف هذا الشهر
+                            إجمالي السلف
                         </span>
 
                         <span class="value">
-                            @Fmt(DashboardStats.monthly_loans)
+                            @Fmt(DashboardStats.total_loans)
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">👨‍💼</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -247,26 +262,30 @@
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">🏭</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
                         <span class="label">
-                            الإنتاج هذا الشهر
+                            إجمالي الإنتاج
                         </span>
 
                         <span class="value">
-                            @DashboardStats.monthly_production_quantity
+                            @DashboardStats.total_production_quantity
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
-                    <div class="card-icon">↩️</div>
+
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -275,15 +294,16 @@
                         </span>
 
                         <span class="value">
-                            @DashboardStats.monthly_returns_count
+                            @DashboardStats.total_returns_count
                         </span>
 
                     </div>
+
                 </div>
 
                 <div class="mini-card">
 
-                    <div class="card-icon">📦</div>
+                    <div class="card-icon"></div>
 
                     <div class="card-data">
 
@@ -292,7 +312,7 @@
                         </span>
 
                         <span class="value">
-                            @DashboardStats.monthly_returns_boxes
+                            @DashboardStats.total_returns_boxes
                         </span>
 
                     </div>
@@ -305,7 +325,7 @@
 
             <div class="stats-section">
 
-                <h3>أفضل العناصر هذا الشهر</h3>
+                <h3>أفضل العناصر</h3>
 
                 <div class="top-stats-grid">
 
@@ -426,8 +446,8 @@
 
                                 <th>الخزنة</th>
                                 <th>الرصيد الحالي</th>
-                                <th>الدخل الشهري</th>
-                                <th>الخروج الشهري</th>
+                                <th>إجمالي الداخل</th>
+                                <th>إجمالي الخارج</th>
 
                             </tr>
 
@@ -446,11 +466,11 @@
                                     </td>
 
                                     <td class="green-text">
-                                        @Fmt(item.monthly_in)
+                                        @Fmt(item.total_in)
                                     </td>
 
                                     <td class="red-text">
-                                        @Fmt(item.monthly_out)
+                                        @Fmt(item.total_out)
                                     </td>
 
                                 </tr>
