@@ -687,15 +687,15 @@
     }
 
         .pay-dialog .money-head img {
-            width: 36px;
-            height: 36px;
+            width: 90px;
+            height: 60px;
             border-radius: 8px;
             object-fit: cover;
         }
 
         .pay-dialog .money-head h3 {
             margin: 0;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 900;
             text-align: center;
         }

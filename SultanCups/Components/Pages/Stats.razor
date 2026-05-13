@@ -584,65 +584,119 @@
 
 @if (showArchiveDialog)
 {
-    <div class="pro-dialog-overlay">
+    <div class="rm-dialog-overlay">
 
-        <div class="sal-dialog-box archive-dialog">
+        <div class="rm-dialog-box archive-dialog-pro">
 
-            <h3>
-                تأكيد تنفيذ الجرد والأرشفة
-            </h3>
-
-            <p>
-                تأكد من:
-                <br />
-                • أرشفة ملفات Excel
-                <br />
-                • أخذ نسخة احتياطية
-                <br />
-                • تصفية جميع الحسابات
-                <br /><br />
-                سيتم بدء دورة إحصائية جديدة بعد الجرد.
-            </p>
-
-            <div class="archive-dates-box">
-
-                <div>
-
-                    <span>من تاريخ:</span>
-
-                    <strong>
-                        @archiveFromDate
-                    </strong>
-
-                </div>
-
-                <div>
-
-                    <span>إلى تاريخ:</span>
-
-                    <strong>
-                        @archiveToDate
-                    </strong>
-
-                </div>
-
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
             </div>
 
-            <div class="pro-dialog-actions">
+            <div class="rm-dialog-body">
 
-                <button class="btn-cancel"
-                        @onclick="() => showArchiveDialog = false">
+                <div class="money-head archive-head">
 
-                    إلغاء
+                    <h3 class="archive-title">
+                        تنفيذ الجرد والأرشفة
+                    </h3>
 
-                </button>
+                    <img class="archive-logo"
+                         src="images/Archived.png" />
 
-                <button class="btn-save"
-                        @onclick="ConfirmArchive">
+                </div>
 
-                    تنفيذ الأرشفة
+                <div class="archive-steps">
 
-                </button>
+                    <div class="archive-step">
+
+                        <div class="step-circle">1</div>
+
+                        <div class="step-text">
+                            أرشفة ملفات Excel
+                        </div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-circle">2</div>
+
+                        <div class="step-text">
+                            أخذ نسخة احتياطية
+                        </div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-circle">3</div>
+
+                        <div class="step-text">
+                            تصفية جميع الحسابات
+                        </div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-circle">4</div>
+
+                        <div class="step-text">
+                            ترحيل آخر تكلفة إنتاج إلى المخزون
+                            كقيمة مرجعية جديدة بعد الجرد
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="archive-note">
+
+                    سيتم بدء دورة إحصائية جديدة بعد الجرد.
+
+                </div>
+
+                <div class="archive-dates-box">
+
+                    <div>
+
+                        <span>من تاريخ:</span>
+
+                        <strong>
+                            @archiveFromDate
+                        </strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>إلى تاريخ:</span>
+
+                        <strong>
+                            @archiveToDate
+                        </strong>
+
+                    </div>
+
+                </div>
+
+                <div class="pay-actions1">
+
+                    <button class="pay-save1"
+                            @onclick="ConfirmArchive">
+
+                        تنفيذ الأرشفة
+
+                    </button>
+
+                    <button class="pay-cancel1"
+                            @onclick="() => showArchiveDialog = false">
+
+                        إلغاء
+
+                    </button>
+
+                </div>
 
             </div>
 
