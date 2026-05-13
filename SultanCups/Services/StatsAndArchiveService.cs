@@ -214,19 +214,7 @@ namespace SultanCups.Services
              (x.loan_amount - x.repaid_amount))
      ?? 0;
 
-            // =====================================
-            // الرواتب المدفوعة
-            // =====================================
-
-            stats.salaries_paid =
-                await _context.salaries
-                    .AsNoTracking()
-                    .Where(x =>
-                        x.salary_date >= lastArchiveDate)
-                    .SumAsync(x =>
-                        (decimal?)x.paid_amount)
-                    ?? 0;
-
+           
             // =====================================
             // الرواتب المستحقة
             // =====================================
@@ -240,28 +228,7 @@ namespace SultanCups.Services
                         (x.amount - x.paid_amount))
                     ?? 0;
 
-            // =====================================
-            // العمولات المدفوعة
-            // =====================================
-
-            stats.commissions_paid =
-                await _context.orders
-                    .AsNoTracking()
-                    .Include(x => x.Items)
-                    .Where(x =>
-                        x.person_type == "marketer"
-                        &&
-                        x.pay_commission_now
-                        &&
-                        !x.is_cancelled
-                        &&
-                        x.order_date >= lastArchiveDate)
-                    .SumAsync(x =>
-                        (decimal?)
-                        (
-                            x.Items.Sum(i => i.quantity)
-                            * x.commission_per_box
-                        )) ?? 0;
+           
 
             // =====================================
             // العمولات غير المدفوعة
@@ -734,14 +701,9 @@ stats.loans_remaining > 0
                     total_loans =
                         stats.total_loans,
 
-                    salaries_paid =
-                        stats.salaries_paid,
-
                     salaries_remaining =
                         stats.salaries_remaining,
 
-                    commissions_paid =
-                        stats.commissions_paid,
 
                     commissions_unpaid =
                         stats.commissions_unpaid,

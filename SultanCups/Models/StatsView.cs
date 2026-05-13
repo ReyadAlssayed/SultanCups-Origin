@@ -33,14 +33,9 @@
 
         // السلف غير المسددة الحالية
         public decimal loans_remaining { get; set; }
-        // الرواتب المدفوعة منذ آخر جرد
-        public decimal salaries_paid { get; set; }
 
         // الرواتب المستحقة الحالية
         public decimal salaries_remaining { get; set; }
-
-        // العمولات المدفوعة منذ آخر جرد
-        public decimal commissions_paid { get; set; }
 
         // العمولات غير المدفوعة الحالية
         public decimal commissions_unpaid { get; set; }

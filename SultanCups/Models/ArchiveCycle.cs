@@ -33,11 +33,7 @@ namespace SultanCups.Models
 
         public decimal total_loans { get; set; }
 
-        public decimal salaries_paid { get; set; }
-
         public decimal salaries_remaining { get; set; }
-
-        public decimal commissions_paid { get; set; }
 
         public decimal commissions_unpaid { get; set; }
 

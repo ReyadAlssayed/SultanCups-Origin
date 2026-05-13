@@ -388,11 +388,27 @@ window.printStatsCard = function () {
                 }
 
                 .top-stats-grid{
-                    display:grid !important;
-                    grid-template-columns:1fr 1fr !important;
-                    gap:12px !important;
-                    padding:14px !important;
-                }
+    display:flex !important;
+    flex-wrap:wrap !important;
+    gap:12px !important;
+    padding:14px !important;
+}
+
+.top-stat-card{
+    width:calc(50% - 6px) !important;
+}
+
+.stats-section{
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+}
+
+.top-stats-grid,
+.stats-table-wrapper,
+.summary-grid{
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+}
 
                 .top-stat-card{
                     min-height:auto !important;
@@ -502,8 +518,6 @@ window.printStatsCard = function () {
 };
 
 
-//
-
 window.printArchiveDetails = function () {
 
     const content =
@@ -515,8 +529,28 @@ window.printArchiveDetails = function () {
         .map(x => x.outerHTML)
         .join('');
 
-    const cards =
-        document.querySelectorAll('.archive-detail-card strong');
+    const getCardValue = (labelText) => {
+
+        const cards =
+            document.querySelectorAll('.archive-detail-card');
+
+        for (const card of cards) {
+
+            const label =
+                card.querySelector('span')
+                    ?.innerText
+                    ?.trim();
+
+            if (label === labelText) {
+
+                return card
+                    .querySelector('strong')
+                    ?.innerText ?? "-";
+            }
+        }
+
+        return "-";
+    };
 
     const win =
         window.open('', '', 'width=1000,height=900');
@@ -676,111 +710,101 @@ window.printArchiveDetails = function () {
 
            <div class="official-text">
 
-    إلى السيد / مدير مصنع السلطان للأكواب الورقية المحترم
+                إلى السيد / مدير مصنع السلطان للأكواب الورقية المحترم
 
-    <br><br>
+                <br><br>
 
-    السلام عليكم ورحمة الله وبركاته،،،
+                السلام عليكم ورحمة الله وبركاته،،،
 
-    <br><br>
+                <br><br>
 
-    نفيدكم علمًا بأنه تم تنفيذ عملية الجرد
-    والأرشفة للدورة المالية الحالية بنجاح،
-    وذلك بعد مراجعة واعتماد كافة البيانات
-    المالية والإدارية المسجلة داخل النظام
-    حتى لحظة إغلاق الدورة الحالية.
+                نفيدكم علمًا بأنه تم تنفيذ عملية الجرد
+                والأرشفة للدورة المالية الحالية بنجاح،
+                وذلك بعد مراجعة واعتماد كافة البيانات
+                المالية والإدارية المسجلة داخل النظام
+                حتى لحظة إغلاق الدورة الحالية.
 
-    <br><br>
+                <br><br>
 
-    وقد أظهرت نتائج الجرد أن إجمالي السيولة
-    الفعلية داخل الخزنات بلغ:
+                وقد أظهرت نتائج الجرد أن إجمالي السيولة
+                الفعلية داخل الخزنات بلغ:
 
-    <strong>${cards[2]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي السيولة")}</strong>
 
-    بينما بلغ صافي الوضع المالي الحالي:
+                بينما بلغ صافي الوضع المالي الحالي:
 
-    <strong>${cards[3]?.innerText}</strong>
+                <strong>${getCardValue("صافي الوضع المالي الحالي")}</strong>
 
-    <br><br>
+                <br><br>
 
-    كما سجلت حركة التدفقات المالية خلال
-    الدورة الحالية إجمالي داخل قدره:
+                كما سجلت حركة التدفقات المالية خلال
+                الدورة الحالية إجمالي داخل قدره:
 
-    <strong>${cards[4]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي الداخل")}</strong>
 
-    في حين بلغ إجمالي الخارج:
+                في حين بلغ إجمالي الخارج:
 
-    <strong>${cards[5]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي الخارج")}</strong>
 
-    أما إجمالي الديون القائمة حتى لحظة
-    الأرشفة فقد بلغ:
+                أما إجمالي الديون القائمة حتى لحظة
+                الأرشفة فقد بلغ:
 
-    <strong>${cards[6]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي الديون")}</strong>
 
-    <br><br>
+                <br><br>
 
-    وفيما يتعلق بالنشاط التجاري والتشغيلي،
-    فقد بلغت قيمة المبيعات المحصلة:
+                وفيما يتعلق بالنشاط التجاري والتشغيلي،
+                فقد بلغت قيمة المبيعات المحصلة:
 
-    <strong>${cards[7]?.innerText}</strong>
+                <strong>${getCardValue("المبيعات المحصلة")}</strong>
 
-    بينما بلغت قيمة المشتريات المسجلة:
+                بينما بلغت قيمة المشتريات المسجلة:
 
-    <strong>${cards[8]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي المشتريات")}</strong>
 
-    كما سجل النظام إجمالي سلف مالية بقيمة:
+                كما سجل النظام إجمالي سلف مالية بقيمة:
 
-    <strong>${cards[9]?.innerText}</strong>
+                <strong>${getCardValue("إجمالي السلف")}</strong>
 
-    <br><br>
+                <br><br>
 
-    وعلى صعيد الالتزامات المالية الخاصة
-    بالموظفين والمسوقين، فقد بلغت قيمة
-    الرواتب المصروفة:
+                بينما بلغت الرواتب المستحقة غير
+                المسددة:
 
-    <strong>${cards[10]?.innerText}</strong>
+                <strong>${getCardValue("الرواتب المستحقة")}</strong>
 
-    بينما بلغت الرواتب المستحقة غير
-    المسددة:
+                كما بلغت العمولات غير المصروفة:
 
-    <strong>${cards[11]?.innerText}</strong>
+                <strong>${getCardValue("العمولات غير المدفوعة")}</strong>
 
-    كما بلغت العمولات المصروفة للمسوقين:
+                <br><br>
 
-    <strong>${cards[12]?.innerText}</strong>
+                وأظهرت الإحصائيات التشغيلية أن أفضل
+                مسوق خلال الدورة الحالية هو:
 
-    في حين بلغت العمولات غير المصروفة:
+                <strong>${getCardValue("أفضل مسوق")}</strong>
 
-    <strong>${cards[13]?.innerText}</strong>
+                بينما كان المنتج الأعلى مبيعًا هو:
 
-    <br><br>
+                <strong>${getCardValue("الأكثر مبيعًا")}</strong>
 
-    وأظهرت الإحصائيات التشغيلية أن أفضل
-    مسوق خلال الدورة الحالية هو:
+                <br><br>
 
-    <strong>${cards[18]?.innerText}</strong>
+                وبناءً على ما سبق، فقد تم اعتماد هذه
+                البيانات رسميًا كمرجع نهائي للدورة
+                المؤرشفة الحالية، وحفظها ضمن نظام
+                الأرشفة المركزي الخاص بالمصنع
+                للرجوع إليها عند الحاجة.
 
-    بينما كان المنتج الأعلى مبيعًا هو:
+                <br><br>
 
-    <strong>${cards[21]?.innerText}</strong>
+                وتفضلوا بقبول فائق الاحترام والتقدير،،،
 
-    <br><br>
+                <br><br>
 
-    وبناءً على ما سبق، فقد تم اعتماد هذه
-    البيانات رسميًا كمرجع نهائي للدورة
-    المؤرشفة الحالية، وحفظها ضمن نظام
-    الأرشفة المركزي الخاص بالمصنع
-    للرجوع إليها عند الحاجة.
+                فريق العمل — نظام الحداثة لإدارة المصانع
 
-    <br><br>
-
-    وتفضلوا بقبول فائق الاحترام والتقدير،،،
-
-    <br><br>
-
-    فريق العمل — نظام الحداثة لإدارة المصانع
-
-</div>
+            </div>
 
             ${content}
 
@@ -829,4 +853,3 @@ window.printArchiveDetails = function () {
 
     }, 700);
 };
-
