@@ -5,6 +5,8 @@
 .stats-page-container {
     min-height: 100vh;
     padding: 26px;
+    position: relative;
+    overflow: hidden;
     overflow-x: hidden;
     font-family: "Cairo", sans-serif;
     background: linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);
@@ -206,11 +208,11 @@
     }
 
     .card-data .value {
-        font-size: 36px;
-        font-weight: 900;
-        line-height: 1.1;
+        font-size: 25px;
+        font-weight: 700;
+        line-height: 1.2;
         color: #0f172a;
-        letter-spacing: -.5px;
+        letter-spacing: 0;
     }
 
 /* =========================================
@@ -361,7 +363,11 @@
 
 .privacy-lock-zone {
     position: absolute;
-    inset: 0;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    border-radius: 26px;
     z-index: 5000;
     display: flex;
     justify-content: center;

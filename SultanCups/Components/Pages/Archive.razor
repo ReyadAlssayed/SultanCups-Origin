@@ -7,472 +7,489 @@
 
 @inject AppDbContext Db
 @inject IJSRuntime JS
+@inject NavigationManager Nav
 
-<div class="emp-page">
+<link href="css/Archive.css" rel="stylesheet" />
+
+<div class="archive-page">
 
     <div class="emp-topbar">
 
-        <div></div>
+        <button type="button"
+                class="emp-add-btn"
+                @onclick='() => Nav.NavigateTo("/Stats")'>
+
+            رجوع
+
+        </button>
 
         <h2 class="emp-title-center">
             سجل الأرشفة والجرد
         </h2>
 
-        <button class="pro-btn-excel"
-                @onclick="RefreshArchives">
-
-            تحديث
-
-        </button>
+        <div style="width:120px;"></div>
 
     </div>
 
-    <div class="emp-card">
+    @if (Archives == null)
+    {
+        <div class="empty-state">
 
-        <div class="emp-table-wrap">
+            <img src="images/Empty.jpg"
+                 class="empty-img" />
 
-            <table class="emp-table">
-
-                <thead>
-
-                    <tr>
-
-                        <th>#</th>
-
-                        <th>تاريخ الجرد</th>
-
-                        <th>إجمالي السيولة</th>
-
-                        <th>إجمالي الداخل</th>
-
-                        <th>إجمالي الخارج</th>
-
-                        <th>الديون</th>
-
-                        <th>الإجراءات</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    @if (Archives == null)
-                    {
-                        <tr>
-
-                            <td colspan="7">
-
-                                جاري التحميل...
-
-                            </td>
-
-                        </tr>
-                    }
-                    else if (Archives.Count == 0)
-                    {
-                        <tr>
-
-                            <td colspan="7" class="st-empty-text">
-
-                                <div class="empty-state">
-
-                                    <img src="images/Empty.jpg"
-                                         class="empty-img" />
-
-                                    <span>
-                                        لا توجد سجلات أرشفة
-                                    </span>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in Archives)
-                        {
-                            <tr>
-
-                                <td>
-                                    @item.archive_id
-                                </td>
-
-                                <td>
-
-                                    @item.archive_date
-                                    .ToLocalTime()
-                                    .ToString("yyyy/MM/dd hh:mm tt")
-
-                                </td>
-
-                                <td>
-                                    @Fmt(item.total_cash_balance)
-                                </td>
-
-                                <td class="green-text">
-                                    @Fmt(item.total_in)
-                                </td>
-
-                                <td class="red-text">
-                                    @Fmt(item.total_out)
-                                </td>
-
-                                <td>
-                                    @Fmt(item.total_debts)
-                                </td>
-
-                                <td class="emp-actions">
-
-                                    <button type="button"
-                                            class="emp-edit"
-                                            @onclick="() => OpenDetails(item)">
-
-                                        التفاصيل
-
-                                    </button>
-
-                                </td>
-
-                            </tr>
-                        }
-                    }
-
-                </tbody>
-
-            </table>
+            <span>
+                لا توجد سجلات أرشفة
+            </span>
 
         </div>
+    }
+    else if (Archives.Count == 0)
+    {
+        <div class="archive-empty">
 
-    </div>
+            لا توجد سجلات أرشفة
+
+        </div>
+    }
+    else
+    {
+        <div class="archive-cards-grid">
+
+            @foreach (var item in Archives)
+            {
+                <div class="archive-card">
+
+                    <div class="archive-card-top">
+
+                        <div>
+
+                            <span class="archive-label">
+                                رقم الأرشيف
+                            </span>
+
+                            <strong>
+                                #@item.archive_id
+                            </strong>
+
+                        </div>
+
+                        <div class="archive-status">
+
+                            مؤرشف
+
+                        </div>
+
+                    </div>
+
+                    <div class="archive-admin-box">
+
+                        <span class="archive-admin-label">
+                            تم تنفيذ الأرشفة بواسطة
+                        </span>
+
+                        <strong class="archive-admin-name">
+
+                            @(item.archived_by != null
+                            && AdminsNames.ContainsKey(item.archived_by.Value)
+
+                                ? AdminsNames[item.archived_by.Value]
+
+                                : "غير معروف")
+
+                        </strong>
+
+                    </div>
+
+                    <div class="archive-main-stats">
+
+                        <div class="archive-stat">
+
+                            <span>
+                                إجمالي السيولة
+                            </span>
+
+                            <strong class="blue-text">
+                                @Fmt(item.total_cash_balance)
+                            </strong>
+
+                        </div>
+
+                        <div class="archive-stat">
+
+                            <span>
+                                صافي الوضع المالي
+                            </span>
+
+                            <strong class="green-text">
+                                @Fmt(item.real_financial_balance)
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="archive-mini-grid">
+
+                        <div class="archive-mini-item">
+
+                            <span>
+                                تاريخ الجرد
+                            </span>
+
+                            <strong>
+
+                                @item.archive_date.ToString("yyyy/MM/dd")
+
+                            </strong>
+
+                        </div>
+
+                        <div class="archive-mini-item">
+
+                            <span>
+                                وقت الأرشفة
+                            </span>
+
+                            <strong>
+
+                                @item.archive_date.ToString("hh:mm tt")
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                    <div class="archive-card-actions">
+
+                        <button class="archive-details-btn"
+                                @onclick="() => OpenDetails(item)">
+
+                            التفاصيل
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
 
 </div>
 
 @if (SelectedArchive != null)
 {
-    <div class="emp-dialog-overlay">
+    <div class="archive-dialog-overlay">
 
-        <div class="emp-dialog-box archive-dialog-box">
+        <div class="archive-dialog archive-dialog-box">
 
-            <div class="emp-dialog-top-image">
+            <div class="archive-dialog-header">
 
-                <img src="images/background.png" />
+                <div>
+
+                    <h2>
+                        تفاصيل دورة الجرد
+                    </h2>
+
+                    <p>
+
+                        @(SelectedArchive.archive_date
+                            .ToLocalTime()
+                            .ToString("yyyy/MM/dd"))
+
+                        —
+
+                        @(SelectedArchive.archive_date
+                            .ToLocalTime()
+                            .ToString("hh:mm tt"))
+
+                    </p>
+
+                </div>
+
+                <button class="archive-close-btn"
+                        @onclick="CloseDialog">
+
+                    ✕
+
+                </button>
 
             </div>
 
-            <div class="emp-dialog-body">
+            <div class="archive-details-grid">
 
-                <h3 class="emp-dialog-title">
+                <div class="archive-detail-card">
 
-                    تفاصيل دورة الجرد
+                    <span>
+                        إجمالي السيولة
+                    </span>
 
-                </h3>
-
-                <div class="archive-details-grid">
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            رقم الأرشيف
-                        </span>
-
-                        <strong>
-                            @SelectedArchive.archive_id
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            تاريخ الأرشفة
-                        </span>
-
-                        <strong>
-
-                            @SelectedArchive.archive_date
-                            .ToLocalTime()
-                            .ToString("yyyy/MM/dd hh:mm tt")
-
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            إجمالي السيولة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.total_cash_balance)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            صافي الوضع المالي
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.real_financial_balance)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            إجمالي الداخل
-                        </span>
-
-                        <strong class="green-text">
-                            @Fmt(SelectedArchive.total_in)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            إجمالي الخارج
-                        </span>
-
-                        <strong class="red-text">
-                            @Fmt(SelectedArchive.total_out)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الديون
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.total_debts)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            المبيعات المحصلة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.total_sales_collected)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            المشتريات
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.total_purchases)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            السلف
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.total_loans)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الرواتب المدفوعة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.salaries_paid)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الرواتب المستحقة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.salaries_remaining)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            العمولات المدفوعة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.commissions_paid)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            العمولات المستحقة
-                        </span>
-
-                        <strong>
-                            @Fmt(SelectedArchive.commissions_unpaid)
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            عدد الموظفين
-                        </span>
-
-                        <strong>
-                            @SelectedArchive.employees_count
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            إجمالي الإنتاج
-                        </span>
-
-                        <strong>
-                            @SelectedArchive.total_production_quantity
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            عدد المرجوعات
-                        </span>
-
-                        <strong>
-                            @SelectedArchive.total_returns_count
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الصناديق الراجعة
-                        </span>
-
-                        <strong>
-                            @SelectedArchive.total_returns_boxes
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            أفضل مسوق
-                        </span>
-
-                        <strong>
-                            @(SelectedArchive.best_marketer_name ?? "-")
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            أفضل زبون
-                        </span>
-
-                        <strong>
-                            @(SelectedArchive.best_customer_name ?? "-")
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            أفضل مورد
-                        </span>
-
-                        <strong>
-                            @(SelectedArchive.best_supplier_name ?? "-")
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الأكثر مبيعًا
-                        </span>
-
-                        <strong>
-                            @(SelectedArchive.most_sold_product_name ?? "-")
-                        </strong>
-
-                    </div>
-
-                    <div class="archive-detail-card">
-
-                        <span>
-                            الأكثر إنتاجًا
-                        </span>
-
-                        <strong>
-                            @(SelectedArchive.most_produced_product_name ?? "-")
-                        </strong>
-
-                    </div>
+                    <strong>
+                        @Fmt(SelectedArchive.total_cash_balance)
+                    </strong>
 
                 </div>
 
-                <div class="emp-dialog-actions">
+                <div class="archive-detail-card">
 
-                    <button type="button"
-                            class="emp-save"
-                            @onclick="PrintArchive">
+                    <span>
+                        صافي الوضع المالي
+                    </span>
 
-                        طباعة PDF
-
-                    </button>
-
-                    <button type="button"
-                            class="emp-cancel"
-                            @onclick="CloseDialog">
-
-                        إغلاق
-
-                    </button>
+                    <strong>
+                        @Fmt(SelectedArchive.real_financial_balance)
+                    </strong>
 
                 </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        إجمالي الداخل
+                    </span>
+
+                    <strong class="green-text">
+                        @Fmt(SelectedArchive.total_in)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        إجمالي الخارج
+                    </span>
+
+                    <strong class="red-text">
+                        @Fmt(SelectedArchive.total_out)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        إجمالي الديون
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.total_debts)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        المبيعات المحصلة
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.total_sales_collected)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        المشتريات
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.total_purchases)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        السلف
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.total_loans)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        الرواتب المدفوعة
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.salaries_paid)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        الرواتب المستحقة
+                    </span>
+
+                    <strong class="red-text">
+                        @Fmt(SelectedArchive.salaries_remaining)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        العمولات المدفوعة
+                    </span>
+
+                    <strong>
+                        @Fmt(SelectedArchive.commissions_paid)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        العمولات غير المدفوعة
+                    </span>
+
+                    <strong class="red-text">
+                        @Fmt(SelectedArchive.commissions_unpaid)
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        عدد الموظفين
+                    </span>
+
+                    <strong>
+                        @SelectedArchive.employees_count
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        إجمالي الإنتاج
+                    </span>
+
+                    <strong>
+                        @SelectedArchive.total_production_quantity
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        عدد المرجوعات
+                    </span>
+
+                    <strong>
+                        @SelectedArchive.total_returns_count
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        الصناديق الراجعة
+                    </span>
+
+                    <strong>
+                        @SelectedArchive.total_returns_boxes
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        أفضل مسوق
+                    </span>
+
+                    <strong>
+                        @(SelectedArchive.best_marketer_name ?? "-")
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        أفضل زبون
+                    </span>
+
+                    <strong>
+                        @(SelectedArchive.best_customer_name ?? "-")
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        أفضل مورد
+                    </span>
+
+                    <strong>
+                        @(SelectedArchive.best_supplier_name ?? "-")
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        الأكثر مبيعًا
+                    </span>
+
+                    <strong>
+                        @(SelectedArchive.most_sold_product_name ?? "-")
+                    </strong>
+
+                </div>
+
+                <div class="archive-detail-card">
+
+                    <span>
+                        الأكثر إنتاجًا
+                    </span>
+
+                    <strong>
+                        @(SelectedArchive.most_produced_product_name ?? "-")
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="archive-dialog-actions">
+
+                <button class="archive-print-btn"
+                        @onclick="PrintArchive">
+
+                    كتابة تقرير جاهز
+
+                </button>
+
+                <button class="archive-cancel-btn"
+                        @onclick="CloseDialog">
+
+                    إغلاق
+
+                </button>
 
             </div>
 
@@ -486,6 +503,7 @@
     List<ArchiveCycle> Archives = new();
 
     ArchiveCycle? SelectedArchive;
+    Dictionary<int, string> AdminsNames = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -499,6 +517,14 @@
                 .AsNoTracking()
                 .OrderByDescending(x => x.archive_id)
                 .ToListAsync();
+
+        AdminsNames =
+            await Db.admins
+                .AsNoTracking()
+                .ToDictionaryAsync(
+                    x => x.admin_id,
+                    x => x.full_name
+                );
     }
 
     void OpenDetails(ArchiveCycle item)

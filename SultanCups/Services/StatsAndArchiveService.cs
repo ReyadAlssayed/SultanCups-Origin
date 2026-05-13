@@ -82,6 +82,7 @@ namespace SultanCups.Services
 
             // =====================================
             // إجمالي الديون الحالية
+            // ديون الفواتير فقط
             // =====================================
 
             var orders =
@@ -104,12 +105,12 @@ namespace SultanCups.Services
                         .Where(x =>
                             x.ref_table == "orders"
                             &&
-                            x.ref_id == order.order_id)
+                            x.ref_id == order.order_id
+                            &&
+                            x.direction == "IN")
                         .SumAsync(x =>
-                            x.direction == "IN"
-                                ? (decimal?)x.amount
-                                : -(decimal?)x.amount
-                        ) ?? 0;
+                            (decimal?)x.amount)
+                        ?? 0;
 
                 decimal remain =
                     (sales - order.discount_total)
@@ -244,16 +245,23 @@ namespace SultanCups.Services
             // =====================================
 
             stats.commissions_paid =
-                await _context.financial_events
+                await _context.orders
                     .AsNoTracking()
+                    .Include(x => x.Items)
                     .Where(x =>
-                        x.event_type.Contains("عمولة")
+                        x.person_type == "marketer"
                         &&
-                        x.direction == "OUT"
+                        x.pay_commission_now
                         &&
-                        x.event_date >= lastArchiveDate)
+                        !x.is_cancelled
+                        &&
+                        x.order_date >= lastArchiveDate)
                     .SumAsync(x =>
-                        (decimal?)x.amount) ?? 0;
+                        (decimal?)
+                        (
+                            x.Items.Sum(i => i.quantity)
+                            * x.commission_per_box
+                        )) ?? 0;
 
             // =====================================
             // العمولات غير المدفوعة

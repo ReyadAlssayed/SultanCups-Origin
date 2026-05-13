@@ -77,16 +77,16 @@
                         إحصائيات تراكمية حقيقية منذ آخر جرد
                     </p>
 
-                </div>
-
-                <div class="top-actions">
-
                     <button class="btn-hide-ui"
                             @onclick="() => isDataVisible = false">
 
                         إخفاء البيانات
 
                     </button>
+
+                </div>
+
+                <div class="top-actions">
 
                     <button class="btn-archive-ui"
                             @onclick="OpenArchiveDialog">
@@ -268,6 +268,79 @@
 
                         <span class="value red-text">
                             @Fmt(DashboardStats.loans_remaining)
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الرواتب المدفوعة
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.salaries_paid)
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            الرواتب المستحقة
+                        </span>
+
+                        <span class="value red-text">
+                            @Fmt(DashboardStats.salaries_remaining)
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            العمولات المدفوعة
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.commissions_paid)
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            العمولات غير المدفوعة
+                        </span>
+
+                        <span class="value red-text">
+                            @Fmt(DashboardStats.commissions_unpaid)
                         </span>
 
                     </div>
