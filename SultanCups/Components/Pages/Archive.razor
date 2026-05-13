@@ -138,9 +138,9 @@
                             </span>
 
                             <strong>
-
-                                @item.archive_date.ToString("yyyy/MM/dd")
-
+                                @(item.archive_date
+                                    .ToLocalTime()
+                                    .ToString("yyyy/MM/dd"))
                             </strong>
 
                         </div>
@@ -152,9 +152,9 @@
                             </span>
 
                             <strong>
-
-                                @item.archive_date.ToString("hh:mm tt")
-
+                                @(item.archive_date
+                                    .ToLocalTime()
+                                    .ToString("hh:mm tt"))
                             </strong>
 
                         </div>
