@@ -1,0 +1,172 @@
+﻿@page "/MainPage"
+
+<style>
+
+    .mainpage-wrap {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+    }
+
+    .mainpage-card {
+        width: 100%;
+        max-width: 760px;
+        padding: 55px 45px;
+        border-radius: 34px;
+        background: linear-gradient(180deg,#ffffff,#f8fafc);
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        box-shadow: 0 25px 60px rgba(15,23,42,.06);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .mainpage-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg,#2563eb,#6366f1);
+        }
+
+    .main-logo {
+        width: 150px;
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 18px;
+    }
+
+    .mainpage-card h1 {
+        margin: 0;
+        font-size: 42px;
+        font-weight: 900;
+        color: #0f172a;
+    }
+
+    .main-desc {
+        margin-top: 12px;
+        font-size: 15px;
+        color: #64748b;
+        font-weight: 700;
+    }
+
+    .verse-box {
+        margin-top: 38px;
+        padding: 30px 24px;
+        border-radius: 26px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+    .verse-line {
+        width: 80px;
+        height: 4px;
+        margin: auto auto 20px;
+        border-radius: 50px;
+        background: linear-gradient(90deg,#2563eb,#6366f1);
+    }
+
+    .verse-box p {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 2;
+        color: #0f172a;
+    }
+
+    .verse-box span {
+        display: block;
+        margin-top: 16px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .hadith-box {
+        margin-top: 22px;
+        padding: 22px;
+        border-radius: 22px;
+        background: linear-gradient(135deg,#eff6ff,#eef2ff);
+        border: 1px solid #dbeafe;
+    }
+
+        .hadith-box p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e3a8a;
+            line-height: 2;
+        }
+
+    .main-footer {
+        margin-top: 40px;
+        font-size: 15px;
+        font-weight: 900;
+        color: #6366f1;
+        letter-spacing: .5px;
+    }
+
+    @@media (max-width:700px) {
+
+        .mainpage-card {
+            padding: 40px 22px;
+        }
+
+            .mainpage-card h1 {
+                font-size: 30px;
+            }
+
+        .verse-box p {
+            font-size: 22px;
+        }
+
+        .hadith-box p {
+            font-size: 16px;
+        }
+
+        .main-logo {
+            width: 120px;
+        }
+    }
+
+</style>
+
+<div class="mainpage-wrap">
+
+    <div class="mainpage-card">
+
+        <div class="verse-box">
+
+            <div class="verse-line"></div>
+
+            <p>
+                ﴿ وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ ﴾
+            </p>
+
+            <span>
+                سورة التوبة - الآية 105
+            </span>
+
+        </div>
+
+        <div class="hadith-box">
+
+            <p>
+                " إن الله يحب إذا عمل أحدكم عملاً أن يتقنه "
+            </p>
+
+        </div>
+
+        <div class="main-footer">
+
+            الحداثة للأنظمة الرقمية
+
+        </div>
+
+    </div>
+
+</div>
