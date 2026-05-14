@@ -79,6 +79,10 @@
                         إحصائيات تراكمية حقيقية منذ آخر جرد
                     </p>
 
+                    <small class="stats-note">
+                        تساعد في المتابعة المالية العامة وليست بديلاً عن المراجعة المحاسبية التفصيلية.
+                    </small>
+
                     <button class="btn-hide-ui"
                             @onclick="() => isDataVisible = false">
 
@@ -90,22 +94,28 @@
 
                 <div class="top-actions">
 
-                    <button class="btn-archive-ui"
-                            @onclick="OpenArchiveDialog">
+                    @if (
+       Session.Role == "Admin1"
+       &&
+       Session.FullName == "مطور النظام"
+       &&
+       Session.Phone == "0910772372"
+   )
+                    {
+                        <button class="btn-archive-ui"
+                                @onclick="OpenArchiveDialog">
 
-                        تنفيذ جرد وأرشفة
+                            تنفيذ جرد وأرشفة
 
-                    </button>
+                        </button>
 
-                    <button class="btn-archive-ui"
-                            @onclick="PrintStatsPdf">
+                        <button class="btn-archive-ui"
+                                @onclick="PrintStatsPdf">
 
-                        طباعة PDF
+                            طباعة PDF
 
-                    </button>
-
-                   
-
+                        </button>
+                    }
                 </div>
 
             </div>

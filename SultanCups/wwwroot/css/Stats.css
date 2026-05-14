@@ -391,6 +391,13 @@
     justify-content: center;
 }
 
+.stats-note {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
+}
+
 .no-access-card {
     width: 430px;
 }
