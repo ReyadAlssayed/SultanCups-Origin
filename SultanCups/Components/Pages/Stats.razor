@@ -122,6 +122,10 @@
                             إجمالي السيولة
                         </span>
 
+                        <small style="font-size:11px;color:#64748b; margin-bottom:5px;">
+                            مع رأس المال 
+                        </small> 
+
                         <span class="value">
                             @Fmt(DashboardStats.total_cash_balance)
                         </span>
@@ -137,7 +141,7 @@
                     <div class="card-data">
 
                         <span class="label">
-                            صافي الوضع المالي الحالي
+                            صافي الداخل والخارج الحالي
                         </span>
 
                         <span class="value">
@@ -402,7 +406,7 @@
 
                         <small>
                             @(DashboardStats.best_marketer != null
-                                ? Fmt(DashboardStats.best_marketer.total_sales)
+                                ? $"{Fmt(DashboardStats.best_marketer.total_sales)} مبيعات"
                                 : "0 د.ل")
                         </small>
 
@@ -418,7 +422,7 @@
 
                         <small>
                             @(DashboardStats.best_customer != null
-                                ? Fmt(DashboardStats.best_customer.total_sales)
+                                ? $"{Fmt(DashboardStats.best_customer.total_sales)} مشتريات"
                                 : "0 د.ل")
                         </small>
 
@@ -434,7 +438,7 @@
 
                         <small>
                             @(DashboardStats.best_supplier != null
-                                ? Fmt(DashboardStats.best_supplier.total_purchases)
+                                ? $"{Fmt(DashboardStats.best_supplier.total_purchases)} موردات"
                                 : "0 د.ل")
                         </small>
 
@@ -666,9 +670,17 @@
                 <div class="pay-actions1">
 
                     <button class="pay-save1"
-                            @onclick="ConfirmArchive">
+                            @onclick="ConfirmArchive"
+                            disabled="@isArchiving">
 
-                        تنفيذ الأرشفة
+                        @if (isArchiving)
+                        {
+                            <span>جاري تنفيذ الأرشفة...</span>
+                        }
+                        else
+                        {
+                            <span>تنفيذ الأرشفة</span>
+                        }
 
                     </button>
 
@@ -706,6 +718,8 @@
 
     string archiveToDate = "";
 
+    bool isArchiving = false;
+
     private async Task LoadStats()
     {
         isDataVisible = true;
@@ -739,27 +753,39 @@
 
     async Task ConfirmArchive()
     {
-        var result =
-            await StatsService
-                .ArchiveCurrentCycle(Session.AdminId);
+        if (isArchiving)
+            return;
 
-        if (!result.success)
+        isArchiving = true;
+
+        try
         {
+            var result =
+                await StatsService
+                    .ArchiveCurrentCycle(Session.AdminId);
+
+            if (!result.success)
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    result.toDate);
+
+                return;
+            }
+
+            showArchiveDialog = false;
+
             await JS.InvokeVoidAsync(
                 "alert",
-                result.toDate);
+                "تم تنفيذ الجرد والأرشفة بنجاح");
 
-            return;
+            DashboardStats =
+                await StatsService.GetDashboardStats();
         }
-
-        showArchiveDialog = false;
-
-        await JS.InvokeVoidAsync(
-    "alert",
-    "تم تنفيذ الجرد والأرشفة بنجاح");
-
-        DashboardStats =
-            await StatsService.GetDashboardStats();
+        finally
+        {
+            isArchiving = false;
+        }
     }
 
     async Task OpenArchiveDialog()

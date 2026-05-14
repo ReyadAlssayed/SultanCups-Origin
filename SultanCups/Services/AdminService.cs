@@ -137,29 +137,21 @@ namespace SultanCups.Services
             username = username.Trim();
 
             var admin = await _context.admins
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
-                    x.username.ToLower() == username.ToLower());
+                    x.username.ToLower() == username.ToLower()
+                    && x.is_active);
 
             if (admin == null)
                 return null;
 
-            if (!admin.is_active)
-                throw new Exception("هذا الحساب غير مفعل");
+            bool valid =
+                BCrypt.Net.BCrypt.Verify(password, admin.password_hash);
 
-            try
-            {
-                bool valid =
-                    BCrypt.Net.BCrypt.Verify(password, admin.password_hash);
-
-                if (!valid)
-                    return null;
-
-                return admin;
-            }
-            catch
-            {
+            if (!valid)
                 return null;
-            }
+
+            return admin;
         }
 
     }

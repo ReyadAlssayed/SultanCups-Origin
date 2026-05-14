@@ -295,6 +295,75 @@ window.printStatsCard = function () {
         document.querySelector('.stats-scrollable-content')
             .cloneNode(true);
 
+    clone
+        .querySelectorAll('.top-actions')
+        .forEach(x => x.remove());
+
+    clone
+        .querySelectorAll('.top-stats-grid')
+        .forEach(grid => {
+
+            const cards =
+                grid.querySelectorAll('.top-stat-card');
+
+            let html = `
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+                margin-top:10px;
+            ">
+        `;
+
+            cards.forEach(card => {
+
+                const title =
+                    card.querySelector('h4')?.innerText ?? '';
+
+                const value =
+                    card.querySelector('span')?.innerText ?? '';
+
+                let small =
+                    card.querySelector('small')?.innerText ?? '';
+
+               
+
+                html += `
+                <tr>
+
+                    <td style="
+                        border:1px solid #ddd;
+                        padding:10px;
+                        font-weight:700;
+                        width:35%;
+                    ">
+                        ${title}
+                    </td>
+
+                    <td style="
+                        border:1px solid #ddd;
+                        padding:10px;
+                        width:35%;
+                    ">
+                        ${value}
+                    </td>
+
+                    <td style="
+                        border:1px solid #ddd;
+                        padding:10px;
+                        color:#666;
+                    ">
+                        ${small}
+                    </td>
+
+                </tr>
+            `;
+            });
+
+            html += `</table>`;
+
+            grid.outerHTML = html;
+        });
+
     clone.querySelectorAll(
         '[class*="skeleton"],[class*="loading"]')
         .forEach(x => x.remove());
@@ -387,51 +456,7 @@ window.printStatsCard = function () {
                     margin:0 !important;
                 }
 
-                .top-stats-grid{
-    display:flex !important;
-    flex-wrap:wrap !important;
-    gap:12px !important;
-    padding:14px !important;
-}
-
-.top-stat-card{
-    width:calc(50% - 6px) !important;
-}
-
-.stats-section{
-    page-break-inside:avoid !important;
-    break-inside:avoid !important;
-}
-
-.top-stats-grid,
-.stats-table-wrapper,
-.summary-grid{
-    page-break-inside:avoid !important;
-    break-inside:avoid !important;
-}
-
-                .top-stat-card{
-                    min-height:auto !important;
-                    height:auto !important;
-                    padding:16px !important;
-                    border-radius:14px !important;
-                    box-shadow:none !important;
-                }
-
-                .top-stat-card h4{
-                    font-size:12px !important;
-                    margin-bottom:6px !important;
-                }
-
-                .top-stat-card span{
-                    font-size:22px !important;
-                    margin-bottom:4px !important;
-                    display:block;
-                }
-
-                .top-stat-card small{
-                    font-size:13px !important;
-                }
+             
 
                 .stats-table-wrapper{
                     padding:10px !important;
@@ -844,12 +869,27 @@ window.printArchiveDetails = function () {
         </html>
     `);
 
-    win.document.close();
+    const waitForRender = setInterval(() => {
 
-    setTimeout(() => {
+        const emptyCards =
+            win.document.querySelectorAll(
+                '.top-stat-card span:empty');
 
-        win.print();
-        win.close();
+        if (emptyCards.length === 0) {
 
-    }, 700);
+            clearInterval(waitForRender);
+
+            win.document.fonts.ready.then(() => {
+
+                setTimeout(() => {
+
+                    win.print();
+                    win.close();
+
+                }, 1200);
+
+            });
+        }
+
+    }, 300);
 };
