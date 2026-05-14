@@ -8,19 +8,18 @@
         align-items: center;
         justify-content: center;
         padding: 30px;
+        background: #f1f5f9;
     }
 
     .mainpage-card {
         width: 100%;
-        max-width: 760px;
-        padding: 55px 45px;
+        max-width: 1200px;
         border-radius: 34px;
         background: linear-gradient(180deg,#ffffff,#f8fafc);
         border: 1px solid #e2e8f0;
-        text-align: center;
-        box-shadow: 0 25px 60px rgba(15,23,42,.06);
-        position: relative;
         overflow: hidden;
+        box-shadow: 0 25px 60px rgba(15,23,42,.08);
+        position: relative;
     }
 
         .mainpage-card::before {
@@ -30,28 +29,35 @@
             right: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(90deg,#2563eb,#6366f1);
+            background: linear-gradient(90deg,#2563eb,#06b6d4);
+            z-index: 2;
         }
 
-    .main-logo {
-        width: 150px;
-        height: auto;
-        object-fit: contain;
-        margin-bottom: 18px;
+    .main-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+        padding: 45px;
     }
 
-    .mainpage-card h1 {
+    .left-side {
+        flex: 1;
+    }
+
+    .system-title {
         margin: 0;
-        font-size: 42px;
+        font-size: 58px;
         font-weight: 900;
         color: #0f172a;
+        line-height: 1.1;
     }
 
-    .main-desc {
-        margin-top: 12px;
-        font-size: 15px;
-        color: #64748b;
-        font-weight: 700;
+    .system-subtitle {
+        margin-top: 14px;
+        font-size: 22px;
+        font-weight: 800;
+        color: #06b6d4;
     }
 
     .verse-box {
@@ -65,9 +71,9 @@
     .verse-line {
         width: 80px;
         height: 4px;
-        margin: auto auto 20px;
+        margin-bottom: 20px;
         border-radius: 50px;
-        background: linear-gradient(90deg,#2563eb,#6366f1);
+        background: linear-gradient(90deg,#2563eb,#06b6d4);
     }
 
     .verse-box p {
@@ -103,33 +109,61 @@
         }
 
     .main-footer {
-        margin-top: 40px;
+        margin-top: 35px;
         font-size: 15px;
         font-weight: 900;
         color: #6366f1;
         letter-spacing: .5px;
     }
 
-    @@media (max-width:700px) {
+    .right-side {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .mainpage-card {
-            padding: 40px 22px;
+    .hero-image {
+        width: 100%;
+        max-width: 520px;
+        border-radius: 28px;
+        object-fit: cover;
+        box-shadow: 0 25px 60px rgba(37,99,235,.20);
+        border: 1px solid rgba(255,255,255,.4);
+    }
+
+    @@media (max-width:950px) {
+
+        .main-content {
+            flex-direction: column-reverse;
+            padding: 30px 22px;
         }
 
-            .mainpage-card h1 {
-                font-size: 30px;
+        .system-title {
+            font-size: 42px;
+            text-align: center;
+        }
+
+        .system-subtitle {
+            text-align: center;
+        }
+
+        .verse-line {
+            margin: auto auto 20px;
+        }
+
+        .verse-box,
+        .hadith-box,
+        .main-footer {
+            text-align: center;
+        }
+
+            .verse-box p {
+                font-size: 24px;
             }
 
-        .verse-box p {
-            font-size: 22px;
-        }
-
-        .hadith-box p {
-            font-size: 16px;
-        }
-
-        .main-logo {
-            width: 120px;
+        .hero-image {
+            max-width: 100%;
         }
     }
 
@@ -139,31 +173,46 @@
 
     <div class="mainpage-card">
 
-        <div class="verse-box">
+        <div class="main-content">
 
-            <div class="verse-line"></div>
+            <div class="left-side">
 
-            <p>
-                ﴿ وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ ﴾
-            </p>
+                <div class="verse-box">
 
-            <span>
-                سورة التوبة - الآية 105
-            </span>
+                    <div class="verse-line"></div>
 
-        </div>
+                    <p>
+                        ﴿ وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ ﴾
+                    </p>
 
-        <div class="hadith-box">
+                    <span>
+                        سورة التوبة - الآية 105
+                    </span>
 
-            <p>
-                " إن الله يحب إذا عمل أحدكم عملاً أن يتقنه "
-            </p>
+                </div>
 
-        </div>
+                <div class="hadith-box">
 
-        <div class="main-footer">
+                    <p>
+                        " إن الله يحب إذا عمل أحدكم عملاً أن يتقنه "
+                    </p>
 
-            الحداثة للأنظمة الرقمية
+                </div>
+
+                <div class="main-footer">
+
+                    الحداثة للأنظمة الرقمية
+
+                </div>
+
+            </div>
+
+            <div class="right-side">
+
+                <img src="images/MainPic.png"
+                     class="hero-image" />
+
+            </div>
 
         </div>
 
