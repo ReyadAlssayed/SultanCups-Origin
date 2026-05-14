@@ -335,21 +335,32 @@
     }
 
     async Task ConfirmDelete()
-    {
-        var result = await InventoryService.DeleteProduction(ProForm.production_id);
+{
+    var result = await InventoryService.DeleteProduction(ProForm.production_id);
 
-        if (result.StartsWith("✔️"))
-        {
-            ShowToast(result, "success");
-            ProductionList = await InventoryService.GetProduction();
-            CloseDialogs();
-        }
-        else
-        {
-            ShowToast(result, "error");
-            // ❌ لا تقفل النافذة
-        }
+    if (result == "deleted")
+    {
+        ProductionList = await InventoryService.GetProduction();
+
+        CloseDialogs();
+
+        ShowToast("تم حذف سجل الإنتاج بنجاح", "success");
     }
+    else if (result == "not_found")
+    {
+        CloseDialogs();
+
+        ShowToast("السجل غير موجود", "error");
+    }
+    else if (result == "stock_not_found")
+    {
+        ShowToast("المخزون غير موجود", "error");
+    }
+    else
+    {
+        ShowToast(result, "error");
+    }
+}
 
     async Task ExportToExcel()
     {
