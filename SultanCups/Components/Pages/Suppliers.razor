@@ -6,6 +6,7 @@
 @inject SultanCups.Services.ToastService ToastService
 
 @using ClosedXML.Excel
+@using System.Text.RegularExpressions
 @inject IJSRuntime JS
 
 <div class="inv-page">
@@ -358,17 +359,16 @@
 
     async Task SaveSupplier()
     {
-
-        var name = SupplierForm.name?.Trim();
+        SupplierForm.name = CleanName(SupplierForm.name);
+        var name = SupplierForm.name;
+        
         // 1. تصفير رسائل الأخطاء السابقة
         Message = "";
         NameError = PhoneError = EmailError = NoteError = LocationError = "";
         ShowActivatePrompt = false;
         bool hasError = false;
 
-        
-
-        // 2. التحقق من اسم المورد (نظام الستارة وفحص التكرار)
+        // 2. التحقق من اسم المورد
         if (string.IsNullOrWhiteSpace(name))
         {
             Message = "اسم المورد مطلوب";
@@ -376,62 +376,104 @@
         }
         else
         {
-            var allSuppliers = await InventoryService.GetAllSuppliers();
-            DuplicateSupplier = allSuppliers
-      .FirstOrDefault(s =>
-          s.name != null &&
-          s.name.Trim().ToLower() == name.ToLower() &&
-          (ShowAddDialog || s.supplier_id != SupplierForm.supplier_id)
-      );
+            string normalizedName = Regex
+                .Replace(name.ToLower(), @"\s+", "")
+                .Trim()
+                .Replace("أ", "ا")
+                .Replace("إ", "ا")
+                .Replace("آ", "ا");
 
-            if (ShowAddDialog)
+            // منع الأرقام والرموز
+            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
             {
-                if (DuplicateSupplier != null)
+                Message = "اسم المورد لا يمكن أن يحتوي على أرقام أو رموز";
+                hasError = true;
+            }
+            else
+            {
+                var allSuppliers = await InventoryService.GetAllSuppliers();
+
+                DuplicateSupplier = allSuppliers
+                    .FirstOrDefault(s =>
+                        s.name != null &&
+                        Regex.Replace(s.name.ToLower(), @"\s+", "")
+                            .Trim()
+                            .Replace("أ", "ا")
+                            .Replace("إ", "ا")
+                            .Replace("آ", "ا")
+                            == normalizedName
+                        &&
+                        (ShowAddDialog || s.supplier_id != SupplierForm.supplier_id)
+                    );
+
+                if (ShowAddDialog)
                 {
-                    if (DuplicateSupplier.is_active)
+                    if (DuplicateSupplier != null)
                     {
-                        Message = "هذا المورد موجود مسبقاً وهو نشط.";
-                        return;
-                    }
-                    else
-                    {
-                        Message = $"المورد '{name}' موجود مسبقاً في الأرشيف.";
-                        ShowActivatePrompt = true;
-                        return;
+                        if (DuplicateSupplier.is_active)
+                        {
+                            Message = "هذا المورد موجود مسبقاً وهو نشط.";
+                            return;
+                        }
+                        else
+                        {
+                            Message = $"المورد '{name}' موجود مسبقاً في الأرشيف.";
+                            ShowActivatePrompt = true;
+                            return;
+                        }
                     }
                 }
-            }
-            else // في حالة التعديل
-            {
-                if (DuplicateSupplier != null && DuplicateSupplier.supplier_id != SupplierForm.supplier_id)
+                else
                 {
-                    if (DuplicateSupplier.is_active)
+                    if (DuplicateSupplier != null &&
+                        DuplicateSupplier.supplier_id != SupplierForm.supplier_id)
                     {
-                        Message = "هذا المورد موجود نشطاً بالفعل؛ لا يمكنك التكرار.";
+                        if (DuplicateSupplier.is_active)
+                        {
+                            Message = "هذا المورد موجود نشطاً بالفعل؛ لا يمكنك التكرار.";
+                        }
+                        else
+                        {
+                            Message = "هذا المورد موجود في الأرشيف؛ لا يمكنك استخدامه.";
+                        }
+
+                        return;
                     }
-                    else
-                    {
-                        Message = "هذا المورد موجود في الأرشيف؛ لا يمكنك استخدامه.";
-                    }
-                    return;
                 }
             }
         }
 
         // 3. التحقق من رقم الهاتف
-        if (string.IsNullOrWhiteSpace(SupplierForm.phone))
+        if (!string.IsNullOrWhiteSpace(SupplierForm.phone))
+        {
+            if (!SupplierForm.phone.All(char.IsDigit))
+            {
+                PhoneError = "رقم الهاتف يجب أن يحتوي أرقام فقط";
+                hasError = true;
+            }
+            else if (SupplierForm.phone.Length < 10 || SupplierForm.phone.Length > 20)
+            {
+                PhoneError = "رقم الهاتف يجب أن يكون بين 10 و 20 خانة";
+                hasError = true;
+            }
+
+            // منع تكرار الرقم
+            var allSuppliers = await InventoryService.GetAllSuppliers();
+
+            bool phoneExists = allSuppliers.Any(s =>
+                s.supplier_id != SupplierForm.supplier_id &&
+                s.phone != null &&
+                s.phone.Trim() == SupplierForm.phone.Trim());
+
+            if (phoneExists)
+            {
+                PhoneError = "رقم الهاتف مستخدم مسبقاً";
+                hasError = true;
+            }
+        }
+        else
         {
             PhoneError = "رقم الهاتف مطلوب";
-            hasError = true;
-        }
-        else if (!SupplierForm.phone.All(char.IsDigit))
-        {
-            PhoneError = "رقم الهاتف يجب أن يحتوي أرقام فقط";
-            hasError = true;
-        }
-        else if (SupplierForm.phone.Length < 10 || SupplierForm.phone.Length > 20)
-        {
-            PhoneError = "رقم الهاتف يجب أن يكون بين 10 و 20 خانة";
             hasError = true;
         }
 
@@ -442,10 +484,11 @@
             hasError = true;
         }
 
-        // 5. البريد الإلكتروني (اختياري - Gmail فقط)
+        // 5. البريد الإلكتروني
         if (!string.IsNullOrWhiteSpace(SupplierForm.email))
         {
             string email = SupplierForm.email.ToLower().Trim();
+
             if (!email.EndsWith("@gmail.com"))
             {
                 EmailError = "يجب أن يكون البريد Gmail صحيحاً";
@@ -453,11 +496,12 @@
             }
         }
 
-        // إذا وجد أي خطأ، نتوقف ونظهر التنبيه
+        // إذا وجد أي خطأ
         if (hasError)
         {
-            if (string.IsNullOrEmpty(Message)) // إذا لم يكن الخطأ في الاسم (الستارة)
+            if (string.IsNullOrEmpty(Message))
                 ToastService.ShowToast("يرجى إكمال البيانات المطلوبة بشكل صحيح", "error");
+
             return;
         }
 
@@ -594,5 +638,12 @@
          (StatusFilter == "inactive" && !s.is_active))
     );
 
+    string CleanName(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return "";
+
+    return Regex.Replace(value.Trim(), @"\s+", " ");
+}
 
 }

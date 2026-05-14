@@ -6,6 +6,7 @@
 @inject SultanCups.Services.ToastService ToastService
 
 @using ClosedXML.Excel
+@using System.Text.RegularExpressions
 @inject IJSRuntime JS
 
 <div class="rm-page">
@@ -364,7 +365,8 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
 
     async Task SaveRawMaterial()
     {
-        var name = RawMaterialForm.name?.Trim();
+        RawMaterialForm.name = CleanName(RawMaterialForm.name);
+        var name = RawMaterialForm.name;
 
         Message = "";
         NameError = SizeError = UomError = CostError = NoteError = "";
@@ -385,43 +387,67 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
         }
         else
         {
-            var all = await InventoryService.GetAllRawMaterials();
+            string normalizedName = Regex
+                .Replace(name.ToLower(), @"\s+", "")
+                .Trim()
+                .Replace("أ", "ا")
+                .Replace("إ", "ا")
+                .Replace("آ", "ا");
 
-            DuplicateRaw = all.FirstOrDefault(r =>
-                r.name != null &&
-                r.name.Trim().ToLower() == name.ToLower() &&
-                r.raw_material_id != RawMaterialForm.raw_material_id
-            );
-
-            if (ShowAddDialog)
+            // منع الأرقام والرموز
+            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
             {
-                if (DuplicateRaw != null)
-                {
-                    if (DuplicateRaw.is_active)
-                    {
-                        Message = "هذه المادة موجودة مسبقاً";
-                        return;
-                    }
-                    else
-                    {
-                        Message = "المادة موجودة في الأرشيف";
-                        ShowActivatePrompt = true;
-                        return;
-                    }
-                }
+                Message = "اسم المادة لا يمكن أن يحتوي على أرقام أو رموز";
+                hasError = true;
             }
             else
             {
-                if (DuplicateRaw != null)
+                var all = await InventoryService.GetAllRawMaterials();
+
+                DuplicateRaw = all.FirstOrDefault(r =>
+                    r.name != null &&
+                    Regex.Replace(r.name.ToLower(), @"\s+", "")
+                        .Trim()
+                        .Replace("أ", "ا")
+                        .Replace("إ", "ا")
+                        .Replace("آ", "ا")
+                        == normalizedName
+                    &&
+                    r.raw_material_id != RawMaterialForm.raw_material_id
+                );
+
+                if (ShowAddDialog)
                 {
-                    Message = DuplicateRaw.is_active
-                        ? "هذا الاسم مستخدم بالفعل"
-                        : "هذا الاسم موجود في الأرشيف";
-                    return;
+                    if (DuplicateRaw != null)
+                    {
+                        if (DuplicateRaw.is_active)
+                        {
+                            Message = "هذه المادة موجودة مسبقاً";
+                            return;
+                        }
+                        else
+                        {
+                            Message = "المادة موجودة في الأرشيف";
+                            ShowActivatePrompt = true;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    if (DuplicateRaw != null)
+                    {
+                        Message = DuplicateRaw.is_active
+                            ? "هذا الاسم مستخدم بالفعل"
+                            : "هذا الاسم موجود في الأرشيف";
+
+                        return;
+                    }
                 }
             }
         }
 
+        // 🔹 الحجم
         if (RawMaterialForm.size <= 0 || RawMaterialForm.size > 1000)
         {
             SizeError = "الحجم يجب أن يكون بين 1 و 1000";
@@ -439,13 +465,13 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
             UomError = "وحدة القياس لا تتجاوز 10 أحرف";
             hasError = true;
         }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(RawMaterialForm.unit_of_measure, @"^[a-zA-Z\u0600-\u06FF\s]+$"))
+        else if (!Regex.IsMatch(RawMaterialForm.unit_of_measure, @"^[a-zA-Z\u0600-\u06FF\s]+$"))
         {
             UomError = "وحدة القياس يجب أن تحتوي على حروف فقط";
             hasError = true;
         }
 
-        // 🔹 التكلفة (0 إلى 1000)
+        // 🔹 التكلفة
         if (RawMaterialForm.unit_cost < 1 || RawMaterialForm.unit_cost > 1000)
         {
             CostError = "التكلفة يجب أن تكون بين 1 و 1000";
@@ -604,4 +630,11 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
 
         RawMaterialForm = new();
     }
+    string CleanName(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return "";
+
+    return Regex.Replace(value.Trim(), @"\s+", " ");
+}
 }
