@@ -122,6 +122,10 @@
                             إجمالي السيولة
                         </span>
 
+                        <small style="font-size:11px;color:#64748b; margin-bottom:5px;">
+                            مع رأس المال 
+                        </small> 
+
                         <span class="value">
                             @Fmt(DashboardStats.total_cash_balance)
                         </span>
@@ -137,7 +141,7 @@
                     <div class="card-data">
 
                         <span class="label">
-                            صافي الوضع المالي الحالي
+                            صافي الداخل والخارج الحالي
                         </span>
 
                         <span class="value">
@@ -402,7 +406,7 @@
 
                         <small>
                             @(DashboardStats.best_marketer != null
-                                ? Fmt(DashboardStats.best_marketer.total_sales)
+                                ? $"{Fmt(DashboardStats.best_marketer.total_sales)} مبيعات"
                                 : "0 د.ل")
                         </small>
 
@@ -418,7 +422,7 @@
 
                         <small>
                             @(DashboardStats.best_customer != null
-                                ? Fmt(DashboardStats.best_customer.total_sales)
+                                ? $"{Fmt(DashboardStats.best_customer.total_sales)} مشتريات"
                                 : "0 د.ل")
                         </small>
 
@@ -434,7 +438,7 @@
 
                         <small>
                             @(DashboardStats.best_supplier != null
-                                ? Fmt(DashboardStats.best_supplier.total_purchases)
+                                ? $"{Fmt(DashboardStats.best_supplier.total_purchases)} موردات"
                                 : "0 د.ل")
                         </small>
 
