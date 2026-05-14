@@ -670,9 +670,17 @@
                 <div class="pay-actions1">
 
                     <button class="pay-save1"
-                            @onclick="ConfirmArchive">
+                            @onclick="ConfirmArchive"
+                            disabled="@isArchiving">
 
-                        تنفيذ الأرشفة
+                        @if (isArchiving)
+                        {
+                            <span>جاري تنفيذ الأرشفة...</span>
+                        }
+                        else
+                        {
+                            <span>تنفيذ الأرشفة</span>
+                        }
 
                     </button>
 
@@ -710,6 +718,8 @@
 
     string archiveToDate = "";
 
+    bool isArchiving = false;
+
     private async Task LoadStats()
     {
         isDataVisible = true;
@@ -743,27 +753,39 @@
 
     async Task ConfirmArchive()
     {
-        var result =
-            await StatsService
-                .ArchiveCurrentCycle(Session.AdminId);
+        if (isArchiving)
+            return;
 
-        if (!result.success)
+        isArchiving = true;
+
+        try
         {
+            var result =
+                await StatsService
+                    .ArchiveCurrentCycle(Session.AdminId);
+
+            if (!result.success)
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    result.toDate);
+
+                return;
+            }
+
+            showArchiveDialog = false;
+
             await JS.InvokeVoidAsync(
                 "alert",
-                result.toDate);
+                "تم تنفيذ الجرد والأرشفة بنجاح");
 
-            return;
+            DashboardStats =
+                await StatsService.GetDashboardStats();
         }
-
-        showArchiveDialog = false;
-
-        await JS.InvokeVoidAsync(
-    "alert",
-    "تم تنفيذ الجرد والأرشفة بنجاح");
-
-        DashboardStats =
-            await StatsService.GetDashboardStats();
+        finally
+        {
+            isArchiving = false;
+        }
     }
 
     async Task OpenArchiveDialog()

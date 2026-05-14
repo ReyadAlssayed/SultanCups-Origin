@@ -196,12 +196,14 @@
 }
 
 .archive-dialog {
-    width: min(1200px,95%);
+    width: min(1150px,94%);
     max-height: 92vh;
     overflow-y: auto;
-    background: white;
     border-radius: 28px;
-    padding: 28px;
+    padding: 26px;
+    background: linear-gradient(rgba(255,255,255,.93), rgba(255,255,255,.93)), url('/images/background.png');
+    background-size: cover;
+    background-position: center;
 }
 
 .archive-dialog-header {
@@ -283,6 +285,84 @@
     padding: 0 26px;
     border-radius: 14px;
     font-weight: 800;
+}
+
+.archive-details-table-wrap {
+    border: 1px solid #e2e8f0;
+    border-radius: 26px;
+    overflow: hidden;
+    background: white;
+}
+
+.archive-details-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .archive-details-table tr:nth-child(even) {
+        background: #f8fafc;
+    }
+
+    .archive-details-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 15px;
+    }
+
+    .archive-details-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .archive-details-table td:nth-child(1),
+    .archive-details-table td:nth-child(3) {
+        color: #64748b;
+        font-weight: 700;
+        width: 24%;
+        font-size: 16px;
+    }
+
+.archive-dialog-header-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.archive-print-btn,
+.archive-cancel-btn,
+.archive-details-btn,
+.archive-close-btn {
+    cursor: pointer;
+}
+
+    .archive-details-table td:nth-child(2),
+    .archive-details-table td:nth-child(4) {
+        color: #0f172a;
+        font-weight: 900;
+        font-size: 18px;
+    }
+
+    .archive-details-table .green-text {
+        color: #16a34a !important;
+    }
+
+    .archive-details-table .red-text {
+        color: #dc2626 !important;
+    }
+
+    .archive-details-table .blue-text {
+        color: #2563eb !important;
+    }
+
+.archive-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.archive-title-side {
+    display: flex;
+    flex-direction: column;
 }
 
 .green-text {
