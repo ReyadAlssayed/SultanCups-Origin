@@ -378,13 +378,17 @@
 }
 
 .glass-shield-card {
-    width: 440px;
-    padding: 34px;
-    border-radius: 28px;
+    width: 620px;
+    min-height: 250px;
+    padding: 34px 50px;
+    border-radius: 32px;
     text-align: center;
     background: rgba(255,255,255,.96);
     border: 1px solid #e2e8f0;
-    box-shadow: 0 20px 60px rgba(15,23,42,.10);
+    box-shadow: 0 25px 70px rgba(15,23,42,.10);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .no-access-card {
@@ -392,16 +396,21 @@
 }
 
 .lock-anim {
-    width: 60px;
-    height: 60px;
-    margin: auto auto 18px;
-    border-radius: 20px;
-    background: #eff6ff;
+    width: 72px;
+    height: 72px;
+    margin: auto auto 24px;
+    border-radius: 24px;
+    background: linear-gradient(135deg,#dbeafe,#eff6ff);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    box-shadow: 0 10px 25px rgba(37,99,235,.12);
 }
+
+    .lock-anim i {
+        font-size: 34px;
+        color: #2563eb;
+    }
 
 .glass-shield-card h3 {
     margin: 0;

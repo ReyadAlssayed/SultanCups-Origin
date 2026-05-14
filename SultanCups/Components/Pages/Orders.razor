@@ -773,14 +773,15 @@ async Task PrintInvoice()
 {
     await JS.InvokeVoidAsync("printOrderCard");
 }
-    async Task ClearHighlight()
-    {
-        await Task.Delay(5000); // 5 ثواني
-        if (Nav.Uri.Contains("/orders"))
+   async Task ClearHighlight()
 {
-    Nav.NavigateTo("/orders");
-}
+    await Task.Delay(5000);
+
+    if (Nav.Uri.EndsWith("/orders"))
+    {
+        Nav.NavigateTo("/orders");
     }
+}
 
 
     async Task ScrollToOrder()
