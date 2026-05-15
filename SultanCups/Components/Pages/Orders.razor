@@ -1023,11 +1023,6 @@ async Task OpenReturnDialog(OrderView o)
         .Distinct()
         .ToList();
 
-    // 🔥 إظهار الاختيار مباشرة إذا تعددت الطرق
-    if (PaymentMethods.Count > 1)
-    {
-        SelectedRefundMethod = PaymentMethods.First();
-    }
 
     ShowReturnDialog = true;
 }

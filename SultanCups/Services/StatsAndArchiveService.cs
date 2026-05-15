@@ -101,16 +101,19 @@ namespace SultanCups.Services
                         i.unit_price * i.quantity);
 
                 decimal paid =
-                    await _context.financial_events
-                        .Where(x =>
-                            x.ref_table == "orders"
-                            &&
-                            x.ref_id == order.order_id
-                            &&
-                            x.direction == "IN")
-                        .SumAsync(x =>
-                            (decimal?)x.amount)
-                        ?? 0;
+     await _context.financial_events
+         .Where(x =>
+             x.ref_table == "orders"
+             &&
+             x.ref_id == order.order_id
+             &&
+             x.payment_method != null)
+         .SumAsync(x =>
+             x.direction == "IN"
+                 ? (decimal?)x.amount
+                 : -(decimal?)x.amount
+         )
+         ?? 0;
 
                 decimal remain =
                     (sales - order.discount_total)
