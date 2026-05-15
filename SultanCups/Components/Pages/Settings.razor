@@ -42,10 +42,10 @@
         </div>
 
 
-        <div class="settings-item" @onclick="() => ShowSystemInfoDialog = true">
+        <div class="settings-item" @onclick='() => Nav.NavigateTo("/SystemGuide")'>
             <div class="item-left">
                 <img src="images/information.png" class="item-icon" />
-                <span>معلومات النظام</span>
+                <span>دليل النظام</span>
             </div>
             <span class="arrow">›</span>
         </div>
@@ -189,37 +189,6 @@
 }
 
 
-@if (ShowSystemInfoDialog)
-{
-    <div class="dialog-overlay">
-        <div class="dialog-box dialog-about">
-
-            <h3 class="about-title-black">معلومات النظام</h3>
-
-            <div class="about-grid">
-
-                <div class="about-box">
-                    <strong>
-                        إذا رأيت 💵 داخل أي نافذة فهذا يعني حركة مالية فعلية.
-                    </strong>
-                </div>
-
-                <div class="about-box">
-                    <strong>
-                        في المشتريات عند تعديل السعر أو الكمية يتم إعادة حساب الفرق تلقائيًا.
-                    </strong>
-                </div>
-
-            </div>
-
-            <button class="dialog-close"
-                    @onclick="() => ShowSystemInfoDialog = false">
-                إغلاق
-            </button>
-
-        </div>
-    </div>
-}
 
 @code {
     string CurrentUserName => Session.FullName;
@@ -236,7 +205,7 @@
 
     string SupportNotes = "";
     string Message = "";
-    bool ShowSystemInfoDialog;
+
 
     bool IsWarningMessage = false;
 

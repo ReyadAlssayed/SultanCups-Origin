@@ -1,0 +1,107 @@
+﻿@page "/SystemGuide"
+@layout MainLayout
+
+<div class="guide-page">
+
+    <div class="guide-header">
+
+        <img src="images/Direction.png"
+             class="guide-image"
+             alt="System Guide" />
+
+        <div class="guide-overlay"></div>
+
+        <div class="guide-header-content">
+            <h1>دليل النظام</h1>
+            <p>
+                تعليمات وإرشادات مهمة لاستخدام نظام السلطان بشكل صحيح وآمن.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="guide-sections">
+
+        <div class="guide-category">
+            <h2>💵 التعليمات المالية</h2>
+
+            <div class="guide-card">
+                ظهور 💵 داخل أي نافذة يعني أن العملية مرتبطة بحركة مالية فعلية داخل النظام.
+            </div>
+
+            <div class="guide-card">
+                عند تعديل قيمة الفاتورة أو المرتجع يتم إعادة حساب الفرق المالي تلقائيًا.
+            </div>
+
+            <div class="guide-card">
+                لا يتم تعديل المدفوعات مباشرة بل يتم تسجيل حركة مالية جديدة للحفاظ على السجل المالي.
+            </div>
+        </div>
+
+        <div class="guide-category">
+            <h2>📦 المخزون</h2>
+
+            <div class="guide-card">
+                عند تنفيذ مرتجع جزئي يتم إرجاع الكمية للمخزون تلقائيًا.
+            </div>
+
+            <div class="guide-card">
+                النظام يمنع إنقاص الكميات إذا كانت الكمية المتوفرة غير كافية.
+            </div>
+
+            <div class="guide-card">
+                تعديل السعر لا يؤثر على الكمية المخزنية نهائيًا.
+            </div>
+        </div>
+
+        <div class="guide-category">
+            <h2>🧾 الفواتير والطلبات</h2>
+
+            <div class="guide-card">
+                كل فاتورة تمتلك رقم فريد يمكن البحث به بسرعة.
+            </div>
+
+            <div class="guide-card">
+                الطلبات المرتبطة بنفس الرقم تعتبر ضمن نفس المجموعة اللونية.
+            </div>
+
+            <div class="guide-card">
+                عند إلغاء جميع الأصناف تتحول الفاتورة تلقائيًا إلى ملغاة.
+            </div>
+        </div>
+
+        <div class="guide-category">
+            <h2>🔄 المرتجعات</h2>
+
+            <div class="guide-card">
+                المرتجع الجزئي هو المسؤول الوحيد عن تقليل الكميات داخل النظام.
+            </div>
+
+            <div class="guide-card">
+                بعض الفواتير متعددة طرق الدفع قد تتطلب تنفيذ الاسترجاع المالي يدويًا.
+            </div>
+
+            <div class="guide-card">
+                جميع المرتجعات يتم تسجيلها داخل سجل خاص للمراجعة لاحقًا.
+            </div>
+        </div>
+
+        <div class="guide-category">
+            <h2>🛡️ الأمان والصلاحيات</h2>
+
+            <div class="guide-card">
+                بعض الصفحات لا تظهر إلا حسب صلاحيات المستخدم الحالية.
+            </div>
+
+            <div class="guide-card">
+                حذف بعض البيانات قد يتحول تلقائيًا إلى تعطيل بدل حذف كامل لحماية النظام.
+            </div>
+
+            <div class="guide-card">
+                جميع العمليات المهمة يتم تسجيلها للمراجعة والمتابعة.
+            </div>
+        </div>
+
+    </div>
+
+</div>
