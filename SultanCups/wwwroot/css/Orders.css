@@ -29,6 +29,21 @@
     cursor: pointer;
 }
 
+.multi-refund-box {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.multi-refund-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 10px;
+}
+
 /* ===== Card & Table ===== */
 .inv-card {
     background: rgba(255,255,255,.75);

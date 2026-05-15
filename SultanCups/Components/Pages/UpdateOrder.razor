@@ -518,8 +518,7 @@
 
                         <span>
 
-                            لا يمكن إنقاص الكمية من واجهة التعديل مباشرة،
-                            استخدم زر الراجع لهذه الفاتورة.
+                            @ErrorDialogMessage
 
                         </span>
 
@@ -626,17 +625,19 @@
             order_date = order.order_date,
 
             Items = order.Items
-            .Select(i => new OrderItem
-            {
-                product_id = i.product_id,
-                quantity = i.quantity,
-                unit_price = i.unit_price,
+.Select(i => new OrderItem
+{
+    product_id = i.product_id,
+    product_name = i.product_name,
 
-                production_cost = i.production_cost,
-                original_reference_value = i.production_cost,
+    quantity = i.quantity,
+    unit_price = i.unit_price,
 
-                IsNew = false
-            }).ToList()
+    production_cost = i.production_cost,
+    original_reference_value = i.production_cost,
+
+    IsNew = false
+}).ToList()
         };
 
         OldProductIds = Form.Items
@@ -779,8 +780,16 @@
         }
         else
         {
-            ErrorDialogMessage = result.message;
-            ShowErrorDialog = true;
+            IsSaving = false;
+
+            if (result.message.Contains("لا يمكن إنقاص الكمية"))
+            {
+                ErrorDialogMessage = result.message;
+                ShowErrorDialog = true;
+                return;
+            }
+
+            ToastService.ShowToast(result.message, "error");
         }
     }
 
@@ -1074,8 +1083,16 @@
             }
             else
             {
-                ErrorDialogMessage = result.message;
-                ShowErrorDialog = true;
+                IsSaving = false;
+
+                if (result.message.Contains("لا يمكن إنقاص الكمية"))
+                {
+                    ErrorDialogMessage = result.message;
+                    ShowErrorDialog = true;
+                    return;
+                }
+
+                ToastService.ShowToast(result.message, "error");
             }
         }
         catch (Exception ex)

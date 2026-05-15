@@ -849,18 +849,22 @@ if (orders.Any())
     CurrentAdminId
 );
 
-            if (result.success)
-            {
-                ToastService.ShowToast("تم الحفظ", "success");
+          if (result.success)
+{
+    ToastService.ShowToast("تم الحفظ", "success");
 
-                Payments = new List<PaymentInput>();
+    Payments = new List<PaymentInput>();
 
-                Nav.NavigateTo($"/orders?new={Form.order_id}");
-            }
-            else
-            {
-                ToastService.ShowToast(result.message, "error");
-            }
+    Nav.NavigateTo($"/orders?new={Form.order_id}");
+}
+else
+{
+    IsSaving = false;
+
+    ToastService.ShowToast(result.message, "error");
+
+    return;
+}
         }
         catch (Exception ex)
         {

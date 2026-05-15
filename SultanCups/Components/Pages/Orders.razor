@@ -555,15 +555,32 @@
 
                 </div>
 
-                @if (PaymentMethods.Count > 1 && ReturnRefundAmount > 0)
-                {
-                    <button class="return-warning-btn"
-                            @onclick='() => Nav.NavigateTo($"/orders/edit/{ReturnOrder.order_id}")'>
+@if (PaymentMethods.Count > 1)
+{
+    <div class="multi-refund-box">
 
-                        فتح الفاتورة واسترجاع المبلغ أولاً
+        <div class="multi-refund-title">
+            اختر طريقة استرجاع المبلغ
+        </div>
 
-                    </button>
-                }
+        <select class="pro-filter-select"
+                @bind="SelectedRefundMethod">
+
+            <option value="">
+                اختر طريقة الدفع
+            </option>
+
+            @foreach (var method in PaymentMethods)
+            {
+                <option value="@method">
+                    @method
+                </option>
+            }
+
+        </select>
+
+    </div>
+}
 
                 <div class="return-dialog-actions">
 
@@ -575,7 +592,7 @@
                     </button>
 
                     <button class="return-cancel-btn"
-                            @onclick="() => ShowReturnDialog = false">
+                            @onclick="CloseReturnDialog">
 
                         إلغاء
 
@@ -644,18 +661,6 @@
         </strong>
 
     </div>
-
-    @if (PaymentMethods.Count > 1)
-    {
-        <div class="cancel-money-warning">
-
-            الفاتورة تحتوي على أكثر من طريقة دفع.
-
-            قم باسترجاع المبلغ من قسم الدفعات داخل تعديل الفاتورة،
-            ثم أعد تنفيذ عملية الراجع.
-
-        </div>
-    }
 }
 
                     @if (ReturnCommissionAmount > 0)
@@ -694,6 +699,55 @@
     </div>
 }
 
+@if (ShowReturnErrorDialog)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box small-dialog">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="money-head">
+                    <h3>تنبيه</h3>
+                </div>
+
+                <div class="cancel-preview">
+
+                    <div class="cancel-money-box">
+
+                        @foreach (var line in ReturnErrorMessage.Split('\n'))
+                        {
+                            <div style="margin-bottom:8px;">
+                                @line
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+                <div class="return-dialog-actions">
+
+                    <button class="return-confirm-btn"
+                            @onclick="() => ShowReturnErrorDialog = false">
+
+                        فهمت
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 @code {
 
     List<OrderView>? OrdersList;
@@ -715,9 +769,14 @@
 
     bool ShowReturnPreview = false;
 
+    bool ShowReturnErrorDialog = false;
+
+string ReturnErrorMessage = "";
+
 decimal ReturnRefundAmount = 0;
 
 decimal ReturnCommissionAmount = 0;
+string SelectedRefundMethod = "";
 
     string SearchText = "";
 
@@ -782,6 +841,8 @@ async Task PrintInvoice()
         Nav.NavigateTo("/orders");
     }
 }
+
+
 
 
     async Task ScrollToOrder()
@@ -939,6 +1000,35 @@ async Task OpenReturnDialog(OrderView o)
         await FinanceService
             .GetOrderItemsForReturn(o.order_id);
 
+    // 🔥 تصفير تلقائي
+    SelectedRefundMethod = "";
+
+    ReturnRefundAmount = 0;
+
+    ReturnCommissionAmount = 0;
+
+    // 🔥 جلب طرق الدفع
+    var payments =
+        await FinanceService
+            .GetPaymentsByOrder(o.order_id);
+
+    PaymentMethods = payments
+        .Where(p =>
+            !string.IsNullOrWhiteSpace(p.payment_method))
+        .Select(p =>
+            GetPaymentName(p.payment_method!))
+        .Where(x =>
+            x != "-" &&
+            !string.IsNullOrWhiteSpace(x))
+        .Distinct()
+        .ToList();
+
+    // 🔥 إظهار الاختيار مباشرة إذا تعددت الطرق
+    if (PaymentMethods.Count > 1)
+    {
+        SelectedRefundMethod = PaymentMethods.First();
+    }
+
     ShowReturnDialog = true;
 }
 
@@ -1015,10 +1105,16 @@ ReturnRefundAmount =
 async Task ExecutePartialReturn()
 {
 
-    if (PaymentMethods.Count > 1 && ReturnRefundAmount > 0)
+if (
+    PaymentMethods.Count > 1
+    &&
+    ReturnRefundAmount > 0
+    &&
+    string.IsNullOrWhiteSpace(SelectedRefundMethod)
+)
 {
     ToastService.ShowToast(
-        "قم باسترجاع المبلغ من الدفعات أولاً",
+        "اختر طريقة استرجاع المبلغ",
         "error"
     );
 
@@ -1028,10 +1124,11 @@ async Task ExecutePartialReturn()
         return;
 
     var result =
-        await FinanceService.ProcessPartialReturn(
-            ReturnOrder.order_id,
-            ReturnItems,
-            CurrentAdminId);
+       await FinanceService.ProcessPartialReturn(
+    ReturnOrder.order_id,
+    ReturnItems,
+    CurrentAdminId,
+    SelectedRefundMethod);
 
    if (result.success)
 {
@@ -1051,13 +1148,28 @@ async Task ExecutePartialReturn()
     ReturnRefundAmount = 0;
 
     ReturnCommissionAmount = 0;
+
+    SelectedRefundMethod = "";
 }
     else
-    {
-        ToastService.ShowToast(
-            result.message,
-            "error");
-    }
+{
+    ReturnErrorMessage = result.message;
+
+    ShowReturnErrorDialog = true;
+}
+}
+
+void CloseReturnDialog()
+{
+    ShowReturnDialog = false;
+
+    SelectedRefundMethod = "";
+
+    ReturnRefundAmount = 0;
+
+    ReturnCommissionAmount = 0;
+
+    ReturnItems.Clear();
 }
 
 

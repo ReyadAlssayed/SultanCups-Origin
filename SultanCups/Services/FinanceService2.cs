@@ -376,12 +376,13 @@ _context.financial_events
         public async Task<List<FinancialEvent>> GetPaymentsByOrder(int orderId)
         {
             return await _context.financial_events
-                .Where(x =>
-                    x.ref_table == "orders" &&
-                    x.ref_id == orderId &&
-                    x.payment_method != null) // 🔥 حذف شرط IN
-                .AsNoTracking()
-                .ToListAsync();
+     .Where(x =>
+    x.ref_table == "orders" &&
+    x.ref_id == orderId &&
+    x.payment_method != null)
+
+     .AsNoTracking()
+     .ToListAsync();
         }
 
         public async Task<Dictionary<int, string>> GetProductsDict()
@@ -438,22 +439,42 @@ _context.financial_events
                     if (edited == null)
                         continue;
 
-                    // ❌ منع إنقاص الكمية
                     if (edited.quantity < oldItem.quantity)
-                        return (false, "لا يمكن إنقاص الكمية من التعديل، استخدم الراجع");
+                    {
+                        return (
+                            false,
+                            "لا يمكن إنقاص الكمية من التعديل، استخدم الراجع"
+                        );
+                    }
 
-                    // ✔ زيادة فقط
-                    var diff = edited.quantity - oldItem.quantity;
+                    var extraNeeded =
+                        edited.quantity - oldItem.quantity;
 
-                    if (diff > 0)
+                    if (extraNeeded > 0)
                     {
                         if (!stock.ContainsKey(oldItem.product_id))
-                            return (false, "المنتج غير موجود");
+                        {
+                            return (
+                                false,
+                                "المنتج غير موجود"
+                            );
+                        }
 
-                        if (stock[oldItem.product_id].quantity < diff)
-                            return (false, "المخزون غير كافي");
+                        if (extraNeeded >
+    stock[oldItem.product_id].quantity)
+                        {
+                            var productName = await _context.products
+                                .Where(p => p.product_id == oldItem.product_id)
+                                .Select(p => p.name)
+                                .FirstOrDefaultAsync();
 
-                        stock[oldItem.product_id].quantity -= diff;
+                            return (
+                                false,
+                                $"المخزون غير كافي للصنف: {productName}"
+                            );
+                        }
+
+                        stock[oldItem.product_id].quantity -= extraNeeded;
                     }
 
                     // ✔ تحديث السعر والكمية والقيمة المرجعية
@@ -486,7 +507,12 @@ _context.financial_events
                         return (false, "منتج غير موجود");
 
                     if (stock[item.product_id].quantity < item.quantity)
-                        return (false, "المخزون غير كافي");
+                    {
+                        return (
+                            false,
+                            $"المخزون غير كافي للصنف: {item.product_name}"
+                        );
+                    }
                 }
 
                 foreach (var item in addedItems)
@@ -1020,11 +1046,13 @@ _context.financial_events
                 .ToList();
         }
 
+
         public async Task<(bool success, string message)>
- ProcessPartialReturn(
-     int orderId,
-     List<ReturnItemInput> items,
-     int adminId)
+        ProcessPartialReturn(
+            int orderId,
+            List<ReturnItemInput> items,
+            int adminId,
+            string? selectedRefundMethod = null)
         {
             using var transaction =
                 await _context.Database.BeginTransactionAsync();
@@ -1052,12 +1080,30 @@ _context.financial_events
                     .Distinct()
                     .ToListAsync();
 
-                if (paymentMethods.Count > 1)
+                decimal selectedMethodBalance = 0;
+
+                if (!string.IsNullOrWhiteSpace(selectedRefundMethod))
                 {
-                    return (
-                        false,
-                        "هذه الفاتورة تحتوي على أكثر من طريقة دفع، قم أولاً بتعديل الدفعات من شاشة تعديل الفاتورة ثم نفذ الراجع مره أخرى "
-                    );
+                    string dbMethod = selectedRefundMethod switch
+                    {
+                        "نقدي" => "cash",
+                        "بطاقة" => "card",
+                        "تحويل" => "transfer",
+                        "شيك" => "check",
+                        _ => selectedRefundMethod
+                    };
+
+                    selectedMethodBalance =
+                        await _context.financial_events
+                            .Where(x =>
+                                x.ref_table == "orders" &&
+                                x.ref_id == order.order_id &&
+                                x.payment_method == dbMethod)
+                            .SumAsync(x =>
+                                x.direction == "IN"
+                                    ? (decimal?)x.amount
+                                    : -(decimal?)x.amount
+                            ) ?? 0;
                 }
 
                 var validReturns = items
@@ -1112,79 +1158,7 @@ _context.financial_events
 
                 decimal totalCommissionReturn = 0;
 
-                foreach (var item in validReturns)
-                {
-                    var orderItem =
-                        order.Items.FirstOrDefault(x =>
-                            x.product_id ==
-                            item.product_id);
 
-                    if (orderItem == null)
-                        return (false, "منتج غير موجود بالفاتورة");
-
-                    if (item.return_quantity >
-                        orderItem.quantity)
-                    {
-                        return (
-                            false,
-                            $"الكمية المرجعة أكبر من الموجود للمنتج {item.product_name}"
-                        );
-                    }
-
-                    // ==================================
-                    // تحديث الكمية
-                    // ==================================
-
-                    orderItem.quantity -= item.return_quantity;
-
-                    if (orderItem.quantity <= 0)
-                    {
-                        _context.order_items.Remove(orderItem);
-                    }
-
-                    // ==================================
-                    // إرجاع للمخزون
-                    // ==================================
-
-                    if (stock.ContainsKey(item.product_id))
-                    {
-                        stock[item.product_id]
-                            .quantity +=
-                            item.return_quantity;
-                    }
-
-                    // ==================================
-                    // تسجيل الراجع
-                    // ==================================
-
-                    _context.returns.Add(new Return
-                    {
-                        order_id = order.order_id,
-
-                        product_id =
-                            item.product_id,
-
-                        returned_quantity =
-                            item.return_quantity,
-
-                        return_date =
-                            DateTime.UtcNow
-                    });
-
-                    // ==================================
-                    // استرجاع العمولة
-                    // ==================================
-
-                    if (order.person_type == "marketer"
-                        &&
-                        order.pay_commission_now)
-                    {
-                        totalCommissionReturn +=
-                            item.return_quantity
-                            *
-                            order.commission_per_box;
-                    }
-                }
 
                 // ==================================
                 // أسماء المنتجات
@@ -1204,12 +1178,16 @@ _context.financial_events
                 // ==================================
                 // حساب الإجمالي الجديد
                 // ==================================
-
                 var currentTotal =
                     order.Items.Sum(x => x.quantity * x.unit_price);
 
+                var returnTotal =
+                    validReturns.Sum(x =>
+                        x.return_quantity * x.unit_price);
+
                 var newNetTotal =
-                    currentTotal - order.discount_total;
+                    (currentTotal - returnTotal)
+                    - order.discount_total;
 
                 // ==================================
                 // الفائض الحقيقي فقط
@@ -1218,29 +1196,114 @@ _context.financial_events
                 var overPaid =
                     orderPaidAmount - newNetTotal;
 
+                if (
+    !string.IsNullOrWhiteSpace(selectedRefundMethod)
+    &&
+    overPaid > selectedMethodBalance
+)
+                {
+                    return (
+      false,
+  @"المبلغ المطلوب استرجاعه أكبر من المبلغ المدفوع بطريقة الدفع المختارة.
+
+لحل المشكلة:
+
+1- أرجع الدفعات الحالية كلها من شاشة تعديل الفاتورة.
+
+2- نفذ الراجع المطلوب.
+
+3- أضف الدفعات الجديدة حسب المبلغ المتبقي بعد الراجع."
+  );
+                }
                 // ==================================
                 // استرجاع فقط إذا أصبح هناك فائض
                 // ==================================
 
-                if (
-                    paymentMethods.Count == 1
-                    &&
-                    overPaid > 0
-                )
+                    foreach (var item in validReturns)
+                    {
+                        var orderItem =
+                            order.Items.FirstOrDefault(x =>
+                                x.product_id ==
+                                item.product_id);
 
+                        if (orderItem == null)
+                            return (false, "منتج غير موجود بالفاتورة");
 
-                {
+                        if (item.return_quantity >
+                            orderItem.quantity)
+                        {
+                            return (
+                                false,
+                                $"الكمية المرجعة أكبر من الموجود للمنتج {item.product_name}"
+                            );
+                        }
+
+                        // ==================================
+                        // تحديث الكمية
+                        // ==================================
+
+                        orderItem.quantity -= item.return_quantity;
+
+                        if (orderItem.quantity <= 0)
+                        {
+                            _context.order_items.Remove(orderItem);
+                        }
+
+                        // ==================================
+                        // إرجاع للمخزون
+                        // ==================================
+
+                        if (stock.ContainsKey(item.product_id))
+                        {
+                            stock[item.product_id]
+                                .quantity +=
+                                item.return_quantity;
+                        }
+
+                        // ==================================
+                        // تسجيل الراجع
+                        // ==================================
+
+                        _context.returns.Add(new Return
+                        {
+                            order_id = order.order_id,
+
+                            product_id =
+                                item.product_id,
+
+                            returned_quantity =
+                                item.return_quantity,
+
+                            return_date =
+                                DateTime.UtcNow
+                        });
+
+                        // ==================================
+                        // استرجاع العمولة
+                        // ==================================
+
+                        if (order.person_type == "marketer"
+                            &&
+                            order.pay_commission_now)
+                        {
+                            totalCommissionReturn +=
+                                item.return_quantity
+                                *
+                                order.commission_per_box;
+                        }
+                    }
+
 
                     var currentCashBalance =
-    await _context.financial_events
-        .Where(x =>
-            x.cash_box_id ==
-            order.cash_box_id)
-        .SumAsync(x =>
-            x.direction == "IN"
-                ? (decimal?)x.amount
-                : -(decimal?)x.amount
-        ) ?? 0;
+                        await _context.financial_events
+                            .Where(x =>
+                                x.cash_box_id ==
+                                order.cash_box_id)
+                            .SumAsync(x =>
+                                x.direction == "IN"
+                                    ? (decimal?)x.amount
+                                    : -(decimal?)x.amount
+                            ) ?? 0;
 
                     if (currentCashBalance < overPaid)
                     {
@@ -1249,6 +1312,13 @@ _context.financial_events
                             "الخزنة لا تحتوي حالياً على المبلغ المطلوب للاسترجاع، قم بتحويل مبلغ إلى الخزنة ثم أعد المحاولة"
                         );
                     }
+
+
+                if (overPaid > 0)
+                {
+
+
+
                     AddFinancialEvent(
                         "استرجاع مبيعات",
                         "OUT",
@@ -1259,11 +1329,22 @@ _context.financial_events
                         "orders",
                         order.person_id,
                         personName,
-                        paymentMethods.First(),
+                        paymentMethods.Count == 1
+    ? paymentMethods.First()
+    : selectedRefundMethod switch
+    {
+        "نقدي" => "cash",
+        "بطاقة" => "card",
+        "تحويل" => "transfer",
+        "شيك" => "check",
+        _ => selectedRefundMethod
+    },
                         "راجع جزئي وإرجاع مبلغ",
                         firstReturnItemId,
                         returnItemName
                     );
+
+
                 }
 
                 // ==================================
