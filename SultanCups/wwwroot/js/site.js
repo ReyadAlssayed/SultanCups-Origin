@@ -388,7 +388,7 @@ window.printStatsCard = function () {
             <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
                   rel="stylesheet">
 
-            <style>
+            
 
                 @page{
                     size:A4;
@@ -516,8 +516,7 @@ window.printStatsCard = function () {
                     تقرير إحصائي رسمي
                 </div>
 
-            </div>
-
+                </div>
             ${content}
 
             <div class="print-footer">
@@ -615,9 +614,9 @@ window.printArchiveDetails = function () {
                     overflow:visible !important;
                 }
 
-                .emp-dialog-actions{
-                    display:none !important;
-                }
+              .archive-dialog-top-actions{
+    display:none !important;
+}
 
                 .emp-dialog-top-image{
                     display:none !important;
@@ -715,6 +714,11 @@ window.printArchiveDetails = function () {
                     font-weight:700;
                 }
 
+             
+
+
+
+
             </style>
 
         </head>
@@ -730,104 +734,6 @@ window.printArchiveDetails = function () {
                 <div class="print-subtitle">
                     تقرير رسمي لدورة الجرد والأرشفة
                 </div>
-
-            </div>
-
-           <div class="official-text">
-
-                إلى السيد / مدير مصنع السلطان للأكواب الورقية المحترم
-
-                <br><br>
-
-                السلام عليكم ورحمة الله وبركاته،،،
-
-                <br><br>
-
-                نفيدكم علمًا بأنه تم تنفيذ عملية الجرد
-                والأرشفة للدورة المالية الحالية بنجاح،
-                وذلك بعد مراجعة واعتماد كافة البيانات
-                المالية والإدارية المسجلة داخل النظام
-                حتى لحظة إغلاق الدورة الحالية.
-
-                <br><br>
-
-                وقد أظهرت نتائج الجرد أن إجمالي السيولة
-                الفعلية داخل الخزنات بلغ:
-
-                <strong>${getCardValue("إجمالي السيولة")}</strong>
-
-                بينما بلغ صافي الوضع المالي الحالي:
-
-                <strong>${getCardValue("صافي الوضع المالي الحالي")}</strong>
-
-                <br><br>
-
-                كما سجلت حركة التدفقات المالية خلال
-                الدورة الحالية إجمالي داخل قدره:
-
-                <strong>${getCardValue("إجمالي الداخل")}</strong>
-
-                في حين بلغ إجمالي الخارج:
-
-                <strong>${getCardValue("إجمالي الخارج")}</strong>
-
-                أما إجمالي الديون القائمة حتى لحظة
-                الأرشفة فقد بلغ:
-
-                <strong>${getCardValue("إجمالي الديون")}</strong>
-
-                <br><br>
-
-                وفيما يتعلق بالنشاط التجاري والتشغيلي،
-                فقد بلغت قيمة المبيعات المحصلة:
-
-                <strong>${getCardValue("المبيعات المحصلة")}</strong>
-
-                بينما بلغت قيمة المشتريات المسجلة:
-
-                <strong>${getCardValue("إجمالي المشتريات")}</strong>
-
-                كما سجل النظام إجمالي سلف مالية بقيمة:
-
-                <strong>${getCardValue("إجمالي السلف")}</strong>
-
-                <br><br>
-
-                بينما بلغت الرواتب المستحقة غير
-                المسددة:
-
-                <strong>${getCardValue("الرواتب المستحقة")}</strong>
-
-                كما بلغت العمولات غير المصروفة:
-
-                <strong>${getCardValue("العمولات غير المدفوعة")}</strong>
-
-                <br><br>
-
-                وأظهرت الإحصائيات التشغيلية أن أفضل
-                مسوق خلال الدورة الحالية هو:
-
-                <strong>${getCardValue("أفضل مسوق")}</strong>
-
-                بينما كان المنتج الأعلى مبيعًا هو:
-
-                <strong>${getCardValue("الأكثر مبيعًا")}</strong>
-
-                <br><br>
-
-                وبناءً على ما سبق، فقد تم اعتماد هذه
-                البيانات رسميًا كمرجع نهائي للدورة
-                المؤرشفة الحالية، وحفظها ضمن نظام
-                الأرشفة المركزي الخاص بالمصنع
-                للرجوع إليها عند الحاجة.
-
-                <br><br>
-
-                وتفضلوا بقبول فائق الاحترام والتقدير،،،
-
-                <br><br>
-
-                فريق العمل — نظام الحداثة لإدارة المصانع
 
             </div>
 

@@ -27,9 +27,9 @@ namespace SultanCups.Services
 
                     .AsNoTracking()
 
-                    .OrderByDescending(x => x.archive_date)
+                    .OrderByDescending(x => x.to_date)
 
-                    .Select(x => x.archive_date)
+                    .Select(x => x.to_date)
 
                     .FirstOrDefaultAsync();
 
@@ -631,8 +631,8 @@ namespace SultanCups.Services
         {
             return await _context.archive_cycles
                 .AsNoTracking()
-                .OrderByDescending(x => x.archive_date)
-                .Select(x => x.archive_date)
+                .OrderByDescending(x => x.to_date)
+                .Select(x => x.to_date)
                 .FirstOrDefaultAsync();
         }
 
@@ -671,13 +671,15 @@ stats.loans_remaining > 0
             }
 
             var archive =
-                new ArchiveCycle
-                {
-                    archive_date = DateTime.UtcNow,
+    new ArchiveCycle
+    {
+        from_date = lastArchiveDate,
 
-                    archived_by = adminId,
+        to_date = DateTime.UtcNow,
 
-                    total_cash_balance =
+        archived_by = adminId,
+
+        total_cash_balance =
                         stats.total_cash_balance,
 
                     real_financial_balance =

@@ -134,11 +134,11 @@
                         <div class="archive-mini-item">
 
                             <span>
-                                تاريخ الجرد
+                                بداية الدورة
                             </span>
 
                             <strong>
-                                @(item.archive_date
+                                @(item.from_date
                                     .ToLocalTime()
                                     .ToString("yyyy/MM/dd"))
                             </strong>
@@ -148,13 +148,13 @@
                         <div class="archive-mini-item">
 
                             <span>
-                                وقت الأرشفة
+                                نهاية الدورة
                             </span>
 
                             <strong>
-                                @(item.archive_date
+                                @(item.to_date
                                     .ToLocalTime()
-                                    .ToString("hh:mm tt"))
+                                    .ToString("yyyy/MM/dd"))
                             </strong>
 
                         </div>
@@ -203,15 +203,15 @@
 
                     <p>
 
-                        @(SelectedArchive.archive_date
-                            .ToLocalTime()
-                            .ToString("yyyy/MM/dd"))
+                        @(SelectedArchive.from_date
+    .ToLocalTime()
+    .ToString("yyyy/MM/dd"))
 
                         —
 
-                        @(SelectedArchive.archive_date
+                        @(SelectedArchive.to_date
                             .ToLocalTime()
-                            .ToString("hh:mm tt"))
+                            .ToString("yyyy/MM/dd"))
 
                     </p>
 

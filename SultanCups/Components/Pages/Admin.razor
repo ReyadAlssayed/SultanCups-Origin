@@ -3,6 +3,7 @@
 @layout Layout.MainLayout
 @inject NavigationManager Nav
 @inject SultanCups.Services.AdminService AdminService
+@inject SultanCups.Services.UserSession Session
 
 @using ClosedXML.Excel
 @inject IJSRuntime JS
@@ -75,8 +76,40 @@
                                 </td>
 
                                 <td class="ad-actions">
-                                    <button type="button" class="ad-edit" @onclick="() => OpenEditDialog(a)">تعديل</button>
-                                    <button type="button" class="ad-delete" @onclick="() => OpenDeleteDialog(a)">تعطيل</button>
+
+                                    @if (
+                                        a.full_name == "مطور النظام"
+                                        &&
+                                        !(
+                                            Session.FullName == "مطور النظام"
+                                            &&
+                                            Session.Phone == "0910772372"
+                                        )
+                                    )
+                                    {
+                                        <span class="locked-admin">
+                                            مغلق
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="ad-edit"
+                                                @onclick="() => OpenEditDialog(a)">
+
+                                            تعديل
+
+                                        </button>
+
+                                        <button type="button"
+                                                class="ad-delete"
+                                                @onclick="() => OpenDeleteDialog(a)">
+
+                                            تعطيل
+
+                                        </button>
+                                    }
+
                                 </td>
                             </tr>
                         }

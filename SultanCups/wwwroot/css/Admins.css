@@ -21,6 +21,16 @@
     min-height: 100vh;
 }
 
+.locked-admin {
+    padding: 7px 14px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 /* الهيدر العلوي - مطابق للإنتاج */
 .ad-header-top {
     display: flex;
