@@ -386,13 +386,23 @@
         if (hasError)
             return;
 
-        if (ShowAddDialog)
-            await SalesService.AddCustomer(CustomerForm);
-        else
-            await SalesService.UpdateCustomer(CustomerForm);
+        try
+        {
+            if (ShowAddDialog)
+                await SalesService.AddCustomer(CustomerForm);
+            else
+                await SalesService.UpdateCustomer(CustomerForm);
 
-        CustomersList = await SalesService.GetCustomers();
-        CloseDialogs();
+            CustomersList = await SalesService.GetCustomers();
+            CloseDialogs();
+        }
+        catch
+        {
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
+        }
     }
 
     async Task ConfirmDelete()
@@ -485,6 +495,21 @@
              (StatusFilter == "inactive" && !c.is_active))
         );
 
+    async Task ActivateExisting()
+    {
+        if (DuplicateCustomer != null)
+        {
+            DuplicateCustomer.is_active = true;
+
+            await SalesService.UpdateCustomer(DuplicateCustomer);
+
+            ToastService.ShowToast("تم إعادة تنشيط الزبون بنجاح", "success");
+
+            CustomersList = await SalesService.GetCustomers();
+
+            CloseDialogs();
+        }
+    }
 
     string CleanName(string? value)
     {

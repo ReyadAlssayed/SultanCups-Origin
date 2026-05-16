@@ -578,7 +578,7 @@
                 DuplicateEmployee = EmployeeList
                     .FirstOrDefault(e =>
                         e.full_name != null &&
-                        Regex.Replace(e.full_name.ToLower(), @"\s+", " ")
+                        Regex.Replace(e.full_name.ToLower(), @"\s+", "")
                             .Trim()
                             .Replace("أ", "ا")
                             .Replace("إ", "ا")
@@ -725,7 +725,7 @@
                     EmployeeList.Any(e =>
                         e.employee_id != EmployeeForm.employee_id &&
                         e.full_name != null &&
-                        Regex.Replace(e.full_name.ToLower(), @"\s+", " ")
+                        Regex.Replace(e.full_name.ToLower(), @"\s+", "")
                             .Trim()
                             .Replace("أ", "ا")
                             .Replace("إ", "ا")
