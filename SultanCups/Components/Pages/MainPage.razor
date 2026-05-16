@@ -1,4 +1,6 @@
 ﻿@page "/MainPage"
+@layout MainLayout
+@inject NavigationManager Nav
 
 <style>
 
@@ -7,13 +9,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 30px;
+        padding: 22px;
         background: #f1f5f9;
     }
 
     .mainpage-card {
         width: 100%;
-        max-width: 1200px;
+        max-width: 1120px;
         border-radius: 34px;
         background: linear-gradient(180deg,#ffffff,#f8fafc);
         border: 1px solid #e2e8f0;
@@ -34,67 +36,84 @@
         }
 
     .main-content {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         align-items: center;
-        justify-content: space-between;
-        gap: 40px;
-        padding: 45px;
+        gap: 30px;
+        padding: 34px;
     }
 
     .left-side {
-        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
-    .system-title {
-        margin: 0;
-        font-size: 58px;
+    .quick-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+    }
+
+    .quick-btn {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 15px;
+        font-size: 14px;
         font-weight: 900;
-        color: #0f172a;
-        line-height: 1.1;
+        cursor: pointer;
+        transition: .18s ease;
+        color: white;
+        box-shadow: 0 10px 25px rgba(37,99,235,.14);
     }
 
-    .system-subtitle {
-        margin-top: 14px;
-        font-size: 22px;
-        font-weight: 800;
-        color: #06b6d4;
+        .quick-btn:hover {
+            transform: translateY(-2px);
+        }
+
+    .sales-btn {
+        background: linear-gradient(135deg,#2563eb,#3b82f6);
+    }
+
+    .expense-btn {
+        background: linear-gradient(135deg,#0f766e,#14b8a6);
     }
 
     .verse-box {
-        margin-top: 38px;
-        padding: 30px 24px;
-        border-radius: 26px;
+        padding: 24px 22px;
+        border-radius: 24px;
         background: #f8fafc;
         border: 1px solid #e2e8f0;
     }
 
+        .verse-box p {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            line-height: 1.9;
+            color: #0f172a;
+        }
+
     .verse-line {
         width: 80px;
         height: 4px;
-        margin-bottom: 20px;
+        margin-top: 15px;
         border-radius: 50px;
         background: linear-gradient(90deg,#2563eb,#06b6d4);
     }
 
-    .verse-box p {
-        margin: 0;
-        font-size: 30px;
-        font-weight: 900;
-        line-height: 2;
-        color: #0f172a;
-    }
-
     .verse-box span {
         display: block;
-        margin-top: 16px;
+        margin-top: 14px;
         color: #64748b;
         font-size: 14px;
         font-weight: 800;
     }
 
     .hadith-box {
-        margin-top: 22px;
-        padding: 22px;
+        margin-top: 18px;
+        padding: 18px;
         border-radius: 22px;
         background: linear-gradient(135deg,#eff6ff,#eef2ff);
         border: 1px solid #dbeafe;
@@ -103,21 +122,12 @@
         .hadith-box p {
             margin: 0;
             font-size: 18px;
-            font-weight: 800;
+            font-weight: 900;
             color: #1e3a8a;
             line-height: 2;
         }
 
-    .main-footer {
-        margin-top: 35px;
-        font-size: 15px;
-        font-weight: 900;
-        color: #6366f1;
-        letter-spacing: .5px;
-    }
-
     .right-side {
-        flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -125,31 +135,22 @@
 
     .hero-image {
         width: 100%;
-        max-width: 520px;
+        max-width: 440px;
+        height: 320px;
+        object-fit: contain;
         border-radius: 28px;
-        object-fit: cover;
-        box-shadow: 0 25px 60px rgba(37,99,235,.20);
-        border: 1px solid rgba(255,255,255,.4);
+        box-shadow: 0 20px 50px rgba(37,99,235,.14);
     }
 
     @@media (max-width:950px) {
 
         .main-content {
-            flex-direction: column-reverse;
-            padding: 30px 22px;
+            grid-template-columns: 1fr;
+            padding: 24px 18px;
         }
 
-        .system-title {
-            font-size: 42px;
-            text-align: center;
-        }
-
-        .system-subtitle {
-            text-align: center;
-        }
-
-        .verse-line {
-            margin: auto auto 20px;
+        .quick-actions {
+            justify-content: center;
         }
 
         .verse-box,
@@ -158,12 +159,21 @@
             text-align: center;
         }
 
-            .verse-box p {
-                font-size: 24px;
-            }
+        .verse-line {
+            margin: 15px auto 0;
+        }
+
+        .verse-box p {
+            font-size: 24px;
+        }
+
+        .hadith-box p {
+            font-size: 16px;
+        }
 
         .hero-image {
             max-width: 100%;
+            height: auto;
         }
     }
 
@@ -177,13 +187,27 @@
 
             <div class="left-side">
 
-                <div class="verse-box">
+                <div class="quick-actions">
 
-                    <div class="verse-line"></div>
+                    <button class="quick-btn sales-btn"
+                            @onclick='() => Nav.NavigateTo("/orders")'>
+                        الانتقال للفواتير
+                    </button>
+
+                    <button class="quick-btn expense-btn"
+                            @onclick='() => Nav.NavigateTo("/OtherPurchases")'>
+                        المصروفات الأخرى
+                    </button>
+
+                </div>
+
+                <div class="verse-box">
 
                     <p>
                         ﴿ وَقُلِ اعْمَلُوا فَسَيَرَى اللَّهُ عَمَلَكُمْ ﴾
                     </p>
+
+                    <div class="verse-line"></div>
 
                     <span>
                         سورة التوبة - الآية 105
@@ -194,14 +218,8 @@
                 <div class="hadith-box">
 
                     <p>
-                        " إن الله يحب إذا عمل أحدكم عملاً أن يتقنه "
+                        " من كان منكم حالفًا فليحلف بالله أو ليصمت "
                     </p>
-
-                </div>
-
-                <div class="main-footer">
-
-                    الحداثة للأنظمة الرقمية
 
                 </div>
 
