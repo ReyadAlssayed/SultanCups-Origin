@@ -762,9 +762,12 @@
 
             ToastService.ShowToast("تم إضافة الراتب بنجاح", "success");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.Message, "error");
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
     }
 
@@ -819,10 +822,13 @@
 
             ToastService.ShowToast("تم تعديل الراتب بنجاح", "success");
         }
-        catch (Exception ex)
-        {
-            ToastService.ShowToast(ex.Message, "error");
-        }
+        catch (Exception)
+    {
+    ToastService.ShowToast(
+        "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+        "error"
+    );
+}
     }
 
     void OpenAddPaymentDialog(Salary s)
@@ -883,11 +889,12 @@
 
             ToastService.ShowToast("تمت إضافة الدفعة بنجاح", "success");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             ToastService.ShowToast(
-                ex.InnerException?.Message ?? ex.Message,
-                "error");
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
     }
 
@@ -927,9 +934,10 @@
 
             ToastService.ShowToast("تم استرجاع الدفعة بنجاح", "success");
         }
-        catch (Exception ex)
+        catch
         {
-            PaymentError = ex.Message;
+            PaymentError =
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام";
         }
     }
 
@@ -945,12 +953,13 @@
 
             ToastService.ShowToast("تم حذف الراتب بنجاح", "success");
         }
-        catch (Exception ex)
-        {
-            var msg = ex.InnerException?.Message ?? ex.Message;
-
-            ToastService.ShowToast(msg, "error");
-        }
+         catch
+            {
+                ToastService.ShowToast(
+                  "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
+    }    
     }
 
     async Task ExportToExcel()

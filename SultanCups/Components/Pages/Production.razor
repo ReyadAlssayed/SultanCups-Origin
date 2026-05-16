@@ -326,7 +326,10 @@
             }
             else
             {
-                ShowToast(result, "error");
+                ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                     "error"
+                    );
                 return;
             }
         }

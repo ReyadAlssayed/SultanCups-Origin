@@ -7,6 +7,8 @@
 
 @using ClosedXML.Excel
 @inject IJSRuntime JS
+@using System.Text.RegularExpressions
+
 
 <div class="mk-page">
 
@@ -286,7 +288,8 @@
 
     async Task SaveCustomer()
     {
-        var name = CustomerForm.name?.Trim();
+        CustomerForm.name = CleanName(CustomerForm.name);
+        var name = CustomerForm.name;
 
         Message = "";
         PhoneError = "";
@@ -302,7 +305,14 @@
             return;
         }
 
-        if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[\u0600-\u06FFa-zA-Z\s]+$"))
+        string normalizedName = Regex
+            .Replace(name.ToLower(), @"\s+", "")
+            .Trim()
+            .Replace("أ", "ا")
+            .Replace("إ", "ا")
+            .Replace("آ", "ا");
+
+        if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
         {
             Message = "الاسم يجب أن يكون نص فقط";
             return;
@@ -312,7 +322,13 @@
 
         DuplicateCustomer = all.FirstOrDefault(c =>
             c.name != null &&
-            c.name.Trim().ToLower() == name.ToLower() &&
+            Regex.Replace(c.name.ToLower(), @"\s+", "")
+                .Trim()
+                .Replace("أ", "ا")
+                .Replace("إ", "ا")
+                .Replace("آ", "ا")
+                == normalizedName
+            &&
             (ShowAddDialog || c.customer_id != CustomerForm.customer_id));
 
         if (DuplicateCustomer != null)
@@ -336,10 +352,23 @@
             PhoneError = "رقم الهاتف مطلوب";
             hasError = true;
         }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(CustomerForm.phone, @"^09\d{8}$"))
+        else if (!Regex.IsMatch(CustomerForm.phone, @"^09\d{8}$"))
         {
             PhoneError = "رقم الهاتف يجب أن يبدأ بـ 09 ويتكون من 10 أرقام";
             hasError = true;
+        }
+        else
+        {
+            bool phoneExists = all.Any(c =>
+                c.customer_id != CustomerForm.customer_id &&
+                c.phone != null &&
+                c.phone.Trim() == CustomerForm.phone.Trim());
+
+            if (phoneExists)
+            {
+                PhoneError = "رقم الهاتف مستخدم مسبقاً";
+                hasError = true;
+            }
         }
 
         // العنوان
@@ -348,7 +377,7 @@
             AddressError = "العنوان مطلوب";
             hasError = true;
         }
-        else if (System.Text.RegularExpressions.Regex.IsMatch(CustomerForm.address, @"^\d+$"))
+        else if (Regex.IsMatch(CustomerForm.address, @"^\d+$"))
         {
             AddressError = "العنوان لا يمكن أن يكون أرقام فقط";
             hasError = true;
@@ -357,24 +386,22 @@
         if (hasError)
             return;
 
-        if (ShowAddDialog)
-            await SalesService.AddCustomer(CustomerForm);
-        else
-            await SalesService.UpdateCustomer(CustomerForm);
-
-        CustomersList = await SalesService.GetCustomers();
-        CloseDialogs();
-    }
-
-    async Task ActivateExisting()
-    {
-        if (DuplicateCustomer != null)
+        try
         {
-            DuplicateCustomer.is_active = true;
-            await SalesService.UpdateCustomer(DuplicateCustomer);
+            if (ShowAddDialog)
+                await SalesService.AddCustomer(CustomerForm);
+            else
+                await SalesService.UpdateCustomer(CustomerForm);
 
             CustomersList = await SalesService.GetCustomers();
             CloseDialogs();
+        }
+        catch
+        {
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
     }
 
@@ -467,4 +494,29 @@
              (StatusFilter == "active" && c.is_active) ||
              (StatusFilter == "inactive" && !c.is_active))
         );
+
+    async Task ActivateExisting()
+    {
+        if (DuplicateCustomer != null)
+        {
+            DuplicateCustomer.is_active = true;
+
+            await SalesService.UpdateCustomer(DuplicateCustomer);
+
+            ToastService.ShowToast("تم إعادة تنشيط الزبون بنجاح", "success");
+
+            CustomersList = await SalesService.GetCustomers();
+
+            CloseDialogs();
+        }
+    }
+
+    string CleanName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        return Regex.Replace(value.Trim(), @"\s+", " ");
+    }
+
 }

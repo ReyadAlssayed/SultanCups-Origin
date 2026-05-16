@@ -516,9 +516,12 @@
                 isAdd ? "تم إضافة المصروف بنجاح" : "تم تعديل المصروف بنجاح",
                 "success");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.Message, "error");
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
     }
 

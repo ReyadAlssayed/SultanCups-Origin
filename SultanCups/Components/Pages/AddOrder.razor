@@ -866,10 +866,9 @@ else
     return;
 }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            var msg = ex.InnerException?.Message ?? ex.Message;
-            ToastService.ShowToast(msg, "error");
+            ToastService.ShowToast("تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام", "error");
         }
 
         finally

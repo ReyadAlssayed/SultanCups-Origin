@@ -778,10 +778,9 @@ OldTotal = GetTotal(p);
             await LoadData();
             Close();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            var msg = ex.InnerException?.Message ?? ex.Message;
-            ToastService.ShowToast(msg, "error");
+            ToastService.ShowToast("حدث خطأ أثناء حفظ الفاتورة", "error");
         }
     }
 

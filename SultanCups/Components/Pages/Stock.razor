@@ -78,6 +78,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-        stockList = await InventoryService.GetStock();
+        try
+        {
+            stockList = await InventoryService.GetStock();
+        }
+        catch
+        {
+            stockList = new();
+        }
     }
 }

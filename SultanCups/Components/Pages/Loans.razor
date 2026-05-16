@@ -884,10 +884,10 @@
                 "success"
             );
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             ToastService.ShowToast(
-                ex.InnerException?.Message ?? ex.Message,
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
                 "error"
             );
         }
@@ -924,9 +924,12 @@
             ShowEditDialog = false;
             ShowDiffDialog = true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.InnerException?.Message ?? ex.Message, "error");
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
     }
 

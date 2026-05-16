@@ -446,9 +446,9 @@
 
             ToastService.ShowToast("تم الإيداع بنجاح", "success");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.InnerException?.Message ?? ex.Message, "error");
+            ToastService.ShowToast("تعذر إكمال عملية الإيداع بسبب خطأ داخلي، يرجى التواصل مع مطور النظام", "error");
         }
     }
 
@@ -489,9 +489,9 @@
 
             ToastService.ShowToast("تم التحويل بنجاح", "success");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.Message, "error");
+            ToastService.ShowToast("تعذر إكمال عملية الإيداع بسبب خطأ داخلي، يرجى التواصل مع مطور النظام", "error");
         }
     }
 

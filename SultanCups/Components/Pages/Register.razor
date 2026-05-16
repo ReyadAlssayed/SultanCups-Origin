@@ -249,9 +249,11 @@
 
             ShowSuccess("تم إنشاء الحساب بنجاح، بانتظار تفعيل مسؤول أول للحساب.");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ShowError(ex.InnerException?.Message ?? ex.Message);
+            ShowError(
+                "تعذر إنشاء الحساب بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+            );
         }
         finally
         {

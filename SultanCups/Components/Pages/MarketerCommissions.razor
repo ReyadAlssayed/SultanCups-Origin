@@ -172,7 +172,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        CommissionList = await FinanceService.GetMarketerCommissions();
+        try
+        {
+            CommissionList = await FinanceService.GetMarketerCommissions();
+        }
+        catch
+        {
+            CommissionList = new();
+        }
     }
 
     IEnumerable<MarketerCommissionView> FilteredList =>

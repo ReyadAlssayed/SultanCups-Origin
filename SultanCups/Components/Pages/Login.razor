@@ -54,7 +54,7 @@
 
             <div class="auth-field auth-password">
                 <label>كلمة المرور</label>
-
+                
                 <input type="@passwordType"
                        placeholder="أدخل كلمة المرور"
                        maxlength="40"
@@ -164,9 +164,9 @@
             username = "";
             password = "";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ShowError(ex.Message);
+            ShowError("تعذر تسجيل الدخول بسبب خطأ داخلي، يرجى التواصل مع مطور النظام");
         }
         finally
         {

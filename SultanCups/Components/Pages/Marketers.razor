@@ -7,6 +7,7 @@
 
 @using ClosedXML.Excel
 @inject IJSRuntime JS
+@using System.Text.RegularExpressions
 
 <div class="mk-page">
 
@@ -335,13 +336,16 @@
 
         ShowEditDialog = true;
     }
+
     async Task SaveMarketer()
     {
-        var name = MarketerForm.name?.Trim();
+        MarketerForm.name = CleanName(MarketerForm.name);
+        var name = MarketerForm.name;
 
         Message = "";
         PhoneError = AddressError = CommissionError = "";
         ShowActivatePrompt = false;
+
         bool hasError = false;
 
         // الاسم
@@ -351,7 +355,14 @@
             return;
         }
 
-        if (!System.Text.RegularExpressions.Regex.IsMatch(name, @"^[\u0600-\u06FFa-zA-Z\s]+$"))
+        string normalizedName = Regex
+            .Replace(name.ToLower(), @"\s+", "")
+            .Trim()
+            .Replace("أ", "ا")
+            .Replace("إ", "ا")
+            .Replace("آ", "ا");
+
+        if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
         {
             Message = "الاسم يجب أن يكون نص فقط";
             return;
@@ -362,7 +373,13 @@
 
             DuplicateMarketer = all.FirstOrDefault(m =>
                 m.name != null &&
-                m.name.Trim().ToLower() == name.ToLower() &&
+                Regex.Replace(m.name.ToLower(), @"\s+", "")
+                    .Trim()
+                    .Replace("أ", "ا")
+                    .Replace("إ", "ا")
+                    .Replace("آ", "ا")
+                    == normalizedName
+                &&
                 (ShowAddDialog || m.marketer_id != MarketerForm.marketer_id)
             );
 
@@ -385,7 +402,8 @@
             }
             else
             {
-                if (DuplicateMarketer != null && DuplicateMarketer.marketer_id != MarketerForm.marketer_id)
+                if (DuplicateMarketer != null &&
+                    DuplicateMarketer.marketer_id != MarketerForm.marketer_id)
                 {
                     Message = "لا يمكن تكرار المسوق";
                     return;
@@ -399,10 +417,25 @@
             PhoneError = "رقم الهاتف مطلوب";
             hasError = true;
         }
-        else if (!System.Text.RegularExpressions.Regex.IsMatch(MarketerForm.phone, @"^09\d{8}$"))
+        else if (!Regex.IsMatch(MarketerForm.phone, @"^09\d{8}$"))
         {
             PhoneError = "رقم الهاتف يجب أن يبدأ بـ 09 ويتكون من 10 خانات";
             hasError = true;
+        }
+        else
+        {
+            var all = await SalesService.GetMarketers();
+
+            bool phoneExists = all.Any(m =>
+                m.marketer_id != MarketerForm.marketer_id &&
+                m.phone != null &&
+                m.phone.Trim() == MarketerForm.phone.Trim());
+
+            if (phoneExists)
+            {
+                PhoneError = "رقم الهاتف مستخدم مسبقاً";
+                hasError = true;
+            }
         }
 
         // العنوان
@@ -411,7 +444,7 @@
             AddressError = "العنوان مطلوب";
             hasError = true;
         }
-        else if (System.Text.RegularExpressions.Regex.IsMatch(MarketerForm.address, @"^\d+$"))
+        else if (Regex.IsMatch(MarketerForm.address, @"^\d+$"))
         {
             AddressError = "العنوان لا يمكن أن يكون أرقام فقط";
             hasError = true;
@@ -427,7 +460,8 @@
         if (hasError)
             return;
 
-        
+        try
+        {
             if (ShowAddDialog)
             {
                 await SalesService.AddMarketer(MarketerForm);
@@ -441,8 +475,14 @@
 
             MarketerList = await SalesService.GetMarketers();
             CloseDialogs();
-        
-        
+        }
+        catch
+        {
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
+        }
     }
 
    
@@ -572,6 +612,14 @@
         DuplicateMarketer = null;
 
         MarketerForm = new() { is_special = false };
+    }
+
+    string CleanName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        return Regex.Replace(value.Trim(), @"\s+", " ");
     }
 
 }
