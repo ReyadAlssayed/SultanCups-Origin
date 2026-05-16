@@ -138,7 +138,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ReturnList = await FinanceService.GetReturns();
+        try
+        {
+            ReturnList = await FinanceService.GetReturns();
+        }
+        catch
+        {
+            ReturnList = new();
+        }
     }
 
     IEnumerable<ReturnView> FilteredList =>

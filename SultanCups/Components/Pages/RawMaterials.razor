@@ -512,7 +512,10 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
         }
         catch
         {
-            ToastService.ShowToast("خطأ في قاعدة البيانات", "error");
+ToastService.ShowToast(
+      "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+        "error"
+        ); 
         }
     }
 

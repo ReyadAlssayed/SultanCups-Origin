@@ -353,23 +353,30 @@
     bool IsExporting = false;
 
 
-   protected override async Task OnInitializedAsync()
-{
-        Logs = await FinanceService.GetFinancialEvents();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Logs = await FinanceService.GetFinancialEvents();
 
-        Orders = await FinanceService2.GetOrdersRaw();
-        OrderItems = await FinanceService2.GetOrderItems();
-        Products = await FinanceService2.GetProducts();
+            Orders = await FinanceService2.GetOrdersRaw();
+            OrderItems = await FinanceService2.GetOrderItems();
+            Products = await FinanceService2.GetProducts();
 
-        Employees = await FinanceService.GetActiveEmployees();
-        Salaries = await FinanceService.GetSalaries();
-        OtherPurchases = await FinanceService.GetOtherPurchases();
-        Suppliers = await FinanceService.GetSuppliers();
-        RawMaterials = await FinanceService.GetRawMaterials();
-        Purchases = await FinanceService.GetPurchases();
+            Employees = await FinanceService.GetActiveEmployees();
+            Salaries = await FinanceService.GetSalaries();
+            OtherPurchases = await FinanceService.GetOtherPurchases();
+            Suppliers = await FinanceService.GetSuppliers();
+            RawMaterials = await FinanceService.GetRawMaterials();
+            Purchases = await FinanceService.GetPurchases();
 
-        Customers = await FinanceService2.GetCustomers();
-        Marketers = await FinanceService2.GetMarketers();
+            Customers = await FinanceService2.GetCustomers();
+            Marketers = await FinanceService2.GetMarketers();
+        }
+        catch
+        {
+            Logs = new();
+        }
     }
 
     void OpenDetails(FinancialEvent item)

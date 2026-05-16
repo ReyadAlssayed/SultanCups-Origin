@@ -1046,7 +1046,10 @@ async Task ConfirmCancelOrder()
     }
     else
     {
-        ToastService.ShowToast(result.message, "error");
+ToastService.ShowToast(
+    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+    "error"
+);  
     }
 }
 
@@ -1148,7 +1151,8 @@ if (
 }
     else
 {
-    ReturnErrorMessage = result.message;
+    ReturnErrorMessage =
+    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام";
 
     ShowReturnErrorDialog = true;
 }

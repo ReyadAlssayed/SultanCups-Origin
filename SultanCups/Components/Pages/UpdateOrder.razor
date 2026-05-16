@@ -1095,9 +1095,12 @@
                 ToastService.ShowToast(result.message, "error");
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ToastService.ShowToast(ex.Message, "error");
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
         }
 
         finally
@@ -1186,7 +1189,7 @@
     }
 
     decimal Total => Form.Items.Sum(i => i.quantity * i.unit_price);
-    decimal Net => Math.Max(0, Total - Form.discount_total);
+    decimal Net => Math.Max(0, Total - Form.discount_total);    
     decimal PaymentsTotal => Payments.Sum(x => x.amount);
 
     string Fmt(decimal v) => $"{v:0.00} د.ل";

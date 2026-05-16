@@ -226,17 +226,28 @@
             return;
         }
 
-        await AdminService.SendSupportMessage(
-            CurrentUserName,
-            CurrentUserRole,
-            SupportNotes
-        );
+        try
+        {
+            await AdminService.SendSupportMessage(
+                CurrentUserName,
+                CurrentUserRole,
+                SupportNotes
+            );
 
-        Message = "تم إرسال الملاحظة للمطور";
-        IsWarningMessage = false;
-        SupportNotes = "";
-        ShowSupportDialog = false;
+            Message = "تم إرسال الملاحظة للمطور";
+            IsWarningMessage = false;
+            SupportNotes = "";
+            ShowSupportDialog = false;
+        }
+        catch
+        {
+            Message =
+                "تعذر إرسال الملاحظة بسبب خطأ داخلي، يرجى التواصل مع مطور النظام";
+
+            IsWarningMessage = true;
+        }
     }
+}
 
     void Logout()
     {

@@ -460,19 +460,29 @@
         if (hasError)
             return;
 
-        if (ShowAddDialog)
+        try
         {
-            await SalesService.AddMarketer(MarketerForm);
-            ToastService.ShowToast("تم إضافة المسوق بنجاح", "success");
-        }
-        else
-        {
-            await SalesService.UpdateMarketer(MarketerForm);
-            ToastService.ShowToast("تم تحديث بيانات المسوق بنجاح", "success");
-        }
+            if (ShowAddDialog)
+            {
+                await SalesService.AddMarketer(MarketerForm);
+                ToastService.ShowToast("تم إضافة المسوق بنجاح", "success");
+            }
+            else
+            {
+                await SalesService.UpdateMarketer(MarketerForm);
+                ToastService.ShowToast("تم تحديث بيانات المسوق بنجاح", "success");
+            }
 
-        MarketerList = await SalesService.GetMarketers();
-        CloseDialogs();
+            MarketerList = await SalesService.GetMarketers();
+            CloseDialogs();
+        }
+        catch
+        {
+            ToastService.ShowToast(
+                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                "error"
+            );
+        }
     }
 
    
