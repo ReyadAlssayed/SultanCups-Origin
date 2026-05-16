@@ -221,12 +221,14 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
                 await transaction.CommitAsync();
                 return (true, order.order_id.ToString());
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
 
-                var msg = ex.InnerException?.Message ?? ex.Message;
-                return (false, msg);
+                return (
+                    false,
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+                );
             }
         }
 
@@ -813,10 +815,14 @@ _context.financial_events
 
                 return (true, "تم تعديل الفاتورة ✔");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
-                return (false, ex.InnerException?.Message ?? ex.Message);
+
+                return (
+                    false,
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+                );
             }
         }
 
@@ -984,11 +990,14 @@ _context.financial_events
 
                 return (true, "تم إلغاء الفاتورة ✔");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
 
-                return (false, ex.InnerException?.Message ?? ex.Message);
+                return (
+                    false,
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+                );
             }
         }
 
@@ -1390,14 +1399,13 @@ _context.financial_events
 
                 return (true, "تم تنفيذ الراجع ✔");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
 
                 return (
                     false,
-                    ex.InnerException?.Message
-                    ?? ex.Message
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
                 );
             }
         }

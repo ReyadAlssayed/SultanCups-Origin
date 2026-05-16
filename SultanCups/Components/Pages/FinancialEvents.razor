@@ -117,10 +117,8 @@
                                 <!-- النوع -->
                                 <td>@item.event_type</td>
 
-                                <!-- المبلغ -->
-                                <td class="pro-money">
-                                    @item.amount.ToString("0.00") د.ل
-                                </td>
+                                 <!-- الخزنة -->
+                                <td>@item.CashBox?.name</td>
 
                                 <!-- الاتجاه (نفس القديم بالضبط) -->
                                 <td>
@@ -134,8 +132,10 @@
                                     }
                                 </td>
 
-                                <!-- الخزنة -->
-                                <td>@item.CashBox?.name</td>
+                                <!-- المبلغ -->
+                                <td class="pro-money">
+                                    @item.amount.ToString("0.00") د.ل
+                                </td>
 
                                 <!-- المسؤول -->
                                 <td>
