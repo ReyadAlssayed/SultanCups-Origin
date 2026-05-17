@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SultanCups.Components.Pages;
 using SultanCups.Data;
 using SultanCups.Models;
 using System.Text.Json;
@@ -76,6 +77,8 @@ namespace SultanCups.Services
                 notes = notes
             });
         }
+
+
         private void AddAudit(
             string table,
             string operation,
@@ -115,6 +118,58 @@ namespace SultanCups.Services
                 loan.status = "خالص";
         }
 
+        //رصيد افتتاحي
+
+        public async Task AddOpeningBalance(
+       int cashBoxId,
+       decimal amount,
+       string? note,
+       int adminId)
+        {
+            var cashBox = await _context.cash_boxes
+                .FirstOrDefaultAsync(x =>
+                    x.cash_box_id == cashBoxId);
+
+            if (cashBox == null)
+                throw new Exception("الخزنة غير موجودة");
+
+            var admin = await _context.admins
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.admin_id == adminId);
+
+            if (admin == null)
+                throw new Exception("المستخدم غير موجود");
+
+            var financialEvent = new FinancialEvent
+            {
+                event_type = "رصيد افتتاحي",
+
+                direction = "IN",
+
+                amount = amount,
+
+                cash_box_id = cashBoxId,
+
+                performed_by = adminId,
+
+                admin_name_snapshot = admin.full_name,
+
+                ref_table = "cash_boxes",
+
+                ref_id = cashBoxId,
+
+                event_date = DateTime.UtcNow,
+
+                notes = string.IsNullOrWhiteSpace(note)
+                    ? "رصيد افتتاحي للخزنة"
+                    : note
+            };
+
+            _context.financial_events.Add(financialEvent);
+
+            await _context.SaveChangesAsync();
+        }
         // =========================================
         // 🔹 Employees
         // =========================================

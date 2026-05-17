@@ -52,15 +52,17 @@ namespace SultanCups.Services
             // =====================================
 
             stats.total_cash_balance =
-                await _context.financial_events
-                    .AsNoTracking()
-                    .SumAsync(x =>
-                        (decimal?)
-                        (
-                            x.direction == "IN"
-                                ? x.amount
-                                : -x.amount
-                        )) ?? 0;
+     await _context.financial_events
+         .AsNoTracking()
+         .Where(x =>
+             x.event_date >= lastArchiveDate)
+         .SumAsync(x =>
+             (decimal?)
+             (
+                 x.direction == "IN"
+                     ? x.amount
+                     : -x.amount
+             )) ?? 0;
 
             // =====================================
             // صافي الوضع المالي الحقيقي
@@ -68,17 +70,19 @@ namespace SultanCups.Services
             // =====================================
 
             stats.real_financial_balance =
-                await _context.financial_events
-                    .AsNoTracking()
-                    .Where(x =>
-                        x.event_type != "رصيد افتتاحي")
-                    .SumAsync(x =>
-                        (decimal?)
-                        (
-                            x.direction == "IN"
-                                ? x.amount
-                                : -x.amount
-                        )) ?? 0;
+     await _context.financial_events
+         .AsNoTracking()
+         .Where(x =>
+             x.event_type != "رصيد افتتاحي"
+             &&
+             x.event_date >= lastArchiveDate)
+         .SumAsync(x =>
+             (decimal?)
+             (
+                 x.direction == "IN"
+                     ? x.amount
+                     : -x.amount
+             )) ?? 0;
 
             // =====================================
             // إجمالي الديون الحالية
@@ -217,7 +221,7 @@ namespace SultanCups.Services
              (x.loan_amount - x.repaid_amount))
      ?? 0;
 
-           
+
             // =====================================
             // الرواتب المستحقة
             // =====================================
@@ -231,7 +235,7 @@ namespace SultanCups.Services
                         (x.amount - x.paid_amount))
                     ?? 0;
 
-           
+
 
             // =====================================
             // العمولات غير المدفوعة
@@ -656,23 +660,6 @@ namespace SultanCups.Services
             var stats =
                 await GetDashboardStats();
 
-            if (
-    stats.total_debts > 0
-    ||
-    stats.salaries_remaining > 0
-    ||
-    stats.commissions_unpaid > 0
-||
-stats.loans_remaining > 0
-)
-            {
-                return (
-                    false,
-                    "",
-                    "لا يمكن تنفيذ الجرد حتى تتم تصفية جميع الحسابات."
-                );
-            }
-
             var archive =
     new ArchiveCycle
     {
@@ -685,65 +672,67 @@ stats.loans_remaining > 0
         total_cash_balance =
                         stats.total_cash_balance,
 
-                    real_financial_balance =
+        real_financial_balance =
                         stats.real_financial_balance,
 
-                    total_debts =
+        total_debts =
                         stats.total_debts,
 
-                    total_in =
+        total_in =
                         stats.total_in,
 
-                    total_out =
+        total_out =
                         stats.total_out,
 
-                    total_sales_collected =
+        total_sales_collected =
                         stats.total_sales_collected,
 
-                    total_purchases =
+        total_purchases =
                         stats.total_purchases,
 
-                    total_loans =
+        total_loans =
                         stats.total_loans,
 
-                    salaries_remaining =
+        salaries_remaining =
                         stats.salaries_remaining,
 
 
-                    commissions_unpaid =
+        commissions_unpaid =
                         stats.commissions_unpaid,
 
-                    employees_count =
+        employees_count =
                         stats.employees_count,
 
-                    total_production_quantity =
+        total_production_quantity =
                         stats.total_production_quantity,
 
-                    total_returns_count =
+        total_returns_count =
                         stats.total_returns_count,
 
-                    total_returns_boxes =
+        total_returns_boxes =
                         stats.total_returns_boxes,
 
-                    best_marketer_name =
+        best_marketer_name =
                         stats.best_marketer?.marketer_name,
 
-                    best_customer_name =
+        best_customer_name =
                         stats.best_customer?.customer_name,
 
-                    best_supplier_name =
+        best_supplier_name =
                         stats.best_supplier?.supplier_name,
 
-                    most_sold_product_name =
+        most_sold_product_name =
                         stats.most_sold_product?.product_name,
 
-                    most_produced_product_name =
+        most_produced_product_name =
                         stats.most_produced_product?.product_name
-                };
+    };
 
             _context.archive_cycles.Add(archive);
 
             await _context.SaveChangesAsync();
+
+      
 
             return (
                 true,
@@ -751,5 +740,150 @@ stats.loans_remaining > 0
                 DateTime.Now.ToString("yyyy/MM/dd hh:mm tt")
             );
         }
+
+        //ترحيل المستحات المالية للجرد الجديد
+
+        public async Task CleanArchivedData()
+        {
+            // =====================================
+            // حذف السلف الخالصة
+            // =====================================
+
+            var finishedLoans = await _context.employee_loans
+                .Where(x => x.status == "خالص")
+                .ToListAsync();
+
+            foreach (var loan in finishedLoans)
+            {
+                var loanEvents = await _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "employee_loans"
+                        &&
+                        x.ref_id == loan.loan_id)
+                    .ToListAsync();
+
+                _context.financial_events.RemoveRange(loanEvents);
+
+                _context.employee_loans.Remove(loan);
+            }
+
+            // =====================================
+            // حذف الرواتب الخالصة
+            // =====================================
+
+            var finishedSalaries = await _context.salaries
+                .Where(x => x.status == "خالص")
+                .ToListAsync();
+
+            foreach (var salary in finishedSalaries)
+            {
+                var salaryEvents = await _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "salaries"
+                        &&
+                        x.ref_id == salary.salary_id)
+                    .ToListAsync();
+
+                _context.financial_events.RemoveRange(salaryEvents);
+
+                _context.salaries.Remove(salary);
+            }
+
+            // =====================================
+            // حذف الفواتير الخالصة
+            // =====================================
+
+            var orders = await _context.orders
+                .Include(x => x.Items)
+                .Where(x => !x.is_cancelled)
+                .ToListAsync();
+
+            foreach (var order in orders)
+            {
+                decimal total =
+                    order.Items.Sum(i =>
+                        i.quantity * i.unit_price);
+
+                decimal paid =
+                    await _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders"
+                            &&
+                            x.ref_id == order.order_id
+                            &&
+                            x.payment_method != null)
+                        .SumAsync(x =>
+                            x.direction == "IN"
+                                ? (decimal?)x.amount
+                                : -(decimal?)x.amount)
+                    ?? 0;
+
+                decimal remaining =
+                    (total - order.discount_total)
+                    - paid;
+
+                bool hasUnpaidCommission =
+                    order.person_type == "marketer"
+                    &&
+                    !order.pay_commission_now;
+
+                // =====================================
+                // إبقاء الفواتير الحية فقط
+                // =====================================
+
+                if (remaining > 0 || hasUnpaidCommission)
+                    continue;
+
+                // حذف العناصر
+
+                var items = await _context.order_items
+                    .Where(x =>
+                        x.order_id == order.order_id)
+                    .ToListAsync();
+
+                _context.order_items.RemoveRange(items);
+
+                // حذف المالية المرتبطة
+
+                var orderEvents = await _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "orders"
+                        &&
+                        x.ref_id == order.order_id)
+                    .ToListAsync();
+
+                _context.financial_events.RemoveRange(orderEvents);
+
+                // حذف الفاتورة
+
+                _context.orders.Remove(order);
+            }
+
+            // =====================================
+            // تصفير الجداول التشغيلية
+            // =====================================
+
+            await _context.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE TABLE production RESTART IDENTITY CASCADE;");
+
+            await _context.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE TABLE returns RESTART IDENTITY CASCADE;");
+
+            await _context.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE TABLE purchases RESTART IDENTITY CASCADE;");
+
+            await _context.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE TABLE other_purchases RESTART IDENTITY CASCADE;");
+
+            await _context.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE TABLE audit_log RESTART IDENTITY CASCADE;");
+
+            // =====================================
+            // حفظ التعديلات
+            // =====================================
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

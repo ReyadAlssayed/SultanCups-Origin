@@ -115,6 +115,14 @@
                             طباعة PDF
 
                         </button>
+
+                        <button class="btn-archive-ui"
+                                @onclick="CleanArchiveData">
+
+                            تنظيف بيانات الجرد
+
+                        </button>
+
                     }
                 </div>
 
@@ -171,7 +179,7 @@
                     <div class="card-data">
 
                         <span class="label">
-                            إجمالي الديون
+                            ديون الفواتير
                         </span>
 
                         <span class="value">
@@ -712,6 +720,7 @@
     </div>
 }
 
+
 @code {
 
     private bool isDataVisible = false;
@@ -731,6 +740,8 @@
     string archiveToDate = "";
 
     bool isArchiving = false;
+
+    bool isMigrating = false;
 
     private async Task LoadStats()
     {
@@ -754,6 +765,7 @@
         }
     }
 
+
     async Task PrintStatsPdf()
     {
         StateHasChanged();
@@ -761,6 +773,18 @@
         await Task.Delay(1200);
 
         await JS.InvokeVoidAsync("printStatsCard");
+    }
+
+    async Task CleanArchiveData()
+    {
+        await StatsService.CleanArchivedData();
+
+        await JS.InvokeVoidAsync(
+            "alert",
+            "تم تنظيف بيانات الجرد بنجاح");
+
+        DashboardStats =
+            await StatsService.GetDashboardStats();
     }
 
     async Task ConfirmArchive()
@@ -832,5 +856,8 @@
             return $"{value:N0} د.ل";
 
         return $"{value:N2} د.ل";
+    }
+
+
     }
 }

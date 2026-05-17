@@ -38,6 +38,21 @@
             تحويل
         </button>
 
+        @if (
+    Session.Role == "Admin1"
+    &&
+    Session.FullName == "مطور النظام"
+    &&
+    Session.Phone == "0910772372"
+)
+        {
+            <button type="button"
+                    class="pro-btn-add"
+                    @onclick="OpenOpeningBalanceDialog">
+                رصيد افتتاحي
+            </button>
+        }
+
         <select class="emp-filter-select" @bind="CashBoxStatusFilter">
             <option value="active">النشطة</option>
             <option value="all">الكل</option>
@@ -358,6 +373,92 @@
     </div>
 }
 
+@if (ShowOpeningBalanceDialog)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <h3>
+                    إضافة رصيد افتتاحي
+                </h3>
+
+                <div class="pro-field">
+
+                    <label class="pro-label">
+                        الخزنة
+                    </label>
+
+                    <select class="pro-input"
+                            @bind="OpeningCashBoxId">
+
+                        <option value="0">
+                            اختر الخزنة
+                        </option>
+
+                        @foreach (var c in CashBoxes.Where(x => x.is_active))
+                        {
+                            <option value="@c.cash_box_id">
+                                @c.name
+                            </option>
+                        }
+
+                    </select>
+
+                </div>
+
+                <div class="pro-field">
+
+                    <label class="pro-label">
+                        الرصيد
+                    </label>
+
+                    <input class="pro-input"
+                           type="number"
+                           @bind="OpeningBalanceAmount" />
+
+                </div>
+
+                <div class="pro-field">
+
+                    <label class="pro-label">
+                        ملاحظة
+                    </label>
+
+                    <input class="pro-input"
+                           @bind="OpeningBalanceNote" />
+
+                </div>
+
+                <div class="pro-dialog-actions">
+
+                    <button class="pro-save"
+                            @onclick="SaveOpeningBalance">
+                        حفظ
+                    </button>
+
+                    <button class="pro-cancel"
+                            @onclick="CloseDialogs">
+
+                        إلغاء
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 
 @code {
 
@@ -378,6 +479,14 @@
     bool ShowAddDialog = false;
     bool ShowEditDialog = false;
     bool ShowDeleteDialog = false;
+
+    bool ShowOpeningBalanceDialog;
+
+    int OpeningCashBoxId;
+
+    decimal OpeningBalanceAmount;
+
+    string OpeningBalanceNote = "";
 
     // =========================================
     // أضف داخل @code
@@ -414,6 +523,15 @@
         TransferNote = "";
         TransferAmountError = "";
         ShowTransferDialog = true;
+    }
+
+    void OpenOpeningBalanceDialog()
+    {
+        OpeningCashBoxId = 0;
+        OpeningBalanceAmount = 0;
+        OpeningBalanceNote = "";
+
+        ShowOpeningBalanceDialog = true;
     }
 
     async Task SaveDeposit()
@@ -668,6 +786,49 @@
         CloseDialogs();
     }
 
+
+    async Task SaveOpeningBalance()
+    {
+        try
+        {
+            if (OpeningCashBoxId <= 0)
+            {
+                ToastService.ShowToast("اختر الخزنة", "error");
+                return;
+            }
+
+            if (OpeningBalanceAmount <= 0)
+            {
+                ToastService.ShowToast("أدخل رصيد صحيح", "error");
+                return;
+            }
+            await FinanceService.AddOpeningBalance(
+                OpeningCashBoxId,
+                OpeningBalanceAmount,
+                OpeningBalanceNote,
+                adminId
+            );
+
+            await RefreshBalances();
+
+            ToastService.ShowToast(
+                "تم إضافة الرصيد الافتتاحي بنجاح",
+                "success"
+            );
+
+            
+
+            CloseDialogs();
+        }
+        catch
+        {
+            ToastService.ShowToast(
+                "حدث خطأ أثناء العملية",
+                "error"
+            );
+        }
+    }
+
     async Task ExportToExcel()
     {
         if (IsExporting)
@@ -732,20 +893,22 @@
 // عدل CloseDialogs
 // =========================================
 
-void CloseDialogs()
-{
-    ShowAddDialog = false;
-    ShowEditDialog = false;
-    ShowDeleteDialog = false;
-    ShowDepositDialog = false;
-    ShowTransferDialog = false;
+    void CloseDialogs()
+    {
+        ShowAddDialog = false;
+        ShowEditDialog = false;
+        ShowDeleteDialog = false;
+        ShowDepositDialog = false;
+        ShowTransferDialog = false;
+        ShowOpeningBalanceDialog = false;
 
-    Message = "";
-    NameError = "";
-    ShowActivatePrompt = false;
-    DuplicateCashBox = null;
+        Message = "";
+        NameError = "";
+        ShowActivatePrompt = false;
+        DuplicateCashBox = null;
+
         TransferAmountError = "";
         DepositAmountError = "";
-}
+    }
 
 }

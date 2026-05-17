@@ -366,5 +366,18 @@ namespace SultanCups.Services
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task ResetStock()
+        {
+            var stockItems = await _context.product_stock
+                .ToListAsync();
+
+            foreach (var item in stockItems)
+            {
+                item.quantity = 0;
+            }
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

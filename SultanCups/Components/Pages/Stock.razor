@@ -2,13 +2,33 @@
 @using SultanCups.Models
 @using SultanCups.Services
 @layout Layout.MainLayout
+@inject UserSession Session
 
 @inject InventoryService InventoryService
+@inject ToastService ToastService
 
 <div class="pro-page">
 
     <div class="pro-topbar">
-        <h2 class="pro-title">المخزن الحركي</h2>
+
+        @if (
+            Session.Role == "Admin1"
+            &&
+            Session.FullName == "مطور النظام"
+            &&
+            Session.Phone == "0910772372"
+        )
+        {
+            <button class="pro-btn-add"
+                    @onclick="OpenResetStockDialog">
+                تصفير المخزن
+            </button>
+        }
+
+        <h2 class="pro-title">
+            المخزن الحركي
+        </h2>
+
     </div>
 
     <div class="pro-card">
@@ -73,8 +93,69 @@
 
 </div>
 
+@if (ShowResetStockDialog)
+{
+    <div class="pro-dialog-overlay">
+
+        <div class="pro-dialog-box">
+
+            <div class="pro-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="pro-dialog-body">
+
+                <div class="pro-delete-icon">
+                    !
+                </div>
+
+                <h3 class="pro-delete-title">
+                    تصفير المخزن
+                </h3>
+
+                <p class="pro-delete-text text-center-delete">
+
+                    هل قمت بأرشفة المخزن إلى Excel؟
+
+                    <br />
+                    <br />
+
+                    سيتم تصفير جميع كميات المخزن الحالية.
+
+                </p>
+
+                <div class="pro-dialog-actions">
+
+                    <button class="pro-delete-confirm"
+                            @onclick="ResetStock">
+                        تصفير الآن
+                    </button>
+
+                    <button class="pro-cancel"
+                            @onclick="CloseDialogs">
+
+                        إلغاء
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 @code {
     List<ProductStock>? stockList;
+
+    bool ShowResetStockDialog;
+
+    void OpenResetStockDialog()
+    {
+        ShowResetStockDialog = true;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,5 +167,34 @@
         {
             stockList = new();
         }
+    }
+
+    async Task ResetStock()
+    {
+        try
+        {
+            await InventoryService.ResetStock();
+
+            stockList = await InventoryService.GetStock();
+
+            CloseDialogs();
+
+            ToastService.ShowToast(
+                "تم تصفير المخزن بنجاح",
+                "success"
+            );
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowToast(
+                ex.InnerException?.Message ?? ex.Message,
+                "error"
+            );
+        }
+    }
+
+    void CloseDialogs()
+    {
+        ShowResetStockDialog = false;
     }
 }
