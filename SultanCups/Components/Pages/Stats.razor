@@ -117,7 +117,7 @@
                         </button>
 
                         <button class="btn-archive-ui"
-                                @onclick="CleanArchiveData">
+                                @onclick="() => showCleanDialog = true">
 
                             تنظيف بيانات الجرد
 
@@ -629,7 +629,7 @@
                     <div class="archive-step">
 
                         <div class="step-text">
-                            حفظ أرصدة الخزنات لاستخدامها كرصيد افتتاحي للدورة الجديدة
+                            حفظ الرصيد الحالي للخزنات وإنشاء رصيد افتتاحي جديد للدورة الجديدة
                         </div>
 
                         <div class="step-circle">4</div>
@@ -720,7 +720,115 @@
     </div>
 }
 
+@if (showCleanDialog)
+{
+    <div class="rm-dialog-overlay">
 
+        <div class="rm-dialog-box archive-dialog-pro">
+
+            <div class="rm-dialog-body">
+
+                <div class="money-head archive-head">
+
+                    <h3 class="archive-title">
+                        تنظيف بيانات الجرد
+                    </h3>
+
+                </div>
+
+                <div class="archive-steps">
+
+                    <div class="archive-step">
+
+                        <div class="step-text">
+                            حذف السجلات القديمة المؤرشفة فقط
+                        </div>
+
+                        <div class="step-circle">1</div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-text">
+                            ديون الفواتير الحالية:
+                            @Fmt(DashboardStats.total_debts)
+                        </div>
+
+                        <div class="step-circle">2</div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-text">
+                            السلف غير المسددة:
+                            @Fmt(DashboardStats.loans_remaining)
+                        </div>
+
+                        <div class="step-circle">3</div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-text">
+                            الرواتب المستحقة:
+                            @Fmt(DashboardStats.salaries_remaining)
+                        </div>
+
+                        <div class="step-circle">4</div>
+
+                    </div>
+
+                    <div class="archive-step">
+
+                        <div class="step-text">
+                            العمولات غير المدفوعة:
+                            @Fmt(DashboardStats.commissions_unpaid)
+                        </div>
+
+                        <div class="step-circle">5</div>
+
+                    </div>
+
+                </div>
+
+                <div class="archive-note">
+
+                    سيتم الإبقاء على السجلات الحية وغير المسددة داخل النظام،
+                    بينما سيتم حذف السجلات القديمة المؤرشفة فقط.
+
+                    <br /><br />
+
+                    هل أنت موافق على تنفيذ التنظيف؟
+
+                </div>
+
+                <div class="pay-actions1">
+
+                    <button class="pay-save1"
+                            @onclick="ConfirmCleanArchive">
+
+                        تنفيذ التنظيف
+
+                    </button>
+
+                    <button class="pay-cancel1"
+                            @onclick="() => showCleanDialog = false">
+
+                        إلغاء
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 @code {
 
     private bool isDataVisible = false;
@@ -736,6 +844,8 @@
     bool showArchiveDialog = false;
 
     string archiveFromDate = "";
+
+    bool showCleanDialog = false;
 
     string archiveToDate = "";
 
@@ -858,6 +968,19 @@
         return $"{value:N2} د.ل";
     }
 
+    async Task ConfirmCleanArchive()
+    {
+        await StatsService.CleanArchivedData();
+
+        showCleanDialog = false;
+
+        await JS.InvokeVoidAsync(
+            "alert",
+            "تم تنظيف بيانات الجرد بنجاح");
+
+        DashboardStats =
+            await StatsService.GetDashboardStats();
+    }
 
     }
 }

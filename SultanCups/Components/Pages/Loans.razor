@@ -1143,6 +1143,15 @@
                 ws.Cell(row, 9).Value =
                     l.notes;
 
+                bool isOld =
+l.loan_date < lastArchiveDate;
+
+                if (isOld)
+                {
+                    ws.Range(row, 1, row, 9)
+                        .Style.Fill.BackgroundColor =
+                            XLColor.FromHtml("#fff7ed");
+                }
                 row++;
             }
 

@@ -1012,6 +1012,15 @@
                 ws.Cell(row, 9).Value = s.CashBox?.name;
                 ws.Cell(row, 10).Value = s.notes;
 
+                bool isOld =
+    s.salary_date < lastArchiveDate;
+
+                if (isOld)
+                {
+                    ws.Range(row, 1, row, 10)
+                        .Style.Fill.BackgroundColor =
+                            XLColor.FromHtml("#fff7ed");
+                }
                 row++;
             }
 

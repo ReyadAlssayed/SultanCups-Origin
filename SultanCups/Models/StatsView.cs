@@ -34,6 +34,8 @@
         // السلف غير المسددة الحالية
         public decimal loans_remaining { get; set; }
 
+
+
         // الرواتب المستحقة الحالية
         public decimal salaries_remaining { get; set; }
 

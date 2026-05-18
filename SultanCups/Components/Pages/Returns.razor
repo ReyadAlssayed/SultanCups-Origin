@@ -6,17 +6,28 @@
 
 @inject FinanceService2 FinanceService
 @inject NavigationManager Nav
+@using ClosedXML.Excel
+@inject IJSRuntime JS
+@inject StatsAndArchiveService StatsService
 
 <div class="pro-page">
 
     <div class="pro-topbar">
-        <div></div>
 
         <h2 class="pro-title">
             سجل البضاعة الراجعة
         </h2>
 
+        <button class="pro-btn-excel"
+                @onclick="ExportToExcel"
+                disabled="@IsExporting">
+            أرشفة Excel
+        </button>
+
+       
+
         <div></div>
+
     </div>
 
     <div class="pro-search-bar">
@@ -83,7 +94,9 @@
                     {
                         @foreach (var r in FilteredList)
                         {
-                            <tr>
+                            bool isOld =
+    r.return_date < lastArchiveDate;
+                            <tr class="@(isOld ? "old-archive-row" : "")">
 
                                 <td class="pro-code">
                                     @r.order_id
@@ -136,15 +149,94 @@
 
     DateTime? DateFilter;
 
+    DateTime lastArchiveDate;
+
+    bool IsExporting = false;
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
             ReturnList = await FinanceService.GetReturns();
+            lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
         }
         catch
         {
             ReturnList = new();
+        }
+    }
+
+    async Task ExportToExcel()
+    {
+        if (IsExporting)
+            return;
+
+        IsExporting = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            using var workbook = new XLWorkbook();
+
+            var ws =
+                workbook.Worksheets.Add("الراجع");
+
+            ws.Cell(1, 1).Value = "رقم الفاتورة";
+            ws.Cell(1, 2).Value = "المنتج";
+            ws.Cell(1, 3).Value = "الكمية";
+            ws.Cell(1, 4).Value = "التاريخ";
+
+            int row = 2;
+
+            foreach (var r in FilteredList)
+            {
+                ws.Cell(row, 1).Value = r.order_id;
+                ws.Cell(row, 2).Value = r.product_name;
+                ws.Cell(row, 3).Value =
+                    r.returned_quantity;
+
+                ws.Cell(row, 4).Value =
+                    r.return_date.ToString("yyyy-MM-dd");
+
+                bool isOld =
+                    r.return_date < lastArchiveDate;
+
+                if (isOld)
+                {
+                    ws.Range(row, 1, row, 4)
+                        .Style.Fill.BackgroundColor =
+                            XLColor.FromHtml("#fff7ed");
+                }
+
+                row++;
+            }
+
+            ws.Row(1).Style.Font.Bold = true;
+
+            ws.Row(1).Style.Fill.BackgroundColor =
+                XLColor.LightGreen;
+
+            ws.Columns().AdjustToContents();
+
+            ws.RightToLeft = true;
+
+            using var stream = new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                $"Returns_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+                Convert.ToBase64String(stream.ToArray())
+            );
+        }
+        finally
+        {
+            IsExporting = false;
+
+            await InvokeAsync(StateHasChanged);
         }
     }
 

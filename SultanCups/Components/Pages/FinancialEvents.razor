@@ -557,6 +557,16 @@
         : GetPaymentName(item.payment_method);
 
                 ws.Cell(row, 12).Value = $"{item.ref_table} - {item.ref_id}";
+
+                bool isOld =
+    item.event_date < lastArchiveDate;
+
+                if (isOld)
+                {
+                    ws.Range(row, 1, row, 12)
+                        .Style.Fill.BackgroundColor =
+                            XLColor.FromHtml("#fff7ed");
+                }
                 row++;
             }
 

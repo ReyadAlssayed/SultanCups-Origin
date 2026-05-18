@@ -242,23 +242,23 @@ namespace SultanCups.Services
             // =====================================
 
             stats.commissions_unpaid =
-                await _context.orders
-                    .AsNoTracking()
-                    .Include(x => x.Items)
-                    .Where(x =>
-                        x.person_type == "marketer"
-                        &&
-                        !x.pay_commission_now
-                        &&
-                        !x.is_cancelled
-                        &&
-                        x.order_date >= lastArchiveDate)
-                    .SumAsync(x =>
-                        (decimal?)
-                        (
-                            x.Items.Sum(i => i.quantity)
-                            * x.commission_per_box
-                        )) ?? 0;
+ await _context.orders
+     .AsNoTracking()
+     .Include(x => x.Items)
+     .Where(x =>
+         x.person_type == "marketer"
+         &&
+         !x.is_cancelled
+         &&
+         (
+             x.pay_commission_now == false
+         ))
+     .SumAsync(x =>
+         (decimal?)
+         (
+             x.Items.Sum(i => i.quantity)
+             * x.commission_per_box
+         )) ?? 0;
 
             // =====================================
             // عدد الموظفين
@@ -692,6 +692,9 @@ namespace SultanCups.Services
 
         total_loans =
                         stats.total_loans,
+
+        loans_remaining =
+                stats.loans_remaining,
 
         salaries_remaining =
                         stats.salaries_remaining,

@@ -12,16 +12,26 @@
 @inject NavigationManager Nav
 @inject StatsAndArchiveService StatsService
 @using Microsoft.AspNetCore.Components
+@using ClosedXML.Excel
+@inject IJSRuntime JS
 
 <div class="pro-page">
 
     <div class="pro-topbar">
-        <button class="pro-btn-add" @onclick='() => Nav.NavigateTo("/orders/add")'>
-            إضافة فاتورة
-        </button>
-        <h2 class="pro-title">فواتير المبيعات</h2>
-        <div></div>
-    </div>
+
+   
+
+    <h2 class="pro-title">فواتير المبيعات</h2>
+
+     <button class="pro-btn-excel"
+            @onclick="ExportToExcel"
+            disabled="@IsExporting">
+        أرشفة Excel
+    </button>
+
+    <div></div>
+
+</div>
 
 
    <div class="pro-search-bar">
@@ -798,6 +808,7 @@ bool ShowDisableDialog = false;
 
 int SelectedMonth = 0;
 int SelectedYear = 0;
+bool IsExporting = false;
 
 OrderView? DisableOrder;
 
@@ -840,7 +851,6 @@ protected override void OnParametersSet()
     };
 }
 
-[Inject] IJSRuntime JS { get; set; } = default!;
 
 async Task PrintInvoice()
 {
@@ -1004,6 +1014,99 @@ async Task OpenDisableDialog(OrderView o)
     }
 
     ShowDisableDialog = true;
+}
+
+async Task ExportToExcel()
+{
+    if (IsExporting)
+        return;
+
+    IsExporting = true;
+
+    await InvokeAsync(StateHasChanged);
+
+    try
+    {
+        using var workbook = new XLWorkbook();
+
+        var ws =
+            workbook.Worksheets.Add("الفواتير");
+
+        ws.Cell(1, 1).Value = "رقم";
+        ws.Cell(1, 2).Value = "النوع";
+        ws.Cell(1, 3).Value = "الاسم";
+        ws.Cell(1, 4).Value = "عدد الأصناف";
+        ws.Cell(1, 5).Value = "الحالة";
+        ws.Cell(1, 6).Value = "صافي الربح";
+        ws.Cell(1, 7).Value = "التاريخ";
+
+        int row = 2;
+
+        foreach (var o in FilteredOrders)
+        {
+            ws.Cell(row, 1).Value = o.order_id;
+
+            ws.Cell(row, 2).Value =
+                o.person_type == "customer"
+                    ? "زبون"
+                    : "مسوق";
+
+            ws.Cell(row, 3).Value = o.person_name;
+
+            ws.Cell(row, 4).Value = o.items_count;
+
+            ws.Cell(row, 5).Value =
+                o.paid_amount == 0
+                    ? "غير خالص"
+                    : o.paid_amount < o.net_total
+                        ? "جزئي"
+                        : "خالص";
+
+            ws.Cell(row, 6).Value = o.profit;
+
+            ws.Cell(row, 7).Value =
+                o.order_date.ToString("yyyy-MM-dd");
+
+            bool isOld =
+                o.order_date < lastArchiveDate
+                &&
+                o.paid_amount < o.net_total;
+
+            if (isOld)
+            {
+                ws.Range(row, 1, row, 7)
+                    .Style.Fill.BackgroundColor =
+                        XLColor.FromHtml("#fff7ed");
+            }
+
+            row++;
+        }
+
+        ws.Row(1).Style.Font.Bold = true;
+
+        ws.Row(1).Style.Fill.BackgroundColor =
+            XLColor.LightGreen;
+
+        ws.Columns().AdjustToContents();
+
+        ws.RightToLeft = true;
+
+        using var stream = new MemoryStream();
+
+        workbook.SaveAs(stream);
+
+        await JS.InvokeVoidAsync(
+            "downloadFile",
+            $"Orders_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+            Convert.ToBase64String(stream.ToArray())
+        );
+    }
+    finally
+    {
+        IsExporting = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
 }
 
 async Task OpenReturnDialog(OrderView o)
