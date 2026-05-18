@@ -455,6 +455,73 @@
     }
 }
 
+.support-dialog {
+    max-width: 620px;
+    border-radius: 28px;
+    padding: 30px;
+}
+
+.support-top {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.support-icon-wrap {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,#eff6ff,#dbeafe);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #bfdbfe;
+}
+
+    .support-icon-wrap img {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+.support-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin-top: -4px;
+    font-weight: 700;
+}
+
+.support-info-box {
+    background: linear-gradient(135deg,#f8fafc,#eff6ff);
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 18px;
+    line-height: 2;
+    color: #334155;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.support-textarea {
+    min-height: 170px;
+    font-size: 15px;
+    line-height: 1.9;
+    padding: 18px;
+}
+
+.support-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+    .support-actions .dialog-action,
+    .support-actions .dialog-close {
+        flex: 1;
+    }
+
 @media (max-width:480px) {
     .settings-header {
         height: 145px;

@@ -46,9 +46,14 @@
     }
     else if (Archives.Count == 0)
     {
-        <div class="archive-empty">
+        <div class="empty-state">
 
-            لا توجد سجلات أرشفة
+            <img src="images/Empty.jpg"
+                 class="empty-img" />
+
+            <span>
+                لا توجد سجلات أرشفة
+            </span>
 
         </div>
     }
@@ -190,7 +195,7 @@
 
                 <div class="archive-logo-wrap">
 
-                    <img src="images/Merge.png"
+                    <img src="images/archived.png"
                          class="archive-logo" />
 
                 </div>
@@ -363,11 +368,15 @@
 
                         <tr>
                             <td>الأكثر إنتاجًا</td>
-                            <td colspan="3">
+
+                            <td>
                                 @(SelectedArchive.most_produced_product_name ?? "-")
                             </td>
-                        </tr>
 
+                            <td></td>
+
+                            <td></td>
+                        </tr>
                     </tbody>
 
                 </table>

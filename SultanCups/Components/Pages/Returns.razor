@@ -8,7 +8,7 @@
 @inject NavigationManager Nav
 @using ClosedXML.Excel
 @inject IJSRuntime JS
-@inject StatsAndArchiveService StatsService
+
 
 <div class="pro-page">
 
@@ -94,9 +94,8 @@
                     {
                         @foreach (var r in FilteredList)
                         {
-                            bool isOld =
-    r.return_date < lastArchiveDate;
-                            <tr class="@(isOld ? "old-archive-row" : "")">
+                           
+                            <tr>
 
                                 <td class="pro-code">
                                     @r.order_id
@@ -141,6 +140,15 @@
 
 </div>
 
+@if (IsExporting)
+{
+    <div class="excel-loading-overlay">
+        <div class="excel-loading-box">
+            جاري الأرشفة...
+        </div>
+    </div>
+}
+
 @code {
 
     List<ReturnView>? ReturnList;
@@ -149,7 +157,6 @@
 
     DateTime? DateFilter;
 
-    DateTime lastArchiveDate;
 
     bool IsExporting = false;
 
@@ -158,8 +165,7 @@
         try
         {
             ReturnList = await FinanceService.GetReturns();
-            lastArchiveDate =
-    await StatsService.GetLastArchiveDate();
+           
         }
         catch
         {
@@ -175,6 +181,7 @@
         IsExporting = true;
 
         await InvokeAsync(StateHasChanged);
+        await Task.Delay(300);
 
         try
         {
@@ -200,16 +207,7 @@
                 ws.Cell(row, 4).Value =
                     r.return_date.ToString("yyyy-MM-dd");
 
-                bool isOld =
-                    r.return_date < lastArchiveDate;
-
-                if (isOld)
-                {
-                    ws.Range(row, 1, row, 4)
-                        .Style.Fill.BackgroundColor =
-                            XLColor.FromHtml("#fff7ed");
-                }
-
+              
                 row++;
             }
 

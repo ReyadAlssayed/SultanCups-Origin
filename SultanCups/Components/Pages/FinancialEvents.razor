@@ -72,7 +72,10 @@
 
         <div class="change-legend">
             <span class="name-change-dot"></span>
-            <span>تعني تم تعديل هدا البيان إضغط على زر التفاصيل</span>
+            <span>
+                تعني أن هذا البيان من أرشيف سابق
+                وليس ضمن الجرد الحالي
+            </span>
         </div>
 
     </div>
@@ -264,7 +267,7 @@
                             @(
     string.IsNullOrWhiteSpace(oldI)
         ? (newI ?? "-")
-        : (string.IsNullOrWhiteSpace(newI) || oldI.Trim() == newI.Trim()
+        : (string.IsNullOrWhiteSpace(newI) || NormalizeItemName(oldI) == NormalizeItemName(newI)
             ? oldI
             : $"{oldI} ← {newI}")
 )
@@ -462,6 +465,15 @@
         return null;
     }
 
+    string NormalizeItemName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        return value
+            .Replace("(منتج)", "")
+            .Trim();
+    }
 
     string GetPaymentName(string method)
     {
@@ -637,6 +649,21 @@
 
 (x.CashBox != null &&
  x.CashBox.name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+
+||
+
+(x.ref_table == "orders" &&
+ $"o{x.ref_id}".Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+
+||
+
+(x.ref_table == "purchases" &&
+ $"p{x.ref_id}".Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+
+ ||
+
+(x.ref_table == "salaries" &&
+ $"s{x.ref_id}".Contains(SearchText, StringComparison.OrdinalIgnoreCase))
             )
 
             &&

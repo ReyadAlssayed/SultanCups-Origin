@@ -176,6 +176,15 @@
 
 </div>
 
+@if (IsExporting)
+{
+    <div class="excel-loading-overlay">
+        <div class="excel-loading-box">
+            جاري الأرشفة...
+        </div>
+    </div>
+}
+
 @code {
 
     List<MarketerCommissionView>? CommissionList;

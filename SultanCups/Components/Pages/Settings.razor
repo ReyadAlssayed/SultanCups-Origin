@@ -104,17 +104,55 @@
 @if (ShowSupportDialog)
 {
     <div class="dialog-overlay">
-        <div class="dialog-box">
-            <h3>الدعم الفني</h3>
 
-            <textarea class="dialog-textarea"
-                      rows="4"
-                      placeholder="اكتب ملاحظتك أو المشكلة هنا..."
+        <div class="dialog-box support-dialog">
+
+            <div class="support-top">
+
+                <div class="support-icon-wrap">
+                    <img src="images/tracking.png" />
+                </div>
+
+                <h3>الدعم الفني</h3>
+
+                <p class="support-subtitle">
+                    يتم إرسال الرسائل مباشرة إلى مطوري النظام
+                </p>
+
+            </div>
+
+            <div class="support-info-box">
+
+                في حال وجود أي مشكلة أو استفسار أو ملاحظة،
+                يمكنك إرسالها هنا ليتم مراجعتها من قبل فريق التطوير.
+
+            </div>
+
+            <textarea class="dialog-textarea support-textarea"
+                      rows="5"
+                      placeholder="اكتب هنا مشكلتك أو استفسارك، وإذا رغبت بالتواصل معك يرجى كتابة رقم هاتفك مع الملاحظة..."
                       @bind="SupportNotes"></textarea>
 
-            <button class="dialog-action" @onclick="SendSupport">إرسال</button>
-            <button class="dialog-close" @onclick="() => ShowSupportDialog = false">إلغاء</button>
+            <div class="support-actions">
+
+                <button class="dialog-action"
+                        @onclick="SendSupport">
+
+                    إرسال الرسالة
+
+                </button>
+
+                <button class="dialog-close"
+                        @onclick="() => ShowSupportDialog = false">
+
+                    إلغاء
+
+                </button>
+
+            </div>
+
         </div>
+
     </div>
 }
 

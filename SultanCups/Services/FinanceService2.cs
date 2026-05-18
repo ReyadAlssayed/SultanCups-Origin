@@ -631,23 +631,17 @@ _context.financial_events
                     .Select(p => p.name)
                     .ToListAsync();
 
-                string itemName;
+                var oldSnapshot = await _context.financial_events
+         .Where(x =>
+             x.ref_table == "orders" &&
+             x.ref_id == order.order_id &&
+             x.item_name_snapshot != null)
+         .Select(x => x.item_name_snapshot)
+         .FirstOrDefaultAsync();
 
-                var oldSet = oldProductIds.OrderBy(x => x).ToList();
-                var newSet = newProductIds.OrderBy(x => x).ToList();
-
-                bool sameProducts = oldSet.SequenceEqual(newSet);
-
-                if (sameProducts)
-                {
-                    // نفس المنتجات
-                    itemName = string.Join(" + ", oldNames);
-                }
-                else
-                {
-                    // تغيرت المنتجات
-                    itemName = $"{string.Join(" + ", oldNames)} → {string.Join(" + ", newNames)}";
-                }
+                string itemName =
+                    oldSnapshot
+                    ?? string.Join(" + ", oldNames);
 
                 var firstItemId = newProductIds.FirstOrDefault();
 
@@ -684,13 +678,14 @@ _context.financial_events
                 HandleCashBoxChange(order, updated, oldPaid, personName, adminId);
 
                 HandlePaymentDifferences(
-    oldPayments,
-    newPaymentsList,
-    order,
-    updated,
-    personChangeLabel,
-    adminId
-);
+      oldPayments,
+      newPaymentsList,
+      order,
+      updated,
+      personChangeLabel,
+      itemName,
+      adminId
+  );
 
                 // =====================================
                 // 🔥 فروقات العمولة
@@ -1468,6 +1463,7 @@ _context.financial_events
     Order oldOrder,
     Order updated,
     string personName,
+    string? itemName,
     int adminId)
         {
             var oldDict = oldPayments
@@ -1513,7 +1509,9 @@ _context.financial_events
                         updated.person_id,
                         personName,
                         method,
-                        $"زاد {methodName} {diff}"
+                        $"زاد {methodName} {diff}",
+null,
+itemName
                     );
                 }
                 else
@@ -1530,7 +1528,9 @@ _context.financial_events
                         updated.person_id,
                         personName,
                         method,
-                        $"نقص {methodName} {Math.Abs(diff)}"
+                        $"نقص {methodName} {Math.Abs(diff)}",
+null,
+itemName
                     );
                 }
             }

@@ -17,20 +17,27 @@
 
 <div class="pro-page">
 
-    <div class="pro-topbar">
+   <div class="pro-topbar">
 
-   
+    <button class="mk-add-btn"
+            @onclick='() => Nav.NavigateTo("/orders/add")'>
 
-    <h2 class="pro-title">فواتير المبيعات</h2>
+        إضافة فاتورة
 
-     <button class="pro-btn-excel"
-            @onclick="ExportToExcel"
-            disabled="@IsExporting">
-        أرشفة Excel
     </button>
 
-    <div></div>
+    <h2 class="pro-title">
+        فواتير المبيعات
+    </h2>
 
+    <button class="pro-btn-excel"
+            @onclick="ExportToExcel"
+            disabled="@IsExporting">
+
+        أرشفة Excel
+
+    </button>
+    <div></div>
 </div>
 
 
@@ -768,6 +775,15 @@
     </div>
 }
 
+@if (IsExporting)
+{
+    <div class="excel-loading-overlay">
+        <div class="excel-loading-box">
+            جاري الأرشفة...
+        </div>
+    </div>
+}
+
 @code {
 
     List<OrderView>? OrdersList;
@@ -1024,6 +1040,8 @@ async Task ExportToExcel()
     IsExporting = true;
 
     await InvokeAsync(StateHasChanged);
+
+    await Task.Delay(300);
 
     try
     {

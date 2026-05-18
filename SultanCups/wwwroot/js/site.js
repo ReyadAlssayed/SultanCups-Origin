@@ -714,10 +714,29 @@ window.printArchiveDetails = function () {
                     font-weight:700;
                 }
 
-             
+             .archive-details-table-wrap{
+    width:100%;
+    margin-top:20px;
+}
 
+.archive-details-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
 
+.archive-details-table td{
+    border:1px solid #d1d5db;
+    padding:14px;
+    font-size:14px;
+    text-align:center;
+    vertical-align:middle;
+}
 
+.archive-details-table td:nth-child(odd){
+    font-weight:800;
+    background:#f9fafb;
+}
 
             </style>
 
@@ -737,7 +756,24 @@ window.printArchiveDetails = function () {
 
             </div>
 
-            ${content}
+            ${document.querySelector('.archive-details-table-wrap').outerHTML}
+
+            <div style="
+    margin-top:25px;
+    padding:14px;
+    border:1px dashed #9ca3af;
+    border-radius:10px;
+    text-align:center;
+    font-size:13px;
+    color:#4b5563;
+    line-height:2;
+">
+
+    للحصول على التفاصيل الكاملة الخاصة بهذه الدورة،
+    مثل الحركات المالية التفصيلية وسجلات الجداول المرتبطة،
+    يرجى مراجعة الأرشيف الداخلي للنظام.
+
+</div>
 
             <div class="signature-box">
 
