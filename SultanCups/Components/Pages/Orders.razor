@@ -10,6 +10,7 @@
 @inject SalesService SalesService
 @inject ToastService ToastService
 @inject NavigationManager Nav
+@inject StatsAndArchiveService StatsService
 @using Microsoft.AspNetCore.Components
 
 <div class="pro-page">
@@ -126,12 +127,21 @@
                     {
                         @foreach (var o in FilteredOrders)
 {
+    bool isOld =
+    o.order_date < lastArchiveDate
+    &&
+    o.paid_amount < o.net_total;
+
     <tr id="order-@o.order_id"
-    class="@(o.is_cancelled
+    class="@(
+    o.is_cancelled
         ? "cancelled-row"
-        : o.order_id == HighlightId
-            ? "new-row"
-            : "")">
+        : isOld
+            ? "old-archive-row"
+            : o.order_id == HighlightId
+                ? "new-row"
+                : ""
+)">
 
         <td>@o.order_id</td>
 
@@ -769,6 +779,8 @@
 
     bool ShowReturnPreview = false;
 
+    DateTime lastArchiveDate;
+
     bool ShowReturnErrorDialog = false;
 
 string ReturnErrorMessage = "";
@@ -803,6 +815,8 @@ bool ShowProfit = false;
     protected override async Task OnInitializedAsync()
     {
         OrdersList = await FinanceService.GetOrders();
+        lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
     }
 
 protected override void OnParametersSet()

@@ -5,6 +5,8 @@
 @inject SultanCups.Services.FinanceService FinanceService
 @inject SultanCups.Services.ToastService ToastService
 @inject SultanCups.Services.UserSession Session
+@using SultanCups.Services
+@inject StatsAndArchiveService StatsService
 
 @using ClosedXML.Excel
 @inject IJSRuntime JS
@@ -106,7 +108,10 @@
                     {
                         @foreach (var s in FilteredSalaries)
                         {
-                            <tr>
+
+                            bool isOld =
+    s.salary_date < lastArchiveDate;
+                            <tr class="@(isOld ? "old-archive-row" : "")">
                                 <td>@s.Employee.full_name</td>
 
                                 <td>@s.salary_type</td>
@@ -580,6 +585,7 @@
     string PaymentError = "";
 
     decimal PaymentAmount;
+    DateTime lastArchiveDate;
 
     Salary SalaryForm = new();
 
@@ -614,6 +620,9 @@
         Salarie = await FinanceService.GetSalaries();
         Employees = await FinanceService.GetActiveEmployees();
         CashBoxes = await FinanceService.GetActiveCashBoxes();
+
+        lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
     }
 
     string SearchText = "";

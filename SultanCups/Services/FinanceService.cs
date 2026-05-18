@@ -565,8 +565,8 @@ namespace SultanCups.Services
                 amount,
                 cashBoxId,
                 adminId,
-                0,
-                "cash_boxes",
+                cashBoxId,
+"cash_boxes",
                 null,
                 null,
                 string.IsNullOrWhiteSpace(notes) ? "إيداع في الخزنة" : notes

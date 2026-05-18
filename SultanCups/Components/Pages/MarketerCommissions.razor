@@ -5,6 +5,7 @@
 
 @using System.Globalization
 @inject FinanceService2 FinanceService
+@inject StatsAndArchiveService StatsService
 @inject NavigationManager Nav
 
 <div class="pro-page">
@@ -89,7 +90,12 @@
                     {
                         @foreach (var c in FilteredList)
                         {
-                            <tr>
+                           
+    bool isOld =
+        c.order_date < lastArchiveDate;
+
+
+<tr class="@(isOld ? "old-archive-row" : "")">
 
                                 <td class="pro-code">
                                     @c.order_id
@@ -162,6 +168,8 @@
 
     List<MarketerCommissionView>? CommissionList;
 
+    DateTime lastArchiveDate;
+
     string SearchText = "";
 
     string StatusFilter = "all";
@@ -175,6 +183,8 @@
         try
         {
             CommissionList = await FinanceService.GetMarketerCommissions();
+            lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
         }
         catch
         {

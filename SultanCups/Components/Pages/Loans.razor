@@ -8,6 +8,10 @@
 @inject IJSRuntime JS
 @using ClosedXML.Excel
 
+@using SultanCups.Services
+@inject StatsAndArchiveService StatsService
+
+
 <div class="pro-page">
 
     <div class="pro-topbar">
@@ -113,7 +117,10 @@
                     {
                         @foreach (var l in FilteredLoans)
                         {
-                            <tr>
+
+                            bool isOld =
+     l.loan_date < lastArchiveDate;
+                            <tr class="@(isOld ? "old-archive-row" : "")">
 
                                 <td>@l.Employee.full_name</td>
 
@@ -135,14 +142,8 @@
                                     </span>
                                 </td>
 
-                                <td class="mg-date-cell">
-                                    <span class="mg-time">
-                                        @l.loan_date.ToLocalTime().ToString("HH:mm")
-                                    </span>
-
-                                    <span class="mg-date">
-                                        @l.loan_date.ToLocalTime().ToString("yyyy-MM-dd")
-                                    </span>
+                                <td class="mg-date">
+                                    @l.loan_date.ToLocalTime().ToString("yyyy-MM-dd")
                                 </td>
 
                                 <td>@l.CashBox.name</td>
@@ -661,7 +662,7 @@
 
     bool ShowFinalDeleteDialog;
     string FinalDeleteMessage = "";
-    
+
     string EmployeeError = "";
     string CashError = "";
     string AmountError = "";
@@ -683,6 +684,8 @@
     int SelectedMonth = 0;
 
     int SelectedYear = 0;
+
+    DateTime lastArchiveDate;
 
     List<int> FilterYears =>
         (Loan ?? new List<EmployeeLoan>())
@@ -755,6 +758,9 @@
         Loan = await FinanceService.GetLoans();
         Employees = await FinanceService.GetActiveEmployees();
         CashBoxes = await FinanceService.GetActiveCashBoxes();
+
+        lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
     }
 
     void OpenAddDialog()
@@ -968,7 +974,7 @@
             ToastService.ShowToast("تم سداد السلفة بنجاح", "success");
         }
     }
-  
+
     async Task ReversePaymentAction()
     {
         if (LoanForm.repaid_amount <= 0)
@@ -1129,7 +1135,7 @@
                 ws.Cell(row, 7).Value =
                     l.loan_date
                         .ToLocalTime()
-                        .ToString("yyyy-MM-dd HH:mm");
+                        .ToString("yyyy-MM-dd");
 
                 ws.Cell(row, 8).Value =
                     l.CashBox?.name;

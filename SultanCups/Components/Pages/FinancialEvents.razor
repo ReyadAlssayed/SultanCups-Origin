@@ -1,9 +1,11 @@
 ﻿@page "/FinancialEvents"
 @layout Layout.MainLayout
 @using SultanCups.Models
+@using SultanCups.Services
 
 @inject SultanCups.Services.FinanceService FinanceService
 @inject SultanCups.Services.FinanceService2 FinanceService2
+@inject StatsAndArchiveService StatsService
 
 @using ClosedXML.Excel
 @using ClosedXML.Excel.Drawings
@@ -112,7 +114,12 @@
                     {
                         @foreach (var item in FilteredLogs)
                         {
-                            <tr>
+
+                            
+    bool isOld =
+        item.event_date < lastArchiveDate;
+
+                            <tr class="@(isOld ? "old-archive-row" : "")">
 
                                 <!-- النوع -->
                                 <td>@item.event_type</td>
@@ -352,6 +359,8 @@
 
     bool IsExporting = false;
 
+    DateTime lastArchiveDate;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -372,6 +381,9 @@
 
             Customers = await FinanceService2.GetCustomers();
             Marketers = await FinanceService2.GetMarketers();
+
+            lastArchiveDate =
+    await StatsService.GetLastArchiveDate();
         }
         catch
         {

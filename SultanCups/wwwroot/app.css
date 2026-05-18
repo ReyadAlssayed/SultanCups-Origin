@@ -568,6 +568,13 @@ body {
     flex: 1;
 }
 
+tr.old-archive-row td {
+    background: #fff7ed !important;
+}
+
+.pro-table tbody tr.old-archive-row td {
+    background-color: #fff7ed !important;
+}
 /* ================== Responsive ================== */
 
 @media (max-width: 740px) {

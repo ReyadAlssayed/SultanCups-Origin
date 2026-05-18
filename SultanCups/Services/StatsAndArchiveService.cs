@@ -882,8 +882,21 @@ namespace SultanCups.Services
             // حفظ التعديلات
             // =====================================
 
+            // حذف المالية القديمة غير المرتبطة
+            var oldFinanceEvents =
+                await _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "cash_boxes")
+                    .ToListAsync();
+
+            _context.financial_events
+                .RemoveRange(oldFinanceEvents);
+
+            // حفظ كل شيء
+
             await _context.SaveChangesAsync();
+
         }
 
-    }
+        }
 }
