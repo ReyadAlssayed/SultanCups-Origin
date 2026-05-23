@@ -3,7 +3,9 @@ using SultanCups.Components;
 using SultanCups.Data;
 using SultanCups.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -24,6 +26,7 @@ builder.Services.AddScoped<FinanceService2>();
 builder.Services.AddScoped<StatsAndArchiveService>();
 
 var app = builder.Build();
+
 
 // ✅ Warm-up مبكر لـ EF Core وفتح أول اتصال بقاعدة البيانات
 using (var scope = app.Services.CreateScope())
@@ -49,11 +52,15 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
+
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+
 
 app.Run();

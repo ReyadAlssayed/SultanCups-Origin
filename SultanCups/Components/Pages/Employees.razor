@@ -158,7 +158,10 @@
                     @if (!string.IsNullOrEmpty(Message))
                     {
                         <div class="restore-box">
-                            <div class="restore-text">@Message</div>
+                            @if (ShowActivatePrompt)
+                            {
+                                <div class="restore-text">@Message</div>
+                            }
 
                             @if (ShowActivatePrompt)
                             {

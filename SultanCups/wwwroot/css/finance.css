@@ -11,6 +11,13 @@
     font-weight: 500;
 }
 
+.money-title-details {
+    margin: 0;
+    font-size: 22px !important;
+    font-weight: 700;
+    color: #0f172a;
+}
+
     .pro-btn-info:hover {
         background: #3b82f6;
     }

@@ -1,5 +1,6 @@
 ﻿@page "/SystemGuide"
 @layout MainLayout
+@inject NavigationManager Nav
 
 <div class="guide-page">
 
@@ -19,12 +20,24 @@
                 وضمان المحافظة على دقة البيانات المالية والمخزنية والإدارية داخل المصنع.
             </p>
         </div>
-
+       
     </div>
 
     <div class="guide-sections">
 
         <!-- التعليمات العامة -->
+        <div class="bk-top-bar">
+
+            <button class="bk-btn-back"
+                    @onclick='() => Nav.NavigateTo("/Settings")'>
+
+                <span class="back-icon">➡️</span>
+
+                الرجوع للإعدادات
+
+            </button>
+
+        </div>
 
         <div class="guide-category">
             <h2>📘 التعليمات العامة</h2>
