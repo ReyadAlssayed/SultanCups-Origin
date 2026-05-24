@@ -154,5 +154,41 @@ namespace SultanCups.Services
             return admin;
         }
 
+        //ملاحظات عامة في النظام
+
+        public async Task AddQuickNote(string text)
+        {
+            var note = new QuickNote
+            {
+                note_text = text,
+                created_at = DateTime.UtcNow
+            };
+
+            _context.quick_notes.Add(note);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<QuickNote>> GetQuickNotes()
+        {
+            return await _context.quick_notes
+                .AsNoTracking()
+                .OrderByDescending(x => x.note_id)
+                .ToListAsync();
+        }
+
+        public async Task DeleteQuickNote(int id)
+        {
+            var note = await _context.quick_notes
+                .FirstOrDefaultAsync(x => x.note_id == id);
+
+            if (note == null)
+                return;
+
+            _context.quick_notes.Remove(note);
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

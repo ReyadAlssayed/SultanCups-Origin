@@ -10,6 +10,27 @@
 
 <div class="ad-page">
 
+    @if (NoAccess)
+    {
+        <div class="privacy-lock-zone">
+
+            <div class="glass-shield-card no-access-card">
+
+                <div class="lock-anim">⛔</div>
+
+                <h3>إدارة المسؤولين</h3>
+
+                <p>
+                    هذه الصفحة مخصصة للمسؤول الرئيسي فقط.
+                </p>
+
+            </div>
+
+        </div>
+
+        return;
+    }
+
     <div class="pro-topbar">
         <div></div>
 
@@ -272,6 +293,8 @@
 
 
 @code {
+
+    bool NoAccess = false;
     List<SultanCups.Models.Admain>? Admins;
 
     bool ShowEditDialog = false;
@@ -492,6 +515,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (Session.Role != "Admin1")
+        {
+            NoAccess = true;
+            return;
+        }
+
         Admins = await AdminService.GetAdmins();
     }
 }

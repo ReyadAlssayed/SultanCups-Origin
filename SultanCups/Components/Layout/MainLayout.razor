@@ -24,11 +24,18 @@
 
         <nav class="sidebar-nav">
 
-            <div class="nav-group">
-                <button type="button" class="nav-parent" @onclick='@(() => Go("/Stats"))'>
-                    إحصائيات المصنع
-                </button>
-            </div>
+            @if (Session.Role == "Admin1")
+            {
+                <div class="nav-group">
+                    <button type="button"
+                            class="nav-parent"
+                            @onclick='@(() => Go("/Stats"))'>
+
+                        إحصائيات المصنع
+
+                    </button>
+                </div>
+            }
 
             <div class="nav-group">
                 <button type="button" class="nav-parent @(OpenKey == "buying" ? "active" : "")" @onclick='@(() => Toggle("buying"))'>
@@ -116,13 +123,16 @@
                         الإعدادات
                     </button>
 
-                    <button type="button"
-                            class="nav-child"
-                            @onclick='@(() => Go("/Archive"))'>
+                   @if (Session.Role == "Admin1")
+{
+    <button type="button"
+            class="nav-child"
+            @onclick='@(() => Go("/Archive"))'>
 
-                        الأرشيف والتقارير
+        الأرشيف والتقارير
 
-                    </button>
+    </button>
+}
                    
                 </div>
             </div>
