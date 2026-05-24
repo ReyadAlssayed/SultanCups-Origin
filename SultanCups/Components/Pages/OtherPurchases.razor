@@ -524,12 +524,20 @@
                 isAdd ? "تم إضافة المصروف بنجاح" : "تم تعديل المصروف بنجاح",
                 "success");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast(
-                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-                "error"
-            );
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
         }
     }
 

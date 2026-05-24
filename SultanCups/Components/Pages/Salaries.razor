@@ -771,12 +771,20 @@
 
             ToastService.ShowToast("تم إضافة الراتب بنجاح", "success");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast(
-                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-                "error"
-            );
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
         }
     }
 
@@ -831,13 +839,21 @@
 
             ToastService.ShowToast("تم تعديل الراتب بنجاح", "success");
         }
-        catch (Exception)
-    {
-    ToastService.ShowToast(
-        "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-        "error"
-    );
-}
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
+        }
     }
 
     void OpenAddPaymentDialog(Salary s)
@@ -888,7 +904,7 @@
 
             if (!ok)
             {
-                PaymentError = "تعذر إضافة الدفعة: تحقق من رصيد الخزنة أو قيمة المبلغ";
+                PaymentError = "لا يوجد رصيد كافٍ في الخزنة";
                 return;
             }
 

@@ -778,9 +778,20 @@ OldTotal = GetTotal(p);
             await LoadData();
             Close();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast("حدث خطأ أثناء حفظ الفاتورة", "error");
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "حدث خطأ أثناء حفظ الفاتورة",
+                    "error");
+            }
         }
     }
 

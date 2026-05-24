@@ -66,7 +66,7 @@
 
             <option value="0">كل السنوات</option>
 
-            @foreach (var y in FilterYears)
+            @for (int y = 2026; y <= 2040; y++)
             {
                 <option value="@y">@y</option>
             }
@@ -803,16 +803,34 @@
 
     async Task ConfirmLoanEdit()
     {
-        LoanForm.employee_id = SelectedEmployeeId;
-        LoanForm.cash_box_id = selectedCashBoxId;
+        try
+        {
+            LoanForm.employee_id = SelectedEmployeeId;
+            LoanForm.cash_box_id = selectedCashBoxId;
 
-        await FinanceService.UpdateLoan(LoanForm, Session.AdminId);
+            await FinanceService.UpdateLoan(LoanForm, Session.AdminId);
 
-        Loan = await FinanceService.GetLoans();
+            Loan = await FinanceService.GetLoans();
 
-        CloseDialogs();
+            CloseDialogs();
 
-        ToastService.ShowToast("تم تعديل السلفة", "success");
+            ToastService.ShowToast("تم تعديل السلفة", "success");
+        }
+        catch (Exception ex)
+        {
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
+        }
     }
 
     void OpenPaymentDialog(EmployeeLoan row)
@@ -890,12 +908,20 @@
                 "success"
             );
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast(
-                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-                "error"
-            );
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
         }
     }
 
@@ -930,12 +956,20 @@
             ShowEditDialog = false;
             ShowDiffDialog = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast(
-                "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-                "error"
-            );
+            if (ex.Message.Contains("رصيد الخزنة"))
+            {
+                ToastService.ShowToast(
+                    "لا يوجد رصيد كافٍ في الخزنة",
+                    "error");
+            }
+            else
+            {
+                ToastService.ShowToast(
+                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    "error");
+            }
         }
     }
 
