@@ -34,7 +34,8 @@ namespace SultanCups.Data
         public DbSet<FinancialEvent> financial_events { get; set; } = null!;
         public DbSet<AuditLog> audit_log { get; set; } = null!;
         public DbSet<CashBoxBalance> cash_box_balances { get; set; } = null!;
-        public DbSet<ArchiveCycle> archive_cycles { get; set; }
+        public DbSet<ArchiveCycle> archive_cycles { get; set; } = null!;
+        public DbSet<SystemLicense> system_license { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

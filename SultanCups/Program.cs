@@ -27,6 +27,41 @@ builder.Services.AddScoped<StatsAndArchiveService>();
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+    var currentGuid =
+        DeviceHelper.GetMachineGuid();
+
+    var license = db.system_license
+        .FirstOrDefault();
+
+    if (license == null ||
+    license.device_guid != currentGuid)
+    {
+        app.MapGet("/", async context =>
+        {
+            context.Response.ContentType = "text/html; charset=utf-8";
+
+            await context.Response.WriteAsync("""
+        <h2 style="
+            text-align:center;
+            margin-top:100px;
+            font-family:Tahoma;
+            color:red;">
+            هذا الجهاز غير مصرح له بتشغيل النظام
+        </h2>
+    """);
+        });
+
+        app.Run();
+
+        return;
+    }
+}
+
 
 // ✅ Warm-up مبكر لـ EF Core وفتح أول اتصال بقاعدة البيانات
 using (var scope = app.Services.CreateScope())
@@ -43,6 +78,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogWarning(ex, "EF Core warm-up failed during startup.");
     }
 }
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
