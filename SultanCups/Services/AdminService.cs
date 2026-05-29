@@ -58,6 +58,34 @@ namespace SultanCups.Services
 
         // هذا الجزء خاص بجدول admins
         // حذف مسؤول حسب admin_id
+
+
+        public async Task SendBackupToTelegram(string filePath)
+        {
+            if (!File.Exists(filePath))
+                return;
+
+            var url =
+                $"https://api.telegram.org/bot{BotToken}/sendDocument";
+
+            using var form = new MultipartFormDataContent();
+
+            form.Add(
+                new StringContent(ChatId),
+                "chat_id"
+            );
+
+            var stream = File.OpenRead(filePath);
+
+            form.Add(
+                new StreamContent(stream),
+                "document",
+                Path.GetFileName(filePath)
+            );
+
+            await _http.PostAsync(url, form);
+        }
+
         public async Task<bool> DeleteAdmin(int adminId)
         {
             var admin = await _context.admins

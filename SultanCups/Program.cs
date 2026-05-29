@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using SultanCups.Components;
 using SultanCups.Data;
 using SultanCups.Services;
+using System;
+using System.IO;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,6 +61,36 @@ using (var scope = app.Services.CreateScope())
         app.Run();
 
         return;
+
+
+    }
+
+    // ===== ضع الكود هنا =====
+
+    var today = DateOnly.FromDateTime(DateTime.Today);
+
+    if (license.last_telegram_backup_date != today)
+    {
+        var adminService =
+            scope.ServiceProvider.GetRequiredService<AdminService>();
+
+        var backupFile =
+            $@"C:\SultanBackups\backup_{DateTime.Today:yyyy-MM-dd}.backup";
+
+        if (File.Exists(backupFile))
+        {
+            try
+            {
+                await adminService.SendBackupToTelegram(backupFile);
+
+                license.last_telegram_backup_date = today;
+
+                await db.SaveChangesAsync();
+            }
+            catch
+            {
+            }
+        }
     }
 }
 

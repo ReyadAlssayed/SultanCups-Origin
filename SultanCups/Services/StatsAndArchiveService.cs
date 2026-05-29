@@ -599,14 +599,20 @@ namespace SultanCups.Services
                     ?? 0;
 
                 decimal currentBalance =
-    await _context.cash_box_balances
-        .AsNoTracking()
-        .Where(x =>
-            x.cash_box_id ==
-            box.cash_box_id)
-        .Select(x => (decimal?)x.balance)
-        .FirstOrDefaultAsync()
-    ?? 0;
+     await _context.financial_events
+         .AsNoTracking()
+         .Where(x =>
+             x.cash_box_id == box.cash_box_id
+             &&
+             x.event_date >= lastArchiveDate)
+         .SumAsync(x =>
+             (decimal?)
+             (
+                 x.direction == "IN"
+                     ? x.amount
+                     : -x.amount
+             ))
+     ?? 0;
 
                 stats.cash_boxes.Add(
                     new CashBoxStatsItem
@@ -861,6 +867,26 @@ namespace SultanCups.Services
 
                 _context.orders.Remove(order);
             }
+
+            var purchaseEvents =
+    await _context.financial_events
+        .Where(x =>
+            x.ref_table == "purchases")
+        .ToListAsync();
+
+            _context.financial_events
+                .RemoveRange(purchaseEvents);
+
+
+
+            var otherPurchaseEvents =
+                await _context.financial_events
+                    .Where(x =>
+                        x.ref_table == "other_purchases")
+                    .ToListAsync();
+
+            _context.financial_events
+                .RemoveRange(otherPurchaseEvents);
 
             // =====================================
             // تصفير الجداول التشغيلية

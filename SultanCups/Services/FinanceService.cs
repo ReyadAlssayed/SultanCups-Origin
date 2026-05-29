@@ -525,14 +525,97 @@ namespace SultanCups.Services
         }
         public async Task<List<CashBoxBalance>> GetCashBoxBalances()
         {
-            return await _context.cash_box_balances.ToListAsync();
+            DateTime lastArchiveDate =
+                await _context.archive_cycles
+                    .AsNoTracking()
+                    .OrderByDescending(x => x.to_date)
+                    .Select(x => x.to_date)
+                    .FirstOrDefaultAsync();
+
+            if (lastArchiveDate == default)
+            {
+                lastArchiveDate =
+                    new DateTime(
+                        2000,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
+            }
+
+            var cashBoxes =
+                await _context.cash_boxes
+                    .AsNoTracking()
+                    .ToListAsync();
+
+            var result = new List<CashBoxBalance>();
+
+            foreach (var box in cashBoxes)
+            {
+                decimal balance =
+                    await _context.financial_events
+                        .AsNoTracking()
+                        .Where(x =>
+                            x.cash_box_id == box.cash_box_id
+                            &&
+                            x.event_date >= lastArchiveDate)
+                        .SumAsync(x =>
+                            (decimal?)
+                            (
+                                x.direction == "IN"
+                                    ? x.amount
+                                    : -x.amount
+                            ))
+                    ?? 0;
+
+                result.Add(new CashBoxBalance
+                {
+                    cash_box_id = box.cash_box_id,
+                    name = box.name,
+                    balance = balance
+                });
+            }
+
+            return result;
         }
         public async Task<decimal> GetBalanceFromView(int cashBoxId)
         {
-            return await _context.cash_box_balances
-                .Where(x => x.cash_box_id == cashBoxId)
-                .Select(x => x.balance)
-                .FirstOrDefaultAsync();
+            DateTime lastArchiveDate =
+                await _context.archive_cycles
+                    .AsNoTracking()
+                    .OrderByDescending(x => x.to_date)
+                    .Select(x => x.to_date)
+                    .FirstOrDefaultAsync();
+
+            if (lastArchiveDate == default)
+            {
+                lastArchiveDate =
+                    new DateTime(
+                        2000,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
+            }
+
+            return await _context.financial_events
+                .AsNoTracking()
+                .Where(x =>
+                    x.cash_box_id == cashBoxId
+                    &&
+                    x.event_date >= lastArchiveDate)
+                .SumAsync(x =>
+                    (decimal?)
+                    (
+                        x.direction == "IN"
+                            ? x.amount
+                            : -x.amount
+                    ))
+                ?? 0;
         }
 
         //جلب السجلات المالية كاملة
