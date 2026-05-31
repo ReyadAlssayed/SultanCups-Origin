@@ -201,6 +201,22 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
                     var commissionAmount =
                         totalQuantity * order.commission_per_box;
 
+                    var currentCashBalance =
+         await _context.cash_box_balances
+             .Where(x => x.cash_box_id == order.cash_box_id)
+             .Select(x => x.balance)
+             .FirstOrDefaultAsync();
+
+                    if (currentCashBalance < commissionAmount)
+                    {
+                        await transaction.RollbackAsync();
+
+                        return (
+                            false,
+                            "رصيد الخزنة غير كاف لصرف العمولة"
+                        );
+                    }
+
                     AddFinancialEvent(
                         "دفع عمولة",
                         "OUT",
@@ -221,13 +237,13 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
                 await transaction.CommitAsync();
                 return (true, order.order_id.ToString());
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
 
                 return (
                     false,
-                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+                    ex.ToString()
                 );
             }
         }
@@ -720,6 +736,22 @@ _context.financial_events
                 // =====================================
                 if (!oldPaidCommission && newPaidCommission)
                 {
+                    var currentCashBalance =
+                        await _context.cash_box_balances
+                            .Where(x => x.cash_box_id == updated.cash_box_id)
+                            .Select(x => x.balance)
+                            .FirstOrDefaultAsync();
+
+                    if (currentCashBalance < newCommission)
+                    {
+                        await transaction.RollbackAsync();
+
+                        return (
+                            false,
+                            "رصيد الخزنة غير كاف لصرف العمولة"
+                        );
+                    }
+
                     AddFinancialEvent(
                         "دفع عمولة",
                         "OUT",
@@ -765,7 +797,24 @@ _context.financial_events
 
                     if (diff > 0)
                     {
-                        AddFinancialEvent(
+
+                            var currentCashBalance =
+      await _context.cash_box_balances
+          .Where(x => x.cash_box_id == updated.cash_box_id)
+          .Select(x => x.balance)
+          .FirstOrDefaultAsync();
+
+                            if (currentCashBalance < diff)
+                            {
+                                await transaction.RollbackAsync();
+
+                                return (
+                                    false,
+                                    "رصيد الخزنة غير كاف لصرف فرق العمولة"
+                                );
+                            }
+
+                            AddFinancialEvent(
                             "زيادة عمولة",
                             "OUT",
                             diff,
@@ -1208,6 +1257,9 @@ _context.financial_events
 
                 var overPaid =
                     orderPaidAmount - newNetTotal;
+
+                if (overPaid < 0)
+                    overPaid = 0;
 
                 if (
     !string.IsNullOrWhiteSpace(selectedRefundMethod)

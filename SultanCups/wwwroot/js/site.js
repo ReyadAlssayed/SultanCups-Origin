@@ -47,12 +47,13 @@ window.printPurchaseCard = function () {
                     margin:10mm;
                 }
 
-                body{
-                    margin:0;
-                    padding:0;
-                    background:#ffffff;
-                    font-family:'Cairo', sans-serif;
-                }
+               body{
+    background:#fff;
+    font-family:'Cairo', sans-serif;
+    margin:0;
+    padding:0;
+    font-size:13px;
+}
 
                 .print-head{
                     width:700px;
@@ -63,14 +64,12 @@ window.printPurchaseCard = function () {
                     color:#111827;
                 }
 
-                .sal-dialog-box{
+.sal-dialog-box{
     width:700px !important;
-    margin:auto !important;
+    margin:-40px auto 0 auto !important;
     box-shadow:none !important;
     padding-bottom:70px;
-    margin-top:-15px !important;
 }
-
                 .pro-dialog-actions{
                     display:none !important;
                 }
@@ -204,10 +203,11 @@ window.printOrderCard = function () {
     margin-bottom:5px;
 }
 
-              th, td{
+            th, td{
     border:2px solid #bdbdbd;
-    padding:8px;
+    padding:6px;
     text-align:center;
+    font-size:12px;
 }
 
                 th{
@@ -216,8 +216,9 @@ window.printOrderCard = function () {
                 }
 
                 .print-only{
-                    display:block !important;
-                }
+    display:block !important;
+    margin-top:-40px !important;
+}
 
                 img{
                     object-fit:contain;
