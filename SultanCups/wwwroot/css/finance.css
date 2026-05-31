@@ -70,7 +70,7 @@
     }
 
 .sal-dialog-body b {
-    color: #475569;
+    color: #334155;
     font-weight: 500;
 }
 
@@ -106,18 +106,19 @@
     .details-list .row {
         display: flex;
         justify-content: space-between;
-        padding: 6px 0;
+        padding: 8px 0;
         border-bottom: 1px dashed #f1f5f9;
-        font-size: 14px;
+        font-size: 15px;
+        font-weight: 500;
     }
-
         .details-list .row span:first-child {
-            color: #64748b;
+            color: #1e293b;
+            font-weight: 600;
         }
 
         .details-list .row span:last-child {
-            color: #0f172a;
-            font-weight: 500;
+            color: #020617;
+            font-weight: 600;
         }
 
 

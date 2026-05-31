@@ -64,11 +64,12 @@ window.printPurchaseCard = function () {
                 }
 
                 .sal-dialog-box{
-                    margin:0 auto !important;
-                    width:700px !important;
-                    box-shadow:none !important;
-                    padding-bottom:70px;
-                }
+    width:700px !important;
+    margin:auto !important;
+    box-shadow:none !important;
+    padding-bottom:70px;
+    margin-top:-15px !important;
+}
 
                 .pro-dialog-actions{
                     display:none !important;
@@ -87,7 +88,7 @@ window.printPurchaseCard = function () {
                     font-size:13px;
                     font-weight:600;
                     border-top:1px solid #000;
-                    padding-top:8px;
+                    padding-top:15px;
                     padding-bottom:4px;
                     background:#fff;
                 }
@@ -152,6 +153,7 @@ window.printOrderCard = function () {
 
     win.document.title = "";
 
+    const printTime = new Date();
     win.document.write(`
 
         <html dir="rtl">
@@ -195,17 +197,18 @@ window.printOrderCard = function () {
                     display:none !important;
                 }
 
-                table{
-                    width:100%;
-                    border-collapse:collapse;
-                    margin-top:15px;
-                }
+               table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:0;
+    margin-bottom:5px;
+}
 
-                th, td{
-                    border:1px solid #ddd;
-                    padding:8px;
-                    text-align:center;
-                }
+              th, td{
+    border:2px solid #bdbdbd;
+    padding:8px;
+    text-align:center;
+}
 
                 th{
                     background:#f3f4f6;
@@ -240,9 +243,11 @@ window.printOrderCard = function () {
 
         <body>
 
+
+
             <div style="
                 width:700px;
-                margin:0 auto 20px auto;
+                margin:0 auto 8px auto;
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -252,7 +257,10 @@ window.printOrderCard = function () {
                 <img src="/images/logo2.jpg"
                      style="width:65px; height:auto;" />
 
-                <div style="text-align:right; line-height:1.3;">
+                <div style="
+    text-align:center;
+    line-height:1.3;
+">
 
                     <div style="font-size:18px; font-weight:700;">
                         مصنع السلطان للأكواب الورقية
@@ -262,16 +270,53 @@ window.printOrderCard = function () {
                         أبناء السيد
                     </div>
 
+                      
+                    <div style="font-size:11px; color:#444; margin-top:2px;">
+    وقت الطباعة:
+    ${printTime.toLocaleDateString('en-CA')}
+    -
+    ${printTime.toLocaleTimeString('en-GB')}
+</div>
+
                 </div>
 
             </div>
 
             ${content}
 
-            <div class="print-footer">
-                صناعة نفخر بها
-            </div>
+ <div class="print-footer">
 
+    <div style="
+        width:100%;
+        font-size:13px;
+        font-weight:700;
+        margin-top:8px;
+        margin-bottom:4px;
+    ">
+
+    <div>
+
+    📍 زليتن / الجمعة
+
+    <span style="margin:0 10px;">|</span>
+
+    ليبيانا: 0945118162
+
+    <span style="margin:0 10px;">|</span>
+
+    مدار: 0912155331
+
+</div>
+
+<div style="margin-top:4px;font-size:11px;">
+
+    🌐 ابحث في خرائط Google:
+    مصنع السلطان للأكواب الورقيه-زليتن 
+
+</div>
+
+
+</div>
         </body>
 
         </html>
@@ -491,14 +536,24 @@ window.printStatsCard = function () {
                     color:#6b7280;
                 }
 
-                .print-footer{
-                    margin-top:20px;
-                    text-align:center;
-                    font-size:12px;
-                    color:#6b7280;
-                    border-top:1px solid #ddd;
-                    padding-top:8px;
-                }
+             .print-footer{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    text-align:center;
+    font-size:12px;
+    font-weight:600;
+    border-top:1px solid #000;
+    padding:8px 0;
+    background:#fff;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:4px;
+}
 
             </style>
 
@@ -522,7 +577,8 @@ window.printStatsCard = function () {
             <div class="print-footer">
 
                 تم إنشاء التقرير بتاريخ:
-                ${new Date().toLocaleString()}
+                ${new Date().toLocaleString
+            ()}
 
             </div>
 

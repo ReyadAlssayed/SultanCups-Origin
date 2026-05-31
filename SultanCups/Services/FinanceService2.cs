@@ -409,6 +409,11 @@ _context.financial_events
                 if (order == null)
                     return (false, "الفاتورة غير موجودة");
 
+                order.created_at = DateTime.SpecifyKind(
+    order.created_at,
+    DateTimeKind.Utc
+);
+
                 if (order.is_cancelled)
                     return (false, "لا يمكن تعديل فاتورة ملغاة");
 
@@ -423,7 +428,10 @@ _context.financial_events
 
                 order.commission_per_box = updated.commission_per_box;
 
-                order.order_date = updated.order_date;
+                order.order_date = DateTime.SpecifyKind(
+    updated.order_date,
+    DateTimeKind.Utc
+);
 
                 var oldItems = await _context.order_items
                     .Where(i => i.order_id == order.order_id)
@@ -521,6 +529,7 @@ _context.financial_events
                 {
                     stock[item.product_id].quantity -= item.quantity;
                 }
+
 
                 await _context.SaveChangesAsync();
 

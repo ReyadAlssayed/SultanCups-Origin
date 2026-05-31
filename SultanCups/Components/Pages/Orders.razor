@@ -283,7 +283,7 @@
                 <div class="details-list">
 
                     <div class="row">
-                        <span>رقم الفاتورة</span>
+                        <span>رقم فاتورة البيع</span>
                         <span>INV-@SelectedOrder.order_id.ToString("D4")</span>
                     </div>
 
@@ -312,10 +312,20 @@
                         <span>@Fmt(SelectedOrder.discount_total)</span>
                     </div>
 
-                    <div class="row">
-                        <span>الإجمالي بعد الخصم</span>
-                        <span>@Fmt(SelectedOrder.net_total)</span>
-                    </div>
+                  <div class="row">
+    <span>الإجمالي بعد الخصم</span>
+
+   <span style="
+    border:2px solid #9ca3af;
+    border-radius:10px;
+    padding:4px 12px;
+    font-weight:800;
+    background:#ffffff;
+    box-shadow:0 1px 3px rgba(0,0,0,0.12);
+">
+        @Fmt(SelectedOrder.net_total)
+    </span>
+</div>
 
                     <div class="row">
     <span>المدفوع</span>
@@ -372,7 +382,7 @@
     </div>
 }
                     <div class="row">
-                        <span>التاريخ</span>
+                        <span>تاريخ إنشاء الفاتورة</span>
                        <span class="dt-box">
     <span class="dt-day">
         @SelectedOrder.order_date.ToLocalTime().ToString("yyyy-MM-dd")
@@ -404,7 +414,7 @@
             <tr>
                 <th>المنتج</th>
                 <th>الكمية</th>
-                <th>السعر</th>
+                <th>سعر الكرتونة</th>
                 <th>الإجمالي</th>
             </tr>
         </thead>
