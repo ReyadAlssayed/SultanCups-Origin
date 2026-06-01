@@ -642,11 +642,13 @@ namespace SultanCups.Services
 
         public async Task<DateTime> GetLastArchiveDate()
         {
-            return await _context.archive_cycles
+            var dt = await _context.archive_cycles
                 .AsNoTracking()
                 .OrderByDescending(x => x.to_date)
                 .Select(x => x.to_date)
                 .FirstOrDefaultAsync();
+
+            return dt.ToLocalTime();
         }
 
         public async Task<(bool success, string fromDate, string toDate)>
