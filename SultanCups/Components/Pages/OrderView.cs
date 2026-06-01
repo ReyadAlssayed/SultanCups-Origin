@@ -30,5 +30,7 @@
         public decimal profit { get; set; }
 
         public DateTime order_date { get; set; }
+
+        public DateTime created_at { get; set; }
     }
 }

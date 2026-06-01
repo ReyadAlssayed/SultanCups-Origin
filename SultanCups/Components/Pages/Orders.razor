@@ -144,8 +144,8 @@
                     {
                         @foreach (var o in FilteredOrders)
 {
-    bool isOld =
-    o.order_date < lastArchiveDate
+   bool isOld =
+    o.created_at < lastArchiveDate
     &&
     o.paid_amount < o.net_total;
 
@@ -1091,10 +1091,10 @@ async Task ExportToExcel()
             ws.Cell(row, 7).Value =
                 o.order_date.ToString("yyyy-MM-dd");
 
-            bool isOld =
-                o.order_date < lastArchiveDate
-                &&
-                o.paid_amount < o.net_total;
+          bool isOld =
+    o.created_at < lastArchiveDate
+    &&
+    o.paid_amount < o.net_total;
 
             if (isOld)
             {

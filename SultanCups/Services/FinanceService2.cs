@@ -126,6 +126,7 @@ namespace SultanCups.Services
                         return (false, $"المخزون غير كافي (المتوفر={stocks[item.product_id].quantity})");
                 }
 
+                order.created_at = DateTime.UtcNow;
                 // حفظ الفاتورة
                 _context.orders.Add(order);
                 await _context.SaveChangesAsync();
@@ -397,7 +398,9 @@ _context.financial_events
                      : -(decimal?)x.amount
              ) ?? 0,
 
-        order_date = o.order_date
+        order_date = o.order_date,
+
+        created_at = o.created_at
     };
 
             return await query
