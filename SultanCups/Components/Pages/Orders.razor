@@ -1186,12 +1186,12 @@ async Task ConfirmCancelOrder()
         ShowDisableDialog = false;
     }
     else
-    {
-ToastService.ShowToast(
-    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
-    "error"
-);  
-    }
+{
+    ToastService.ShowToast(
+        result.message,
+        "error"
+    );
+}
 }
 
 async Task ConfirmPartialReturn()

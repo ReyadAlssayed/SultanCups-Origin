@@ -130,7 +130,7 @@ namespace SultanCups.Services
                 _context.orders.Add(order);
                 await _context.SaveChangesAsync();
 
-                // حفظ الأصناف + خصم المخزون
+                // حفظ الأصناف  خصم المخزون
                 foreach (var item in items)
                 {
                     item.order_id = order.order_id;
@@ -1293,11 +1293,23 @@ _context.financial_events
 4- أعد محاولة تنفيذ الراجع مرة أخرى."
             );
                 }
+
+
+                var currentCashBalance =
+ await GetCurrentCashBalance(order.cash_box_id);
+
+                if (currentCashBalance < overPaid)
+                {
+                    return (
+                        false,
+                        "الخزنة لا تحتوي حالياً على المبلغ المطلوب للاسترجاع، قم بتحويل مبلغ إلى الخزنة ثم أعد المحاولة"
+                    );
+                }
                 // ==================================
                 // استرجاع فقط إذا أصبح هناك فائض
                 // ==================================
 
-                    foreach (var item in validReturns)
+                foreach (var item in validReturns)
                     {
                         var orderItem =
                             order.Items.FirstOrDefault(x =>
@@ -1372,16 +1384,6 @@ _context.financial_events
                     }
 
 
-                var currentCashBalance =
- await GetCurrentCashBalance(order.cash_box_id);
-
-                if (currentCashBalance < overPaid)
-                    {
-                        return (
-                            false,
-                            "الخزنة لا تحتوي حالياً على المبلغ المطلوب للاسترجاع، قم بتحويل مبلغ إلى الخزنة ثم أعد المحاولة"
-                        );
-                    }
 
 
                 if (overPaid > 0)

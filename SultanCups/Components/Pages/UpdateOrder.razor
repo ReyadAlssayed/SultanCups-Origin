@@ -1010,7 +1010,7 @@
             if (netDiff > 0)
             {
                 ChangeMessages.Add(
-                    $"زيادة على الفاتورة: +{netDiff:0.00} د.ل");
+                    $"زيادة على الفاتورة: {netDiff:0.00} د.ل");
             }
             else if (netDiff < 0)
             {
@@ -1041,7 +1041,7 @@
                 if (commissionDiff > 0)
                 {
                     ChangeMessages.Add(
-                        $"زيادة مستحقة للمسوق: +{commissionDiff:0.00} د.ل");
+                        $"زيادة مستحقة للمسوق: {commissionDiff:0.00} د.ل");
                 }
                 else if (commissionDiff < 0)
                 {
@@ -1060,7 +1060,7 @@
             if (paidDiff > 0)
             {
                 ChangeMessages.Add(
-                    $"زيادة دفعات: +{paidDiff:0.00} د.ل");
+                    $"زيادة دفعات: {paidDiff:0.00} د.ل");
             }
             else if (paidDiff < 0)
             {
