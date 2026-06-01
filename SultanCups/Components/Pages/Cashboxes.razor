@@ -620,9 +620,9 @@
 
             ToastService.ShowToast("تم التحويل بنجاح", "success");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast("تعذر إكمال عملية الإيداع بسبب خطأ داخلي، يرجى التواصل مع مطور النظام", "error");
+            ToastService.ShowToast(ex.Message, "error");
         }
     }
 

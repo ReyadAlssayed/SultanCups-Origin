@@ -791,6 +791,8 @@
         {
             IsSaving = false;
 
+
+
             if (result.message.Contains("لا يمكن إنقاص الكمية"))
             {
                 ErrorDialogMessage = result.message;
@@ -1093,6 +1095,7 @@
             else
             {
                 IsSaving = false;
+
 
                 if (result.message.Contains("لا يمكن إنقاص الكمية"))
                 {

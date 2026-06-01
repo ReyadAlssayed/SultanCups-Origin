@@ -13,6 +13,44 @@ namespace SultanCups.Services
             _context = context;
         }
 
+
+        private async Task<decimal> GetCurrentCashBalance(int cashBoxId)
+        {
+            DateTime lastArchiveDate =
+                await _context.archive_cycles
+                    .AsNoTracking()
+                    .OrderByDescending(x => x.to_date)
+                    .Select(x => x.to_date)
+                    .FirstOrDefaultAsync();
+
+            if (lastArchiveDate == default)
+            {
+                lastArchiveDate =
+                    new DateTime(
+                        2000,
+                        1,
+                        1,
+                        0,
+                        0,
+                        0,
+                        DateTimeKind.Utc);
+            }
+
+            return await _context.financial_events
+                .AsNoTracking()
+                .Where(x =>
+                    x.cash_box_id == cashBoxId
+                    &&
+                    x.event_date >= lastArchiveDate)
+                .SumAsync(x =>
+                    (decimal?)
+                    (
+                        x.direction == "IN"
+                            ? x.amount
+                            : -x.amount
+                    ))
+                ?? 0;
+        }
         private void AddFinancialEvent(
      string type,
      string direction,
@@ -202,10 +240,7 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
                         totalQuantity * order.commission_per_box;
 
                     var currentCashBalance =
-         await _context.cash_box_balances
-             .Where(x => x.cash_box_id == order.cash_box_id)
-             .Select(x => x.balance)
-             .FirstOrDefaultAsync();
+      await GetCurrentCashBalance(order.cash_box_id);
 
                     if (currentCashBalance < commissionAmount)
                     {
@@ -213,7 +248,7 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
 
                         return (
                             false,
-                            "رصيد الخزنة غير كاف لصرف العمولة"
+                            $"الرصيد={currentCashBalance} | العمولة={commissionAmount}"
                         );
                     }
 
@@ -243,7 +278,7 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
 
                 return (
                     false,
-                    ex.ToString()
+                    ex.Message
                 );
             }
         }
@@ -452,7 +487,7 @@ _context.financial_events
                 var oldItems = await _context.order_items
                     .Where(i => i.order_id == order.order_id)
                     .ToListAsync();
-
+                var oldQuantity = oldItems.Sum(x => x.quantity);
 
                 var stock = await _context.product_stock
                     .ToDictionaryAsync(s => s.product_id);
@@ -716,7 +751,6 @@ _context.financial_events
                 // 🔥 فروقات العمولة
                 // =====================================
 
-                var oldQuantity = oldItems.Sum(x => x.quantity);
                 var newQuantity = newItems.Sum(x => x.quantity);
 
                 var oldCommission =
@@ -737,10 +771,7 @@ _context.financial_events
                 if (!oldPaidCommission && newPaidCommission)
                 {
                     var currentCashBalance =
-                        await _context.cash_box_balances
-                            .Where(x => x.cash_box_id == updated.cash_box_id)
-                            .Select(x => x.balance)
-                            .FirstOrDefaultAsync();
+     await GetCurrentCashBalance(updated.cash_box_id);
 
                     if (currentCashBalance < newCommission)
                     {
@@ -797,25 +828,26 @@ _context.financial_events
 
                     if (diff > 0)
                     {
+                        return (
+                            false,
+                            $"oldQty={oldQuantity} | newQty={newQuantity} | oldComm={oldCommission} | newComm={newCommission} | diff={diff} | oldPaid={oldPaidCommission} | newPaid={newPaidCommission}"
+                        );
 
-                            var currentCashBalance =
-      await _context.cash_box_balances
-          .Where(x => x.cash_box_id == updated.cash_box_id)
-          .Select(x => x.balance)
-          .FirstOrDefaultAsync();
+                        var currentCashBalance =
+                    await GetCurrentCashBalance(updated.cash_box_id);
 
-                            if (currentCashBalance < diff)
-                            {
-                                await transaction.RollbackAsync();
+                        if (currentCashBalance < diff)
+                        {
+                            await transaction.RollbackAsync();
 
-                                return (
-                                    false,
-                                    "رصيد الخزنة غير كاف لصرف فرق العمولة"
-                                );
-                            }
+                            return (
+                                false,
+                                $"رصيد={currentCashBalance} | فرق={diff}"
+                            );
+                        }
 
-                            AddFinancialEvent(
-                            "زيادة عمولة",
+                        AddFinancialEvent(
+                                                "زيادة عمولة",
                             "OUT",
                             diff,
                             updated.cash_box_id,
@@ -868,13 +900,13 @@ _context.financial_events
 
                 return (true, "تم تعديل الفاتورة ✔");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
 
                 return (
                     false,
-                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام"
+                    ex.ToString()
                 );
             }
         }
