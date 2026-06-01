@@ -452,13 +452,20 @@ _context.financial_events
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
+            async Task<(bool success, string message)> FailAsync(string message)
+            {
+                await transaction.RollbackAsync();
+                _context.ChangeTracker.Clear();
+                return (false, message);
+            }
+
             try
             {
                 var order = await _context.orders
      .FirstOrDefaultAsync(x => x.order_id == updated.order_id);
 
                 if (order == null)
-                    return (false, "الفاتورة غير موجودة");
+                    return await FailAsync("الفاتورة غير موجودة");
 
                 order.created_at = DateTime.SpecifyKind(
     order.created_at,
@@ -466,7 +473,7 @@ _context.financial_events
 );
 
                 if (order.is_cancelled)
-                    return (false, "لا يمكن تعديل فاتورة ملغاة");
+                    return await FailAsync("لا يمكن تعديل فاتورة ملغاة");
 
                 // ✔ بعد التحقق فقط
 
@@ -502,10 +509,7 @@ _context.financial_events
 
                     if (edited.quantity < oldItem.quantity)
                     {
-                        return (
-                            false,
-                            "لا يمكن إنقاص الكمية من التعديل، استخدم الراجع"
-                        );
+                        return await FailAsync("لا يمكن إنقاص الكمية من التعديل، استخدم الراجع");
                     }
 
                     var extraNeeded =
@@ -515,10 +519,7 @@ _context.financial_events
                     {
                         if (!stock.ContainsKey(oldItem.product_id))
                         {
-                            return (
-                                false,
-                                "المنتج غير موجود"
-                            );
+                            return await FailAsync("المنتج غير موجود");
                         }
 
                         if (extraNeeded >
@@ -529,10 +530,7 @@ _context.financial_events
                                 .Select(p => p.name)
                                 .FirstOrDefaultAsync();
 
-                            return (
-                                false,
-                                $"المخزون غير كافي للصنف: {productName}"
-                            );
+                            return await FailAsync($"المخزون غير كافي للصنف: {productName}");
                         }
 
                         stock[oldItem.product_id].quantity -= extraNeeded;
@@ -562,17 +560,14 @@ _context.financial_events
                 foreach (var item in addedItems)
                 {
                     if (item.product_id <= 0)
-                        return (false, "منتج غير صالح");
+                        return await FailAsync("منتج غير صالح");
 
                     if (!stock.ContainsKey(item.product_id))
-                        return (false, "منتج غير موجود");
+                        return await FailAsync("منتج غير موجود");
 
                     if (stock[item.product_id].quantity < item.quantity)
                     {
-                        return (
-                            false,
-                            $"المخزون غير كافي للصنف: {item.product_name}"
-                        );
+                        return await FailAsync($"المخزون غير كافي للصنف: {item.product_name}");
                     }
                 }
 
@@ -722,16 +717,16 @@ _context.financial_events
                 var newPaid = newPaymentsList.Sum(p => p.amount);
 
                 if (newPaid > newNet)
-                    return (false, "المبلغ المدفوع أكبر من الإجمالي");
+                    return await FailAsync("المبلغ المدفوع أكبر من الإجمالي");
 
                 if (newPaymentsList.Any(p => p.amount < 0))
-                    return (false, "لا يمكن إدخال مبلغ سالب");
+                    return await FailAsync("لا يمكن إدخال مبلغ سالب");
 
 
                 var finalCashBoxId = updated.cash_box_id;
 
                 if (finalCashBoxId <= 0)
-                    return (false, "اختر الخزنة");
+                    return await FailAsync("اختر الخزنة");
 
                 updated.cash_box_id = finalCashBoxId;
 
@@ -775,12 +770,9 @@ _context.financial_events
 
                     if (currentCashBalance < newCommission)
                     {
-                        await transaction.RollbackAsync();
 
-                        return (
-                            false,
-                            "رصيد الخزنة غير كاف لصرف العمولة"
-                        );
+
+                        return await FailAsync("رصيد الخزنة غير كاف لصرف العمولة");
                     }
 
                     AddFinancialEvent(
@@ -828,26 +820,18 @@ _context.financial_events
 
                     if (diff > 0)
                     {
-                        return (
-                            false,
-                            $"oldQty={oldQuantity} | newQty={newQuantity} | oldComm={oldCommission} | newComm={newCommission} | diff={diff} | oldPaid={oldPaidCommission} | newPaid={newPaidCommission}"
-                        );
+                       
 
                         var currentCashBalance =
-                    await GetCurrentCashBalance(updated.cash_box_id);
+                           await GetCurrentCashBalance(updated.cash_box_id);
 
                         if (currentCashBalance < diff)
                         {
-                            await transaction.RollbackAsync();
-
-                            return (
-                                false,
-                                $"رصيد={currentCashBalance} | فرق={diff}"
-                            );
+                            return await FailAsync("رصيد الخزنة غير كاف لصرف فرق العمولة");
                         }
 
                         AddFinancialEvent(
-                                                "زيادة عمولة",
+                            "زيادة عمولة",
                             "OUT",
                             diff,
                             updated.cash_box_id,
@@ -903,6 +887,7 @@ _context.financial_events
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                _context.ChangeTracker.Clear();
 
                 return (
                     false,
@@ -1009,15 +994,7 @@ _context.financial_events
                 {
 
                     var currentCashBalance =
-    await _context.financial_events
-        .Where(x =>
-            x.cash_box_id ==
-            order.cash_box_id)
-        .SumAsync(x =>
-            x.direction == "IN"
-                ? (decimal?)x.amount
-                : -(decimal?)x.amount
-        ) ?? 0;
+      await GetCurrentCashBalance(order.cash_box_id);
 
                     if (currentCashBalance < paidAmount)
                     {
@@ -1395,18 +1372,10 @@ _context.financial_events
                     }
 
 
-                    var currentCashBalance =
-                        await _context.financial_events
-                            .Where(x =>
-                                x.cash_box_id ==
-                                order.cash_box_id)
-                            .SumAsync(x =>
-                                x.direction == "IN"
-                                    ? (decimal?)x.amount
-                                    : -(decimal?)x.amount
-                            ) ?? 0;
+                var currentCashBalance =
+ await GetCurrentCashBalance(order.cash_box_id);
 
-                    if (currentCashBalance < overPaid)
+                if (currentCashBalance < overPaid)
                     {
                         return (
                             false,
@@ -1816,3 +1785,5 @@ on o.person_id equals m.marketer_id into mg
         }
     }
 }
+
+
