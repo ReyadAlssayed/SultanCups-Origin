@@ -162,24 +162,7 @@
 
         <td>@o.order_id</td>
 
-        <td>
-    @o.order_id
-    <br />
-    paid=@o.paid_amount
-    <br />
-    net=@o.net_total
-    <br />
-    archive=@lastArchiveDate
-</td>
-<br />
-created=@o.created_at
 
-<br />
-isOld=@(
-    o.created_at < lastArchiveDate
-    &&
-    o.paid_amount < o.net_total
-)
 
         <td>@(o.person_type == "customer" ? "زبون" : "مسوق")</td>
 
@@ -864,12 +847,14 @@ List<ReturnItemInput> ReturnItems = new();
 DateTime? DateFilter;
 bool ShowProfit = false;
    
-    protected override async Task OnInitializedAsync()
-    {
-        OrdersList = await FinanceService.GetOrders();
-        lastArchiveDate =
-    await StatsService.GetLastArchiveDate();
-    }
+   protected override async Task OnInitializedAsync()
+{
+    OrdersList = await FinanceService.GetOrders();
+
+    lastArchiveDate =
+        (await StatsService.GetLastArchiveDate())
+        .ToLocalTime();
+}
 
 protected override void OnParametersSet()
 {
@@ -1324,6 +1309,7 @@ void CloseReturnDialog()
     SelectedRefundMethod = "";
 
     ReturnRefundAmount = 0;
+
 
     ReturnCommissionAmount = 0;
 

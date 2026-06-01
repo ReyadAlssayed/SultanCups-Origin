@@ -279,7 +279,7 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
 
                 return (
                     false,
-                    ex.Message
+                    ex.ToString()
                 );
             }
         }
@@ -725,6 +725,20 @@ _context.financial_events
                 if (newPaymentsList.Any(p => p.amount < 0))
                     return await FailAsync("لا يمكن إدخال مبلغ سالب");
 
+                var refundAmount = oldPaid - newPaid;
+
+                if (refundAmount > 0)
+                {
+                    var currentCashBalance =
+                        await GetCurrentCashBalance(updated.cash_box_id);
+
+                    if (currentCashBalance < refundAmount)
+                    {
+                        return await FailAsync(
+                            "رصيد الخزنة لا يكفي لاسترجاع هذا المبلغ"
+                        );
+                    }
+                }
 
                 var finalCashBoxId = updated.cash_box_id;
 
@@ -734,6 +748,7 @@ _context.financial_events
                 updated.cash_box_id = finalCashBoxId;
 
                 HandleCashBoxChange(order, updated, oldPaid, personName, adminId);
+
 
                 HandlePaymentDifferences(
       oldPayments,
