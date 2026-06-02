@@ -11,6 +11,25 @@
     margin-bottom: 20px;
 }
 
+.shipping-input-wrap {
+    position: relative;
+}
+
+.shipping-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.shipping-input {
+    padding-left: 42px !important;
+}
     .top-bar h3 {
         text-align: center;
         margin: 0;

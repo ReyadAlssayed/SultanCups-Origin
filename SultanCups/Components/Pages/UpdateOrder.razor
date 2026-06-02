@@ -224,10 +224,25 @@
                 </div>
 
                 <label>الخصم <span class="muted1">(اختياري)</span></label>
+
                 <input type="number"
                        class="pro-input"
                        @bind-value="Form.discount_total"
                        @bind-value:event="oninput" />
+
+                <div class="shipping-input-wrap">
+
+                    <img src="images/Shipping.png"
+                         class="shipping-icon" />
+
+                    <input type="number"
+                           class="pro-input shipping-input"
+                           @bind-value="Form.shipping_cost"
+                           @bind-value:event="oninput" />
+
+                </div>
+
+                <hr />
 
                 <hr />
 
@@ -628,6 +643,7 @@
             person_type = order.person_type,
             discount_total = order.discount_total,
             cash_box_id = order.cash_box_id,
+            shipping_cost = order.shipping_cost,
             notes = order.notes,
             commission_per_box = order.commission_per_box,
             pay_commission_now = order.pay_commission_now,
@@ -892,8 +908,9 @@
         }
 
         bool hasFinancialImpact =
-            TempPayments.Sum(p => p.amount) > 0 ||
-            Form.pay_commission_now;
+    TempPayments.Sum(p => p.amount) > 0 ||
+    Form.pay_commission_now ||
+    Form.shipping_cost > 0;
 
         if (hasFinancialImpact &&
             Form.cash_box_id <= 0)
@@ -972,8 +989,9 @@
             var newPaid = Payments.Sum(p => p.amount);
 
             bool hasFinancialImpact =
-    newPaid > 0 ||
-    Form.pay_commission_now;
+     newPaid > 0 ||
+     Form.pay_commission_now ||
+     Form.shipping_cost > 0;
 
             // 🔥 لا يوجد تأثير مالي
             // اسمح بخزنة افتراضية

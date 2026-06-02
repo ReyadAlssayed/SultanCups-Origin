@@ -295,12 +295,6 @@
                     </div>
 
                     <div class="row">
-    <span>عدد الأصناف</span>
-    <span>@SelectedOrder.items_count</span>
-</div>
-
-
-                    <div class="row">
                         <span>الإجمالي</span>
                         <span>@Fmt(SelectedOrder.total)</span>
                     </div>
@@ -350,6 +344,11 @@
 </span>
 </div>
 
+<div class="row">
+    <span>تكلفة الشحن</span>
+    <span>@Fmt(SelectedOrder.shipping_cost)</span>
+</div>
+
                    @if (SelectedOrder.person_type == "marketer")
 {
     <div class="row">
@@ -379,6 +378,7 @@
         </span>
     </div>
 }
+
                     <div class="row">
                         <span>تاريخ إنشاء الفاتورة</span>
                        <span class="dt-box">

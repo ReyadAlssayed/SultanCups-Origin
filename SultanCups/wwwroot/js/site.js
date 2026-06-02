@@ -180,12 +180,12 @@ window.printOrderCard = function () {
                     padding:0;
                 }
 
-                .sal-dialog-box{
-                    width:700px !important;
-                    margin:auto !important;
-                    box-shadow:none !important;
-                    padding-bottom:70px;
-                }
+              .sal-dialog-box{
+    width:700px !important;
+    margin:auto !important;
+    box-shadow:none !important;
+    padding-bottom:70px;
+}
 
                 .btn-cancel,
                 .btn-pdf-save{
@@ -256,7 +256,7 @@ window.printOrderCard = function () {
             ">
 
                 <img src="/images/logo2.jpg"
-                     style="width:65px; height:auto;" />
+                     style="width:80px; height:auto;" />
 
                 <div style="
     text-align:center;
@@ -267,10 +267,10 @@ window.printOrderCard = function () {
                         مصنع السلطان للأكواب الورقية
                     </div>
 
-                    <div style="font-size:12px; color:#444;">
+                    <div style="font-size:12px; color:#000;">
                         أبناء السيد
                     </div>
-
+                    
                       
                     <div style="font-size:11px; color:#444; margin-top:2px;">
     وقت الطباعة:
@@ -284,41 +284,30 @@ window.printOrderCard = function () {
             </div>
 
             ${content}
-
- <div class="print-footer">
-
-    <div style="
-        width:100%;
-        font-size:13px;
-        font-weight:700;
-        margin-top:8px;
-        margin-bottom:4px;
-    ">
+            
+<div class="print-footer">
 
     <div>
+        📍 زليتن / الجمعة
+        &nbsp;&nbsp;│&nbsp;&nbsp;
+        ليبيانا: 0945118162
+        &nbsp;&nbsp;│&nbsp;&nbsp;
+        مدار: 0912155331
+        &nbsp;&nbsp;│&nbsp;&nbsp;
+        🌐 خرائط Google: مصنع السلطان - زليتن
+    </div>
 
-    📍 زليتن / الجمعة
-
-    <span style="margin:0 10px;">|</span>
-
-    ليبيانا: 0945118162
-
-    <span style="margin:0 10px;">|</span>
-
-    مدار: 0912155331
-
-</div>
-
-<div style="margin-top:4px;font-size:11px;">
-
-    🌐 ابحث في خرائط Google:
-    مصنع السلطان للأكواب الورقيه-زليتن 
-
-</div>
-
+    <div style="
+        margin-top:4px;
+        font-size:13px;
+        font-weight:700;
+    ">
+       صناعة بمعايير عالية
+    </div>
 
 </div>
-        </body>
+
+</body>
 
         </html>
     `);

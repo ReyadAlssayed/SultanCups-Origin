@@ -253,10 +253,24 @@
                 </div>
 
                 <label>الخصم <span class="muted1">(اختياري)</span></label>
+
                 <input type="number"
                        class="pro-input"
                        @bind-value="Form.discount_total"
                        @bind-value:event="oninput" />
+
+                <div class="shipping-input-wrap">
+
+                    <img src="images/Shipping.png"
+                         class="shipping-icon" />
+
+
+                    <input type="number"
+                           class="pro-input shipping-input"
+                           @bind-value="Form.shipping_cost"
+                           @bind-value:event="oninput" />
+
+                </div>
 
                 <hr />
                 @if (Form.person_type == "marketer")
@@ -656,8 +670,9 @@ if (orders.Any())
         }
 
         bool hasFinancialImpact =
-     TempPayments.Sum(p => p.amount) > 0 ||
-     Form.pay_commission_now;
+      TempPayments.Sum(p => p.amount) > 0 ||
+      Form.pay_commission_now ||
+      Form.shipping_cost > 0;
 
         if (hasFinancialImpact &&
             Form.cash_box_id <= 0)
@@ -799,8 +814,9 @@ if (orders.Any())
             var realPaid = Payments.Sum(p => p.amount);
 
             bool hasFinancialImpact =
-        realPaid > 0 ||
-        Form.pay_commission_now;
+    realPaid > 0 ||
+    Form.pay_commission_now ||
+    Form.shipping_cost > 0;
 
             // 🔥 يوجد تأثير مالي
             if (hasFinancialImpact)

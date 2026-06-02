@@ -11,6 +11,7 @@ public class Order
 
     public decimal discount_total { get; set; }
 
+    public decimal shipping_cost { get; set; }
     public decimal commission_per_box { get; set; }
     public bool pay_commission_now { get; set; }
 

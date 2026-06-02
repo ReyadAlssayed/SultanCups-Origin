@@ -270,6 +270,38 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
                     await _context.SaveChangesAsync();
                 }
 
+                if (order.shipping_cost > 0)
+                {
+                    var currentCashBalance =
+                        await GetCurrentCashBalance(order.cash_box_id);
+
+                    if (currentCashBalance < order.shipping_cost)
+                    {
+                        await transaction.RollbackAsync();
+
+                        return (
+                            false,
+                            "رصيد الخزنة لا يكفي لمصاريف الشحن"
+                        );
+                    }
+
+                    AddFinancialEvent(
+                        "مصاريف شحن",
+                        "OUT",
+                        order.shipping_cost,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "مصاريف شحن الفاتورة"
+                    );
+
+                    await _context.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
                 return (true, order.order_id.ToString());
             }
@@ -327,6 +359,8 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
 
         discount_total = o.discount_total,
 
+        shipping_cost = o.shipping_cost,
+
         net_total =
          ((_context.order_items
              .Where(i => i.order_id == o.order_id)
@@ -376,9 +410,11 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
             : 0
         )
 
-        +
 
-        o.discount_total
+        +
+o.discount_total
++
+o.shipping_cost
 
     )
 
@@ -480,12 +516,14 @@ _context.financial_events
 
                 // ✔ بعد التحقق فقط
 
-                order.discount_total = updated.discount_total;
-                order.cash_box_id = updated.cash_box_id;
-                order.notes = updated.notes;
-
                 var oldCommissionPerBox = order.commission_per_box;
                 var oldPayCommissionNow = order.pay_commission_now;
+                var oldShippingCost = order.shipping_cost;
+
+                order.discount_total = updated.discount_total;
+                order.shipping_cost = updated.shipping_cost;
+                order.cash_box_id = updated.cash_box_id;
+                order.notes = updated.notes;
 
                 order.commission_per_box = updated.commission_per_box;
 
@@ -714,9 +752,13 @@ _context.financial_events
                     .ToListAsync();
 
                 var oldPaid = oldPayments.Sum(x =>
-                    x.direction == "IN" ? x.amount : -x.amount);
+      x.direction == "IN" ? x.amount : -x.amount);
+
+                var shippingDiff =
+                    updated.shipping_cost - oldShippingCost;
 
                 var newPaymentsList = payments ?? new List<PaymentInput>();
+
                 var newPaid = newPaymentsList.Sum(p => p.amount);
 
                 if (newPaid > newNet)
@@ -726,6 +768,19 @@ _context.financial_events
                     return await FailAsync("لا يمكن إدخال مبلغ سالب");
 
                 var refundAmount = oldPaid - newPaid;
+
+                if (shippingDiff > 0)
+                {
+                    var currentCashBalance =
+                        await GetCurrentCashBalance(updated.cash_box_id);
+
+                    if (currentCashBalance < shippingDiff)
+                    {
+                        return await FailAsync(
+                            "رصيد الخزنة لا يكفي لمصاريف الشحن"
+                        );
+                    }
+                }
 
                 if (refundAmount > 0)
                 {
@@ -759,6 +814,39 @@ _context.financial_events
       itemName,
       adminId
   );
+
+                if (shippingDiff > 0)
+                {
+                    AddFinancialEvent(
+                        "زيادة مصاريف شحن",
+                        "OUT",
+                        shippingDiff,
+                        updated.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        null,
+                        "زيادة مصاريف الشحن بعد تعديل"
+                    );
+                }
+                else if (shippingDiff < 0)
+                {
+                    AddFinancialEvent(
+                        "استرجاع مصاريف شحن",
+                        "IN",
+                        Math.Abs(shippingDiff),
+                        updated.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        updated.person_id,
+                        personName,
+                        null,
+                        "استرجاع فرق الشحن بعد تعديل"
+                    );
+                }
 
                 // =====================================
                 // 🔥 فروقات العمولة
@@ -1056,6 +1144,23 @@ _context.financial_events
                         personName,
                         null,
                         "استرجاع عمولة بعد إلغاء الفاتورة"
+                    );
+                }
+
+                if (order.shipping_cost > 0)
+                {
+                    AddFinancialEvent(
+                        "استرجاع مصاريف شحن",
+                        "IN",
+                        order.shipping_cost,
+                        order.cash_box_id,
+                        adminId,
+                        order.order_id,
+                        "orders",
+                        order.person_id,
+                        personName,
+                        null,
+                        "استرجاع مصاريف الشحن بعد إلغاء الفاتورة"
                     );
                 }
 
