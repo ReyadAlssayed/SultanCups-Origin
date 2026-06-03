@@ -105,7 +105,7 @@ window.printPurchaseCard = function () {
             ${content}
 
             <div class="print-footer">
-                صناعة نفخر بها
+                صناعة بمعايير عالية
             </div>
 
         </body>
@@ -297,13 +297,30 @@ window.printOrderCard = function () {
         🌐 خرائط Google: مصنع السلطان - زليتن
     </div>
 
-    <div style="
-        margin-top:4px;
-        font-size:13px;
+   <div style="
+    margin-top:4px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+">
+
+    <span style="
+        font-size:12px;
         font-weight:700;
     ">
-       صناعة بمعايير عالية
-    </div>
+        صناعة بمعايير عالية
+    </span>
+
+    <img src="/images/Quality.png"
+         style="
+            width:30px;
+            height:30px;
+            object-fit:contain;
+         " />
+
+
+</div>
 
 </div>
 
@@ -848,7 +865,7 @@ window.printArchiveDetails = function () {
 
                 <br>
 
-                مصنع السلطان للأكواب الورقية — صناعة نفخر بها
+                مصنع السلطان للأكواب الورقية — صناعة بمعايير عالية
 
             </div>
 

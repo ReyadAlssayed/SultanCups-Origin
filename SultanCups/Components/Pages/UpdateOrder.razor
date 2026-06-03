@@ -492,6 +492,8 @@
 
                     </div>
 
+                   
+
                 </div>
 
                 <div class="pay-modal-actions-row">
@@ -613,7 +615,10 @@
 
     decimal OriginalCommission = 0;
 
+    decimal OriginalShippingCost = 0;
+
     bool OriginalPayCommissionNow = false;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -693,9 +698,13 @@
             })
             .ToList();
 
+
+
         OriginalNet = Net;
 
         OriginalCommission = Commission;
+
+        OriginalShippingCost = Form.shipping_cost;
 
         OriginalPayCommissionNow =
             Form.pay_commission_now;
@@ -796,6 +805,8 @@
             OriginalNet = Net;
 
             OriginalCommission = Commission;
+
+            OriginalShippingCost = Form.shipping_cost;
 
             OriginalPayCommissionNow =
                 Form.pay_commission_now;
@@ -1084,6 +1095,24 @@
             {
                 ChangeMessages.Add(
                     $"استرجاع دفعات: {Math.Abs(paidDiff):0.00} د.ل");
+            }
+
+            // ====================================
+            // فرق الشحن
+            // ====================================
+
+            var shippingDiff =
+                Form.shipping_cost - OriginalShippingCost;
+
+            if (shippingDiff > 0)
+            {
+                ChangeMessages.Add(
+                    $"زيادة مصاريف شحن: {shippingDiff:0.00} د.ل");
+            }
+            else if (shippingDiff < 0)
+            {
+                ChangeMessages.Add(
+                    $"استرجاع فرق شحن: {Math.Abs(shippingDiff):0.00} د.ل");
             }
 
             // ====================================

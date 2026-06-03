@@ -506,7 +506,18 @@
 
     </div>
 }
+@if (DisableOrder.shipping_cost > 0)
+{
+    <div class="cancel-money-box money-in">
 
+        سيتم استرجاع مصاريف الشحن:
+
+        <strong>
+            @Fmt(DisableOrder.shipping_cost)
+        </strong>
+
+    </div>
+}
                 </div>
 
               <div class="return-dialog-actions">
@@ -550,6 +561,10 @@
                 <div class="return-main-title">
                     ترجيع جزئي
                 </div>
+
+                <div class="return-note-gray">
+    ملاحظة: تكلفة الشحن لا تتأثر بالراجع الجزئي. إذا أردت تعديل قيمة الشحن فقم بذلك من شاشة تعديل الفاتورة.
+</div>
 
                 <div class="return-items-box">
 
@@ -712,6 +727,10 @@
                     }
 
                 </div>
+
+                
+
+
 
                 <div class="return-dialog-actions">
 
