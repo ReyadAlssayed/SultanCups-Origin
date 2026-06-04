@@ -344,10 +344,13 @@
 </span>
 </div>
 
-<div class="row">
-    <span>تكلفة الشحن</span>
-    <span>@Fmt(SelectedOrder.shipping_cost)</span>
-</div>
+@if (SelectedOrder.person_type == "marketer")
+{
+    <div class="row">
+        <span>تكلفة الشحن</span>
+        <span>@Fmt(SelectedOrder.shipping_cost)</span>
+    </div>
+}
 
                    @if (SelectedOrder.person_type == "marketer")
 {

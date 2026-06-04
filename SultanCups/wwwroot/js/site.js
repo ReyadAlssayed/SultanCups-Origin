@@ -312,7 +312,7 @@ window.printOrderCard = function () {
         صناعة بمعايير عالية
     </span>
 
-    <img src="/images/Quality.png"
+    <img src="/images/Arrow.jpg"
          style="
             width:30px;
             height:30px;

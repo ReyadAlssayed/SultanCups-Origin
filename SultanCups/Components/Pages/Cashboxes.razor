@@ -73,33 +73,48 @@
                         <th style="text-align:center">الإجراءات</th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    @foreach (var c in FilteredCashBoxes)
+
+                    @if (!FilteredCashBoxes.Any())
                     {
                         <tr>
-                            <td class="cb-name">@c.name</td>
-
-                            <td class="cb-money">
-                                @GetBalance(c.cash_box_id).ToString("0.00") د.ل
-                            </td>
-
-                            <td class="cb-status">
-                                <span class="@(@c.is_active ? "cb-active" : "cb-inactive")">
-                                    @(@c.is_active ? "نشطة" : "غير نشطة")
-                                </span>
-                            </td>
-
-                            <td style="text-align:center;">
-                                <button type="button" class="inv-small inv-edit" @onclick="() => OpenEditDialog(c)">تعديل</button>
-                                <button type="button"
-                                        class="inv-small inv-del"
-                                        @onclick="() => OpenDeleteDialog(c)">
-                                    @(c.is_active ? "تعطيل" : "تنشيط")
-                                </button>
+                            <td colspan="4" class="st-empty-text">
+                                <div class="empty-state">
+                                    <img src="images/Empty.jpg" class="empty-img" />
+                                    <span>لا توجد خزنات</span>
+                                </div>
                             </td>
                         </tr>
                     }
+                    else
+                    {
+                        @foreach (var c in FilteredCashBoxes)
+                        {
+                            <tr>
+                                <td class="cb-name">@c.name</td>
+
+                                <td class="cb-money">
+                                    @GetBalance(c.cash_box_id).ToString("0.00") د.ل
+                                </td>
+
+                                <td class="cb-status">
+                                    <span class="@(@c.is_active ? "cb-active" : "cb-inactive")">
+                                        @(@c.is_active ? "نشطة" : "غير نشطة")
+                                    </span>
+                                </td>
+
+                                <td style="text-align:center;">
+                                    <button type="button" class="inv-small inv-edit" @onclick="() => OpenEditDialog(c)">تعديل</button>
+                                    <button type="button"
+                                            class="inv-small inv-del"
+                                            @onclick="() => OpenDeleteDialog(c)">
+                                        @(c.is_active ? "تعطيل" : "تنشيط")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+
                 </tbody>
             </table>
 
