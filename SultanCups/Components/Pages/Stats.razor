@@ -143,7 +143,7 @@
                         </span>
 
                         <small style="font-size:11px;color:#64748b; margin-bottom:5px;">
-                            مع رأس المال 
+                            مع الرصيد الافتتاحي
                         </small> 
 
                         <span class="value">
@@ -163,10 +163,7 @@
                         <span class="label">
                             صافي الداخل والخارج الحالي
                         </span>
-                        <small style="font-size:11px;color:#64748b; margin-bottom:5px;">
-                            بدون رأس المال
-                        </small>
-
+ 
                         <span class="value">
                             @Fmt(DashboardStats.real_financial_balance)
                         </span>
@@ -202,6 +199,10 @@
                         <span class="label">
                             إجمالي الداخل
                         </span>
+
+                        <small style="font-size:11px;color:#64748b; margin-bottom:5px;">
+                            بدون الرصيد الافتتاحي
+                        </small>
 
                         <span class="value green-text">
                             @Fmt(DashboardStats.total_in)
@@ -308,7 +309,7 @@
                     <div class="card-data">
 
                         <span class="label">
-                            الرواتب المستحقة
+                            الرواتب المستحقة الغير مدفوعة
                         </span>
 
                         <span class="value red-text">

@@ -270,7 +270,7 @@
                 }
 
                 <div class="sum-line1 main">
-                    <span>الإجمالي</span>
+                    <span>الإجمالي النهائي</span>
                     <strong>@Fmt(Net)</strong>
                 </div>
 
@@ -305,6 +305,14 @@
                     {
                         <div class="status-bar not-paid">⚠ غير خالص</div>
                     }
+                </div>
+
+                <div class="notes-wrapper">
+                    <label>ملاحظات</label>
+
+                    <textarea class="notes1"
+                              placeholder="اكتب أي ملاحظة..."
+                              @bind="Form.notes"></textarea>
                 </div>
 
             </div>

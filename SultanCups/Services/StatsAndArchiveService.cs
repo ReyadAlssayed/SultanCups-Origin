@@ -134,14 +134,16 @@ namespace SultanCups.Services
             // =====================================
 
             stats.total_in =
-                await _context.financial_events
-                    .AsNoTracking()
-                    .Where(x =>
-                        x.direction == "IN"
-                        &&
-                        x.event_date >= lastArchiveDate)
-                    .SumAsync(x =>
-                        (decimal?)x.amount) ?? 0;
+       await _context.financial_events
+           .AsNoTracking()
+           .Where(x =>
+               x.direction == "IN"
+               &&
+               x.event_type != "رصيد افتتاحي"
+               &&
+               x.event_date >= lastArchiveDate)
+           .SumAsync(x =>
+               (decimal?)x.amount) ?? 0;
 
             // =====================================
             // إجمالي الخارج منذ آخر جرد
@@ -803,12 +805,33 @@ namespace SultanCups.Services
             // =====================================
 
             var orders = await _context.orders
-                .Include(x => x.Items)
-                .Where(x => !x.is_cancelled)
-                .ToListAsync();
+      .Include(x => x.Items)
+      .ToListAsync();
 
             foreach (var order in orders)
             {
+                if (order.is_cancelled)
+                {
+                    var cancelledItems = await _context.order_items
+                        .Where(x => x.order_id == order.order_id)
+                        .ToListAsync();
+
+                    _context.order_items.RemoveRange(cancelledItems);
+
+                    var cancelledOrderEvents = await _context.financial_events
+                        .Where(x =>
+                            x.ref_table == "orders"
+                            &&
+                            x.ref_id == order.order_id)
+                        .ToListAsync();
+
+                    _context.financial_events.RemoveRange(cancelledOrderEvents);
+
+                    _context.orders.Remove(order);
+
+                    continue;
+                }
+
                 decimal total =
                     order.Items.Sum(i =>
                         i.quantity * i.unit_price);

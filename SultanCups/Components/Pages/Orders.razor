@@ -144,10 +144,8 @@
                     {
                         @foreach (var o in FilteredOrders)
 {
-   bool isOld =
-    o.created_at < lastArchiveDate
-    &&
-    o.paid_amount < o.net_total;
+                            bool isOld =
+                             o.created_at < lastArchiveDate;
 
     <tr id="order-@o.order_id"
     class="@(
@@ -1118,9 +1116,7 @@ async Task ExportToExcel()
                 o.order_date.ToString("yyyy-MM-dd");
 
           bool isOld =
-    o.created_at < lastArchiveDate
-    &&
-    o.paid_amount < o.net_total;
+    o.created_at < lastArchiveDate;
 
             if (isOld)
             {
@@ -1224,6 +1220,15 @@ async Task ConfirmPartialReturn()
 {
     if (ReturnOrder == null)
         return;
+
+    if (ReturnOrder.discount_total > 0)
+    {
+        ToastService.ShowToast(
+    "هذه الفاتورة تحتوي على خصم. يرجى إلغاء الخصم أولاً أو إلغاء الفاتورة وإعادة إدخالها بالأصناف والكميات الجديدة",
+    "error");
+
+        return;
+    }
 
     var validItems =
         ReturnItems

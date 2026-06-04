@@ -1579,7 +1579,7 @@ _context.financial_events
 
                 await transaction.CommitAsync();
 
-                return (true, "تم تنفيذ الراجع ✔");
+                return (true, "تم تنفيذ الراجع");
             }
             catch (Exception)
             {

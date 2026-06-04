@@ -170,8 +170,8 @@
                 </div>
 
                 <div class="inv-field">
-                    <label class="inv-label">العمولة (دينار ليبي)</label>
-                    <input type="number" min="1" max="500" class="inv-input-dialog @(string.IsNullOrEmpty(CommissionError) ? "" : "is-invalid")"
+                    <label class="inv-label">العمولة للصندوق الواحد (دينار ليبي)</label>
+                    <input type="number" min="0.01" max="500" class="inv-input-dialog @(string.IsNullOrEmpty(CommissionError) ? "" : "is-invalid")"
                            @bind="MarketerForm.commission_per_box" />
 
                     @if (!string.IsNullOrEmpty(CommissionError))
@@ -450,9 +450,9 @@
         }
 
         // العمولة
-        if (MarketerForm.commission_per_box < 1 || MarketerForm.commission_per_box > 500)
+        if (MarketerForm.commission_per_box <= 0 || MarketerForm.commission_per_box > 500)
         {
-            CommissionError = "العمولة يجب أن تكون بين 1 و 500 دينار";
+            CommissionError = "العمولة يجب أن تكون بين 0 و 500 دينار";
             hasError = true;
         }
 
