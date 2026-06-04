@@ -782,7 +782,7 @@
             else
             {
                 ToastService.ShowToast(
-                    "تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام",
+                    ex.Message,
                     "error");
             }
         }
