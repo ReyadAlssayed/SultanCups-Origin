@@ -110,7 +110,7 @@
                         {
 
                             bool isOld =
-    s.salary_date < lastArchiveDate;
+     s.created_at < lastArchiveDate;
                             <tr class="@(isOld ? "old-archive-row" : "")">
                                 <td>@s.Employee.full_name</td>
 
@@ -1029,7 +1029,7 @@
                 ws.Cell(row, 10).Value = s.notes;
 
                 bool isOld =
-    s.salary_date < lastArchiveDate;
+     s.created_at < lastArchiveDate;
 
                 if (isOld)
                 {

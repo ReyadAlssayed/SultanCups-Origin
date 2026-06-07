@@ -20,7 +20,9 @@ namespace SultanCups.Models
 
         public DateTime loan_date { get; set; }
 
+        public DateTime created_at { get; set; }
         public string? notes { get; set; }
+
 
         [ForeignKey("employee_id")]
         public Employee Employee { get; set; } = null!;

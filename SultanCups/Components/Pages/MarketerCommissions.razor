@@ -102,9 +102,8 @@
                     {
                         @foreach (var c in FilteredList)
                         {
-                           
-    bool isOld =
-        c.order_date < lastArchiveDate;
+                            bool isOld =
+                                c.created_at < lastArchiveDate;
 
 
 <tr class="@(isOld ? "old-archive-row" : "")">
@@ -207,7 +206,8 @@
         {
             CommissionList = await FinanceService.GetMarketerCommissions();
             lastArchiveDate =
-    await StatsService.GetLastArchiveDate();
+    (await StatsService.GetLastArchiveDate())
+    .ToLocalTime();
         }
         catch
         {
@@ -261,7 +261,7 @@
                     c.order_date.ToString("yyyy-MM-dd");
 
                 bool isOld =
-                    c.order_date < lastArchiveDate;
+                    c.created_at < lastArchiveDate;
 
                 if (isOld)
                 {

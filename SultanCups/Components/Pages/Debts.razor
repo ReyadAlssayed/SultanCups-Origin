@@ -57,6 +57,7 @@
 
         <div class="pro-table-wrap">
 
+
             <table class="pro-table">
                 <thead>
                     <tr>
@@ -96,7 +97,7 @@
                         {
 
                             bool isOld =
-    d.order_date < lastArchiveDate;
+       d.created_at < lastArchiveDate;
                             <tr class="@(isOld ? "old-archive-row" : "")">
                                 <td class="pro-code">@d.order_id</td>
                                 <td>@d.person_name</td>
@@ -118,7 +119,7 @@
                                         @d.status
                                     </span>
                                 </td>
-
+                               
                                 <td>@d.order_date.ToString("yyyy-MM-dd")</td>
 
                                 <td>
@@ -170,8 +171,10 @@ List<DebtView>? DebtList;
     protected override async Task OnInitializedAsync()
     {
         DebtList = await FinanceService.GetDebts();
+
         lastArchiveDate =
-    await StatsService.GetLastArchiveDate();
+            (await StatsService.GetLastArchiveDate())
+            .ToLocalTime();
     }
 
     async Task ExportToExcel()
@@ -213,7 +216,7 @@ List<DebtView>? DebtList;
                     d.order_date.ToString("yyyy-MM-dd");
 
                 bool isOld =
-                    d.order_date < lastArchiveDate;
+      d.created_at < lastArchiveDate;
 
                 if (isOld)
                 {

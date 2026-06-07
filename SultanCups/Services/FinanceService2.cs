@@ -1785,6 +1785,7 @@ on o.person_id equals m.marketer_id into mg
                     person_name = o.person_type == "customer" ? c.name : m.name,
                     person_type = o.person_type,
                     order_date = o.order_date,
+                    created_at = o.created_at,
                     net_total = net,
                     paid_amount = paid, // ✔ الصحيح
                     remaining = remaining,
@@ -1863,7 +1864,8 @@ on o.person_id equals m.marketer_id into mg
     ? "محتسبة"
     : "غير محتسبة",
 
-                    order_date = o.order_date
+                    order_date = o.order_date,
+                    created_at = o.created_at
                 };
             })
             .OrderByDescending(x => x.order_id)

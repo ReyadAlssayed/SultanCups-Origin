@@ -14,5 +14,8 @@
         public string commission_status { get; set; } = "";
 
         public DateTime order_date { get; set; }
+
+        public DateTime created_at { get; set; }
+
     }
 }

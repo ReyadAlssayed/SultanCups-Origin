@@ -20,6 +20,7 @@ namespace SultanCups.Models
         
         public DateTime salary_date { get; set; }
 
+        public DateTime created_at { get; set; }
         public int cash_box_id { get; set; }
 
         public string? notes { get; set; }

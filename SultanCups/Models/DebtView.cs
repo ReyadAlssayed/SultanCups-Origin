@@ -10,6 +10,8 @@
 
         public DateTime order_date { get; set; }
 
+        public DateTime created_at { get; set; }
+
         public decimal net_total { get; set; }
 
         public decimal paid_amount { get; set; }

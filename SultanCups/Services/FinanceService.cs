@@ -191,7 +191,8 @@ namespace SultanCups.Services
                 .AsNoTracking()
                 .Include(s => s.Employee)
                 .Include(s => s.CashBox)
-                .ToListAsync();
+              .OrderByDescending(x => x.created_at)
+.ToListAsync();
         }
 
         public async Task AddSalary(Salary salary, int adminId)
@@ -214,6 +215,7 @@ namespace SultanCups.Services
             UpdateSalaryStatus(salary);
 
             salary.salary_date = DateTime.SpecifyKind(salary.salary_date, DateTimeKind.Utc);
+            salary.created_at = DateTime.UtcNow;
 
             var balance = await GetBalanceFromView(salary.cash_box_id);
 
@@ -414,6 +416,7 @@ namespace SultanCups.Services
             salary.cash_box_id = updated.cash_box_id;
             salary.notes = updated.notes;
             salary.employee_id = updated.employee_id;
+
             salary.salary_date = DateTime.SpecifyKind(updated.salary_date, DateTimeKind.Utc);
 
             UpdateSalaryStatus(salary);
@@ -970,7 +973,7 @@ p.name
                 .AsNoTracking()
                 .Include(x => x.Employee)
                 .Include(x => x.CashBox)
-                .OrderByDescending(x => x.loan_date)
+                .OrderByDescending(x => x.created_at)
                 .ToListAsync();
         }
         public async Task<decimal> GetEmployeeLoanRemaining(int employeeId)
@@ -1005,6 +1008,7 @@ p.name
 
             UpdateLoanStatus(loan);
 
+            loan.created_at = DateTime.UtcNow;
             _context.employee_loans.Add(loan);
             await _context.SaveChangesAsync();
 
