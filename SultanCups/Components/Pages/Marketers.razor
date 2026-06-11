@@ -287,6 +287,51 @@
     </div>
 }
 
+
+@if (ShowInfoDialog)
+{
+    <div class="inv-dialog-overlay">
+
+        <div class="inv-dialog-box">
+
+            <div class="inv-dialog-top-image">
+                <img src="images/Background.png" />
+            </div>
+
+            <div class="inv-dialog-body">
+
+                <h3>تنبيه</h3>
+
+                <p>
+                    هذه الصفحة لم تعد مستخدمة في العمل الحالي.
+                    <br /><br />
+
+                    بناءً على سياسة المصنع الحالية يتم التعامل مع المسوق بنفس معاملة الزبون لأن عمولاته لا تُصرف من المصنع.
+
+                    <br /><br />
+
+                    إذا أردت إضافة شخص جديد فاذهب إلى صفحة الزبائن.
+
+                    <br /><br />
+
+                    استخدم هذه الصفحة فقط إذا قررت مستقبلاً عمل عمولات تُصرف من المصنع وتريد رصدها وتتبعها مالياً داخل النظام.
+                </p>
+
+                <div class="inv-dialog-actions">
+
+                    <button class="inv-save"
+                            @onclick="() => ShowInfoDialog = false">
+                        فهمت
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+}
 @code {
     List<SultanCups.Models.Marketer>? MarketerList;
 
@@ -297,6 +342,8 @@
     string Message = "";
     bool ShowActivatePrompt = false;
     Marketer? DuplicateMarketer;
+
+    bool ShowInfoDialog = true;
 
     bool IsExporting = false;
 

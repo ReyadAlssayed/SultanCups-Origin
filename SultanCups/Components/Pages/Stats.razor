@@ -163,33 +163,39 @@
                         <span class="label">
                             صافي الداخل والخارج الحالي
                         </span>
- 
-                        <span class="value">
-                            @Fmt(DashboardStats.real_financial_balance)
-                        </span>
+
+                        <div class="value">
+
+                            <div class="big-number">
+                                @Fmt(DashboardStats.real_financial_balance)
+                            </div>
+
+                            @if (DashboardStats.real_financial_balance > 0)
+                            {
+                                <div class="small-text green-text">
+                                    الداخل أكثر
+                                </div>
+                            }
+                            else if (DashboardStats.real_financial_balance == 0)
+                            {
+                                <div class="small-text gray-text">
+                                    متساوي الداخل والخارج
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="small-text red-text">
+                                    الخارج المالي أكثر
+                                </div>
+                            }
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                <div class="mini-card">
-
-                    <div class="card-icon"></div>
-
-                    <div class="card-data">
-
-                        <span class="label">
-                            ديون الفواتير
-                        </span>
-
-                        <span class="value">
-                            @Fmt(DashboardStats.total_debts)
-                        </span>
-
-                    </div>
-
-                </div>
-
+               
                 <div class="mini-card">
 
                     <div class="card-icon"></div>
@@ -229,6 +235,25 @@
                     </div>
 
                 </div>
+
+                <div class="mini-card">
+
+                    <div class="card-icon"></div>
+
+                    <div class="card-data">
+
+                        <span class="label">
+                            ديون الفواتير
+                        </span>
+
+                        <span class="value">
+                            @Fmt(DashboardStats.total_debts)
+                        </span>
+
+                    </div>
+
+                </div>
+
 
                 <div class="mini-card">
 

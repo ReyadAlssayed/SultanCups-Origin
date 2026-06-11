@@ -27,6 +27,29 @@
     filter: blur(0);
 }
 
+.green-text {
+    color: #16a34a;
+    font-size: 13px;
+}
+
+.red-text {
+    color: #dc2626;
+    font-size: 13px;
+}
+
+.gray-text {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.big-number {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.small-text {
+    margin-top: 3px;
+}
 /* =========================================
    TOP BAR
 ========================================= */

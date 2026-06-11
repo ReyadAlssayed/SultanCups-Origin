@@ -383,7 +383,7 @@
                 .Replace("آ", "ا");
 
             // منع الأرقام والرموز
-            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
+            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z_]+$"))
             {
                 Message = "اسم المورد لا يمكن أن يحتوي على أرقام أو رموز";
                 hasError = true;

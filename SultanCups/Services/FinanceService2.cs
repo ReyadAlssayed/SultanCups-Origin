@@ -309,9 +309,13 @@ string.IsNullOrWhiteSpace(itemSnapshotName)
             {
                 await transaction.RollbackAsync();
 
+                var msg =
+                    ex.InnerException?.Message ??
+                    ex.Message;
+
                 return (
                     false,
-                    ex.ToString()
+                    "فشل حفظ الفاتورة: " + msg
                 );
             }
         }

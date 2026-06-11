@@ -121,7 +121,7 @@
 
                     @* حقل عدد الكراتين *@
                     <div class="pro-field">
-                        <label class="pro-label">عدد الكراتين (1-1000)</label>
+                        <label class="pro-label">عدد الكراتين (1-10000)</label>
                         <input class="pro-input @(string.IsNullOrEmpty(CountError) ? "" : "is-invalid")" type="number" @bind="ProForm.box_count" />
                         @if (!string.IsNullOrEmpty(CountError))
                         {
@@ -299,8 +299,8 @@
         bool hasError = false;
 
         if (ProForm.product_id <= 0) { ProductError = "يرجى اختيار منتج"; hasError = true; }
-        if (ProForm.box_count < 1 || ProForm.box_count > 1000) { CountError = "العدد بين 1 و 1000"; hasError = true; }
-        if (ProForm.box_cost <= 0 || ProForm.box_cost > 100) { CostError = "التكلفة بين 0.01 و 100"; hasError = true; }
+        if (ProForm.box_count < 1 || ProForm.box_count > 10000) { CountError = "العدد بين 1 و 10000"; hasError = true; }
+        if (ProForm.box_cost <= 0 || ProForm.box_cost > 1000) { CostError = "التكلفة بين 0.01 و 1000"; hasError = true; }
         if (!string.IsNullOrEmpty(ProForm.notes) && ProForm.notes.Length > 100) { NoteError = "أقصى حد 100 حرف"; hasError = true; }
 
         if (hasError) return;

@@ -148,11 +148,11 @@
                 <div class="rm-field">
                     <label class="rm-label">الحجم</label>
 
-                    <input type="number"
-                           min="1" max="1000"
-                           class="rm-input @(string.IsNullOrEmpty(SizeError) ? "" : "is-invalid")"
-                           @bind="RawMaterialForm.size"
-                           @oninput="@((e) => SizeError = "")" />
+                        <input type="number"
+                               min="0.1" max="9999" step="0.01"
+                               class="rm-input @(string.IsNullOrEmpty(SizeError) ? "" : "is-invalid")"
+                               @bind="RawMaterialForm.size"
+                               @oninput="@((e) => SizeError = "")" />
 
                     @if (!string.IsNullOrEmpty(SizeError))
                     {
@@ -179,11 +179,11 @@
                 <div class="rm-field">
                     <label class="rm-label">تكلفة الوحدة</label>
 
-                    <input type="number"
-                           min="1" max="1000" step="0.01"
-                           class="rm-input @(string.IsNullOrEmpty(CostError) ? "" : "is-invalid")"
-                           @bind="RawMaterialForm.unit_cost"
-                           @oninput="@((e) => CostError = "")" />
+                        <input type="number"
+                               min="0.1" max="99999" step="0.01"
+                               class="rm-input @(string.IsNullOrEmpty(CostError) ? "" : "is-invalid")"
+                               @bind="RawMaterialForm.unit_cost"
+                               @oninput="@((e) => CostError = "")" />
 
                     @if (!string.IsNullOrEmpty(CostError))
                     {
@@ -395,9 +395,9 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
                 .Replace("آ", "ا");
 
             // منع الأرقام والرموز
-            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z]+$"))
+            if (!Regex.IsMatch(normalizedName, @"^[\u0600-\u06FFa-zA-Z0-9.]+$"))
             {
-                Message = "اسم المادة لا يمكن أن يحتوي على أرقام أو رموز";
+                Message = "اسم المادة لا يمكن أن يحتوي على رموز خاصة";
                 hasError = true;
             }
             else
@@ -448,9 +448,9 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
         }
 
         // 🔹 الحجم
-        if (RawMaterialForm.size <= 0 || RawMaterialForm.size > 1000)
+        if (RawMaterialForm.size < 0.1m || RawMaterialForm.size > 9999)
         {
-            SizeError = "الحجم يجب أن يكون بين 1 و 1000";
+            SizeError = "الحجم يجب أن يكون بين 0.1 و 9999";
             hasError = true;
         }
 
@@ -471,10 +471,9 @@ List<SultanCups.Models.RawMaterial>? RawMaterial;
             hasError = true;
         }
 
-        // 🔹 التكلفة
-        if (RawMaterialForm.unit_cost < 1 || RawMaterialForm.unit_cost > 1000)
+        if (RawMaterialForm.unit_cost < 0.1m || RawMaterialForm.unit_cost > 99999)
         {
-            CostError = "التكلفة يجب أن تكون بين 1 و 1000";
+            CostError = "التكلفة يجب أن تكون بين 0.1 و 99999";
             hasError = true;
         }
 

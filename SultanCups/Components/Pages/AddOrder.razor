@@ -504,7 +504,7 @@
             Form = new Order
             {
                 order_date = DateTime.UtcNow, // 🔥 الحل
-                person_type = "marketer",
+            person_type = "customer",
                 person_id = 0,
                 Items = new List<OrderItem>
             {
@@ -890,9 +890,14 @@ else
     return;
 }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ToastService.ShowToast("تعذر إكمال العملية بسبب خطأ داخلي، يرجى التواصل مع مطور النظام", "error");
+            ToastService.ShowToast(
+                "تعذر إكمال الحفظ، تحقق من البيانات أو الاتصال بقاعدة البيانات",
+                "error"
+            );
+
+            Console.WriteLine(ex.ToString());
         }
 
         finally
